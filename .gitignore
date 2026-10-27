@@ -1,0 +1,23 @@
+.DS_Store
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+**/.env
+**/local.properties
+**/.gradle/
+**/build/
+数据库数据/*.sqlite3*
+数据库数据/uploads/*
+!数据库数据/uploads/.gitkeep
+后端/bin/
+数据库数据/backups/*
+!数据库数据/backups/.gitkeep
+后端/历史版本/
+数据库数据/历史SQLite备份/
+
+# 本机 IDE、调试与测试结果
+**/.idea/
+**/.kotlin/
+.playwright-cli/
+后端/output/
+后端/验证记录.md

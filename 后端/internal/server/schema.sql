@@ -1,0 +1,41 @@
+-- Go runtime migrations. MySQL 8.0+ / 9.x, InnoDB, utf8mb4.
+CREATE TABLE IF NOT EXISTS app_state (id TINYINT PRIMARY KEY) ENGINE=InnoDB;
+INSERT IGNORE INTO app_state(id) VALUES (1);
+CREATE TABLE IF NOT EXISTS users (
+ id BIGINT PRIMARY KEY AUTO_INCREMENT, username VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL UNIQUE,
+ password_hash VARCHAR(200) NOT NULL, display_name VARCHAR(40) NOT NULL, created_at VARCHAR(35) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS sessions (
+ token_hash CHAR(64) CHARACTER SET ascii PRIMARY KEY, user_id BIGINT NOT NULL, expires_at BIGINT NOT NULL,
+ INDEX session_user (user_id), FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS notes (
+ id CHAR(32) CHARACTER SET ascii PRIMARY KEY, user_id BIGINT NOT NULL, title VARCHAR(160) NOT NULL,
+ category VARCHAR(40) NOT NULL, tags JSON NOT NULL, content MEDIUMTEXT NOT NULL, steps JSON NOT NULL,
+ occurred_on DATE NOT NULL, created_at VARCHAR(35) NOT NULL, updated_at VARCHAR(35) NOT NULL,
+ INDEX notes_owner_date(user_id,occurred_on), FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS attachments (
+ id CHAR(32) CHARACTER SET ascii PRIMARY KEY, user_id BIGINT NOT NULL, note_id CHAR(32) CHARACTER SET ascii NULL,
+ filename VARCHAR(180) NOT NULL, stored_name VARCHAR(80) NOT NULL, mime VARCHAR(80) NOT NULL, size BIGINT NOT NULL,
+ extracted_text MEDIUMTEXT NOT NULL, status VARCHAR(30) NOT NULL, created_at VARCHAR(35) NOT NULL,
+ INDEX attachment_owner(user_id), INDEX attachment_note(note_id),
+ FOREIGN KEY(user_id) REFERENCES users(id), FOREIGN KEY(note_id) REFERENCES notes(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS note_terms (
+ note_id CHAR(32) CHARACTER SET ascii NOT NULL, term VARCHAR(64) COLLATE utf8mb4_bin NOT NULL, weight INT NOT NULL,
+ PRIMARY KEY(note_id,term), INDEX term_lookup(term,note_id), FOREIGN KEY(note_id) REFERENCES notes(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS conversations (
+ id CHAR(32) CHARACTER SET ascii PRIMARY KEY, user_id BIGINT NOT NULL, mode VARCHAR(20) NOT NULL,
+ title VARCHAR(60) NOT NULL, created_at VARCHAR(35) NOT NULL,
+ INDEX conversation_owner(user_id), FOREIGN KEY(user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS messages (
+ id BIGINT PRIMARY KEY AUTO_INCREMENT, conversation_id CHAR(32) CHARACTER SET ascii NOT NULL,
+ role VARCHAR(20) NOT NULL, content MEDIUMTEXT NOT NULL, sources JSON NOT NULL, created_at VARCHAR(35) NOT NULL,
+ INDEX message_conversation(conversation_id,id), FOREIGN KEY(conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS login_attempts (
+ ip VARCHAR(64) CHARACTER SET ascii PRIMARY KEY, attempts INT NOT NULL, started BIGINT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

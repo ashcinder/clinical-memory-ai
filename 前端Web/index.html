@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173d4b"><meta name="description" content="临记：医生的个人诊疗笔记、材料归档与多模态经验检索工作台。">
+  <title>临记 · 个人诊疗经验库</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/styles.css">
+  <script src="/demo-match.js" defer></script><script src="/app.js" defer></script>
+</head>
+<body>
+  <div id="auth" class="auth-shell" hidden>
+    <div class="auth-story"><div class="brand"><span class="brand-mark">临</span><b>临记<span>CLINICAL MEMORY</span></b></div><div><p class="eyebrow">你的每一次记录，都有迹可循</p><h1>让过去的经验，<br>在需要时回来。</h1><p>笔记、影像、语音材料，汇入同一个个人经验库。<br>从一段描述出发，回到当时的治疗过程。</p><div class="auth-timeline"><span>记录</span><i></i><span>关联</span><i></i><span>回顾</span></div></div><small>个人工作空间 · 原始资料可追溯</small></div>
+    <form id="auth-form" class="auth-form"><p class="eyebrow">欢迎使用临记</p><h2 id="auth-title">登录个人资料库</h2><p id="auth-description" class="muted">继续整理和回顾你的诊疗经验。</p><label>用户名<input id="username" autocomplete="username" required minlength="3" maxlength="64" pattern="[a-zA-Z0-9_.\-]+" placeholder="字母、数字或下划线"></label><label>密码<input id="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128" placeholder="至少 8 位"></label><label id="name-field" hidden>显示名称<input id="display-name" maxlength="40" placeholder="例如：陈医生"></label><p id="auth-error" class="error" role="alert"></p><button class="primary" id="auth-submit">登录</button><small>首次使用需要创建个人账户。资料仅对已登录的账户开放。</small></form>
+  </div>
+  <div id="workspace" class="workspace" hidden>
+    <aside class="sidebar"><a class="brand" href="#search"><span class="brand-mark">临</span><b>临记<span>CLINICAL MEMORY</span></b></a><p class="nav-label">个人工作空间</p><nav aria-label="主导航"><button data-view="search" class="active"><span>⌕</span>经验检索</button><button data-view="notes"><span>▤</span>我的笔记</button><button data-view="materials"><span>▧</span>材料归档</button><button data-view="chat"><span>◌</span>AI 对话</button></nav><div class="sidebar-note"><span class="tiny-dot"></span>每一步，都回到原始记录<p>用笔记串联诊疗过程<br>把经验留给下一次回顾</p></div><div class="sidebar-bottom"><button data-view="settings"><span>⚙</span>服务设置</button><div class="profile"><div class="avatar" id="avatar">医</div><div><b id="profile-name">医生</b><small>个人资料库</small></div><button id="logout" class="icon-button" title="退出登录" aria-label="退出登录">↪</button></div></div></aside>
+    <div class="main-shell"><header class="topbar"><div><span class="muted">个人资料库</span><span class="slash">/</span><b id="page-title">经验检索</b></div><div class="topbar-right"><span id="model-badge" class="status-pill">本地检索模式</span><button class="mobile-settings icon-button" data-view="settings" aria-label="服务设置">⚙</button><button class="primary small" id="new-note"><span>＋</span> 新建笔记</button></div></header><main id="main" tabindex="-1"></main><footer>临记 · 个人经验回顾工具<span>历史经验供回顾，诊疗决策请由医生独立判断</span></footer></div>
+  </div>
+  <dialog id="dialog"><div class="dialog-top"><h2 id="dialog-title"></h2><button id="close-dialog" class="icon-button" aria-label="关闭弹窗">×</button></div><div id="dialog-content"></div></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>
