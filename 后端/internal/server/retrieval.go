@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// Model-proposed IDs are restricted to the current account's retrieved candidates.
+// Model-proposed IDs are restricted to the shared library's retrieved candidates.
 func (a *App) retrieveRanked(ctx context.Context, query string, userID int64, category string, limit int) ([]Note, bool, []string) {
 	if a.aiConfig(ctx).CloudSearchDisabled {
 		return a.retrieveFiltered(query, userID, category, limit, filterFromContext(ctx)), false, nil

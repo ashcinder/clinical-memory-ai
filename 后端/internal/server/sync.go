@@ -32,11 +32,13 @@ func isSyncedMutation(r *http.Request) bool {
 func (a *App) syncState(w http.ResponseWriter, r *http.Request, u User) {
 	var revision uint64
 	check(a.DB.QueryRow("SELECT COALESCE((SELECT revision FROM user_sync WHERE user_id=?),0)", u.ID).Scan(&revision))
+	var libraryRevision uint64
+	check(a.DB.QueryRow("SELECT revision FROM shared_library WHERE id=1").Scan(&libraryRevision))
 	// The file fingerprint also detects configuration changes made outside the UI.
 	config, err := a.loadAISettings(u.ID)
 	check(err)
-	version := digest(jsonText(map[string]any{"revision": revision, "user": u, "config": config}))
-	respond(w, 200, map[string]any{"version": version, "revision": revision, "user": u, "note_format": "plain-text-v1", "poll_seconds": 5})
+	version := digest(jsonText(map[string]any{"revision": revision, "library_revision": libraryRevision, "user": u, "config": config}))
+	respond(w, 200, map[string]any{"version": version, "revision": revision, "library_revision": libraryRevision, "library_scope": "shared", "user": u, "note_format": "plain-text-v1", "poll_seconds": 5})
 }
 func (a *App) updateProfile(w http.ResponseWriter, r *http.Request, u User) {
 	var in struct {

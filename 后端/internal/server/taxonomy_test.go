@@ -85,20 +85,20 @@ func TestLearningCatalogueHTTP(t *testing.T) {
 	}
 	otherID, _ := other.LastInsertId()
 	withTx(a, func(tx *sql.Tx) Note {
-		return a.saveNote(tx, NoteInput{Title: "他人学习记录", Category: "教程", Tags: []string{"他人私有标签"}}, newID(), otherID, true)
+		return a.saveNote(tx, NoteInput{Title: "他人学习记录", Category: "教程", Tags: []string{"共享标签"}}, newID(), otherID, true)
 	})
 	catalogue := c.request("GET", "/api/taxonomy", nil, 200)
-	if len(catalogue["note_types"].([]any)) != 7 || len(catalogue["tags"].([]any)) != 1 {
+	if len(catalogue["note_types"].([]any)) != 7 || len(catalogue["tags"].([]any)) != 2 {
 		t.Fatal(catalogue)
 	}
 	for _, row := range catalogue["note_types"].([]any) {
 		v := row.(map[string]any)
-		if v["id"] == "tutorial" && v["count"] != float64(2) {
+		if v["id"] == "tutorial" && v["count"] != float64(3) {
 			t.Fatal("aliases must share a directory count", v)
 		}
 	}
 	list := c.request("GET", "/api/notes?note_type=tutorial&limit=1", nil, 200)
-	if list["total"] != float64(2) || len(list["items"].([]any)) != 1 {
+	if list["total"] != float64(3) || len(list["items"].([]any)) != 1 {
 		t.Fatal(list)
 	}
 	result := c.request("POST", "/api/search", SearchInput{Query: "学习", NoteType: "tutorial", Tag: "待复习", Limit: 1}, 200)
@@ -128,8 +128,8 @@ func TestLearningCatalogueHTTP(t *testing.T) {
 		c.request("POST", "/api/notes", NoteInput{Title: "标签目录验证", Category: "知识要点", Content: "标签筛选测试", Tags: tags}, 201)
 	}
 	full := c.request("GET", "/api/taxonomy", nil, 200)
-	if len(full["tags"].([]any)) != 46 {
-		t.Fatal("all owned tags must be available to the picker", full)
+	if len(full["tags"].([]any)) != 47 {
+		t.Fatal("all shared tags must be available to the picker", full)
 	}
 
 }

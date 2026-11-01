@@ -58,7 +58,7 @@ func (a *App) Migrate() error {
 			}
 		}
 	}
-	return nil
+	return a.initializeSharedLibrary()
 }
 
 const noteColumns = "id,title,category,tags,content,steps,DATE_FORMAT(occurred_on,'%Y-%m-%d'),created_at,updated_at"
@@ -89,7 +89,7 @@ func ownedNote(q queryer, id string, userID int64, lock bool) Note {
 	if lock {
 		suffix = " FOR UPDATE"
 	}
-	n, err := scanNote(q.QueryRow("SELECT "+noteColumns+" FROM notes WHERE id=? AND user_id=?"+suffix, id, userID))
+	n, err := scanNote(q.QueryRow("SELECT "+noteColumns+" FROM notes WHERE id=?"+suffix, id))
 	if err == sql.ErrNoRows {
 		fail(404, "笔记不存在")
 	}
@@ -113,7 +113,7 @@ func ownedAttachment(q queryer, id string, userID int64, lock bool) Attachment {
 	if lock {
 		suffix = " FOR UPDATE"
 	}
-	a, err := scanAttachment(q.QueryRow("SELECT "+attachmentColumns+" FROM attachments WHERE id=? AND user_id=?"+suffix, id, userID))
+	a, err := scanAttachment(q.QueryRow("SELECT "+attachmentColumns+" FROM attachments WHERE id=? AND (user_id=? OR note_id IS NOT NULL)"+suffix, id, userID))
 	if err == sql.ErrNoRows {
 		fail(404, "材料不存在")
 	}
@@ -123,7 +123,7 @@ func ownedAttachment(q queryer, id string, userID int64, lock bool) Attachment {
 func (a *App) saveNote(tx *sql.Tx, in NoteInput, id string, userID int64, isNew bool) Note {
 	in.validate()
 	var owner int64
-	check(tx.QueryRow("SELECT id FROM users WHERE id=? FOR UPDATE", userID).Scan(&owner))
+	check(tx.QueryRow("SELECT id FROM shared_library WHERE id=1 FOR UPDATE").Scan(&owner))
 	catalog := loadTaxonomy(tx, userID).Types
 	var current Note
 	if !isNew {
@@ -164,7 +164,7 @@ func (a *App) saveNote(tx *sql.Tx, in NoteInput, id string, userID int64, isNew 
 		_, err := tx.Exec("INSERT INTO notes(title,category,tags,content,steps,occurred_on,updated_at,id,user_id,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)", append(values, id, userID, now())...)
 		check(err)
 	} else {
-		_, err := tx.Exec("UPDATE notes SET title=?,category=?,tags=?,content=?,steps=?,occurred_on=?,updated_at=? WHERE id=? AND user_id=?", append(values, id, userID)...)
+		_, err := tx.Exec("UPDATE notes SET title=?,category=?,tags=?,content=?,steps=?,occurred_on=?,updated_at=? WHERE id=?", append(values, id)...)
 		check(err)
 		_, err = tx.Exec("UPDATE attachments SET note_id=NULL WHERE note_id=?", id)
 		check(err)
@@ -293,8 +293,7 @@ func (a *App) retrieveFiltered(query string, userID int64, category string, limi
 		marks[i] = "?"
 		args = append(args, t)
 	}
-	args = append(args, userID)
-	statement := "SELECT n.id, SUM(t.weight) AS relevance FROM note_terms t JOIN notes n ON n.id=t.note_id WHERE t.term IN (" + strings.Join(marks, ",") + ") AND n.user_id=?"
+	statement := "SELECT n.id, SUM(t.weight) AS relevance FROM note_terms t JOIN notes n ON n.id=t.note_id WHERE t.term IN (" + strings.Join(marks, ",") + ")"
 	if category != "" {
 		statement += " AND n.category=?"
 		args = append(args, category)
