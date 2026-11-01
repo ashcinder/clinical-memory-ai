@@ -164,7 +164,7 @@ func (a *App) imageMatches(ctx context.Context, queryIDs []string, userID int64,
 	if len(queries) == 0 {
 		return []Note{}, found, warnings
 	}
-	rows, err := a.DB.QueryContext(ctx, "SELECT "+attachmentColumns+" FROM attachments WHERE user_id=? AND note_id IS NOT NULL AND mime LIKE 'image/%' ORDER BY id", userID)
+	rows, err := a.DB.QueryContext(ctx, "SELECT "+attachmentColumns+" FROM attachments WHERE note_id IS NOT NULL AND mime LIKE 'image/%' ORDER BY id")
 	check(err)
 	candidates := []Attachment{}
 	for rows.Next() {

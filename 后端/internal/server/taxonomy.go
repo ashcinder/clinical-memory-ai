@@ -10,7 +10,7 @@ import (
 	"unicode"
 )
 
-// Categories remain user-owned data. Aliases group older names without rewriting notes.
+// One shared catalog describes the collaborative note library.
 type NoteType struct {
 	ID           string   `json:"id"`
 	Title        string   `json:"title"`
@@ -56,7 +56,7 @@ type taxonomyConfig struct {
 
 func loadTaxonomy(q queryer, userID int64) taxonomyConfig {
 	var raw string
-	err := q.QueryRow("SELECT config FROM user_taxonomy WHERE user_id=?", userID).Scan(&raw)
+	err := q.QueryRow("SELECT taxonomy FROM shared_library WHERE id=1").Scan(&raw)
 	if err == sql.ErrNoRows {
 		return taxonomyConfig{Types: noteTypes(), Tags: []string{}}
 	}
@@ -77,7 +77,7 @@ func taxonomyTags(q queryer, userID int64, c taxonomyConfig) []tagCount {
 	for _, name := range c.Tags {
 		counts[name] = 0
 	}
-	rows, err := q.Query("SELECT tags FROM notes WHERE user_id=?", userID)
+	rows, err := q.Query("SELECT tags FROM notes")
 	check(err)
 	defer rows.Close()
 	for rows.Next() {
@@ -105,7 +105,7 @@ func taxonomyTags(q queryer, userID int64, c taxonomyConfig) []tagCount {
 func taxonomyPayload(q queryer, userID int64) map[string]any {
 	c := loadTaxonomy(q, userID)
 	types := append([]NoteType{}, c.Types...)
-	rows, err := q.Query("SELECT category,COUNT(*) FROM notes WHERE user_id=? AND NOT EXISTS(SELECT 1 FROM note_type_links l WHERE l.note_id=notes.id) GROUP BY category", userID)
+	rows, err := q.Query("SELECT category,COUNT(*) FROM notes WHERE NOT EXISTS(SELECT 1 FROM note_type_links l WHERE l.note_id=notes.id) GROUP BY category")
 	check(err)
 	for rows.Next() {
 		var category string
@@ -120,7 +120,7 @@ func taxonomyPayload(q queryer, userID int64) map[string]any {
 	}
 	check(rows.Err())
 	rows.Close()
-	linked, err := q.Query("SELECT l.type_id,COUNT(*) FROM note_type_links l JOIN notes n ON n.id=l.note_id WHERE n.user_id=? GROUP BY l.type_id", userID)
+	linked, err := q.Query("SELECT l.type_id,COUNT(*) FROM note_type_links l JOIN notes n ON n.id=l.note_id GROUP BY l.type_id")
 	check(err)
 	for linked.Next() {
 		var id string
@@ -140,7 +140,7 @@ func (a *App) taxonomy(w http.ResponseWriter, r *http.Request, u User) {
 	respond(w, 200, taxonomyPayload(a.DB, u.ID))
 }
 
-// Mutations are serialized per account, including note writes. Names and note indexes
+// Mutations are serialized across the library, including note writes. Names and note indexes
 // change in one transaction; deleting a directory never deletes its notes.
 func (a *App) mutateTaxonomy(w http.ResponseWriter, r *http.Request, u User) {
 	var in struct {
@@ -168,7 +168,7 @@ func (a *App) mutateTaxonomy(w http.ResponseWriter, r *http.Request, u User) {
 	}
 	withTx(a, func(tx *sql.Tx) bool {
 		var uid int64
-		check(tx.QueryRow("SELECT id FROM users WHERE id=? FOR UPDATE", u.ID).Scan(&uid))
+		check(tx.QueryRow("SELECT id FROM shared_library WHERE id=1 FOR UPDATE").Scan(&uid))
 		c := loadTaxonomy(tx, u.ID)
 		beforeTypes := append([]NoteType{}, c.Types...)
 		if in.ExpectedVersion == "" || in.ExpectedVersion != taxonomyVersion(c) {
@@ -258,7 +258,7 @@ func (a *App) mutateTaxonomy(w http.ResponseWriter, r *http.Request, u User) {
 			}
 		}
 		if in.Action != "create" {
-			rows, err := tx.Query("SELECT id,category,tags FROM notes WHERE user_id=? ORDER BY id", u.ID)
+			rows, err := tx.Query("SELECT id,category,tags FROM notes ORDER BY id")
 			check(err)
 
 			type change struct {
@@ -321,20 +321,20 @@ func (a *App) mutateTaxonomy(w http.ResponseWriter, r *http.Request, u User) {
 				}
 			}
 			for _, v := range changes {
-				_, err = tx.Exec("UPDATE notes SET category=?,tags=?,updated_at=? WHERE id=? AND user_id=?", v.category, jsonText(v.tags), now(), v.id, u.ID)
+				_, err = tx.Exec("UPDATE notes SET category=?,tags=?,updated_at=? WHERE id=?", v.category, jsonText(v.tags), now(), v.id)
 				check(err)
 				if v.ids != nil {
 					writeNoteTypes(tx, v.id, v.ids)
 				}
 			}
 			// Store the directory before reindexing, so canonical note types agree.
-			_, err = tx.Exec("INSERT INTO user_taxonomy(user_id,config) VALUES (?,?) ON DUPLICATE KEY UPDATE config=VALUES(config)", u.ID, jsonText(c))
+			_, err = tx.Exec("UPDATE shared_library SET taxonomy=? WHERE id=1", jsonText(c))
 			check(err)
 			for _, v := range changes {
 				reindex(tx, v.id, u.ID)
 			}
 		} else {
-			_, err := tx.Exec("INSERT INTO user_taxonomy(user_id,config) VALUES (?,?) ON DUPLICATE KEY UPDATE config=VALUES(config)", u.ID, jsonText(c))
+			_, err := tx.Exec("UPDATE shared_library SET taxonomy=? WHERE id=1", jsonText(c))
 			check(err)
 		}
 		return true

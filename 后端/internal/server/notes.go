@@ -28,7 +28,7 @@ func (a *App) deleteNote(w http.ResponseWriter, r *http.Request, u User) {
 		ownedNote(tx, id, u.ID, true)
 		_, err := tx.Exec("UPDATE attachments SET note_id=NULL WHERE note_id=?", id)
 		check(err)
-		_, err = tx.Exec("DELETE FROM notes WHERE id=? AND user_id=?", id, u.ID)
+		_, err = tx.Exec("DELETE FROM notes WHERE id=?", id)
 		check(err)
 		return true
 	})
@@ -41,8 +41,8 @@ func (a *App) noteListFiltered(userID int64, category string, limit, offset int,
 	if filter.Types == nil {
 		filter.Types = loadTaxonomy(a.DB, userID).Types
 	}
-	where := "user_id=?"
-	args := []any{userID}
+	where := "1=1"
+	args := []any{}
 	if category != "" {
 		where += " AND category=?"
 		args = append(args, category)
@@ -78,10 +78,10 @@ func (a *App) listNotes(w http.ResponseWriter, r *http.Request, u User) {
 }
 func (a *App) stats(w http.ResponseWriter, r *http.Request, u User) {
 	var notes, attachments, conversations int
-	check(a.DB.QueryRow("SELECT COUNT(*) FROM notes WHERE user_id=?", u.ID).Scan(&notes))
-	check(a.DB.QueryRow("SELECT COUNT(*) FROM attachments WHERE user_id=?", u.ID).Scan(&attachments))
+	check(a.DB.QueryRow("SELECT COUNT(*) FROM notes").Scan(&notes))
+	check(a.DB.QueryRow("SELECT COUNT(*) FROM attachments WHERE user_id=? OR note_id IS NOT NULL", u.ID).Scan(&attachments))
 	check(a.DB.QueryRow("SELECT COUNT(*) FROM conversations WHERE user_id=?", u.ID).Scan(&conversations))
-	rows, err := a.DB.Query("SELECT category,COUNT(*) FROM notes WHERE user_id=? GROUP BY category ORDER BY COUNT(*) DESC,category", u.ID)
+	rows, err := a.DB.Query("SELECT category,COUNT(*) FROM notes GROUP BY category ORDER BY COUNT(*) DESC,category")
 	check(err)
 	defer rows.Close()
 	categories := []map[string]any{}
@@ -142,9 +142,9 @@ func (a *App) demo(w http.ResponseWriter, r *http.Request, u User) {
 	}
 	withTx(a, func(tx *sql.Tx) bool {
 		var id int64
-		check(tx.QueryRow("SELECT id FROM users WHERE id=? FOR UPDATE", u.ID).Scan(&id))
+		check(tx.QueryRow("SELECT id FROM shared_library WHERE id=1 FOR UPDATE").Scan(&id))
 		var count int
-		check(tx.QueryRow("SELECT COUNT(*) FROM notes WHERE user_id=?", u.ID).Scan(&count))
+		check(tx.QueryRow("SELECT COUNT(*) FROM notes").Scan(&count))
 		if count > 0 {
 			fail(409, "仅可在空资料库中导入虚构示例")
 		}

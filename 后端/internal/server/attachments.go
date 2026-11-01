@@ -75,7 +75,7 @@ func (a *App) upload(w http.ResponseWriter, r *http.Request, u User) {
 	respond(w, 201, item)
 }
 func (a *App) listAttachments(w http.ResponseWriter, r *http.Request, u User) {
-	rows, err := a.DB.Query("SELECT "+attachmentColumns+" FROM attachments WHERE user_id=? ORDER BY created_at DESC,id", u.ID)
+	rows, err := a.DB.Query("SELECT "+attachmentColumns+" FROM attachments WHERE (user_id=? OR note_id IS NOT NULL) ORDER BY created_at DESC,id", u.ID)
 	check(err)
 	defer rows.Close()
 	items := []Attachment{}

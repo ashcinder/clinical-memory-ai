@@ -582,7 +582,7 @@ async function navigate(view) {
     b.classList.toggle("active", b.dataset.view === view),
   );
   pageLoading = true;
-  $("#main").innerHTML = '<div class="loading">正在读取个人资料库…</div>';
+  $("#main").innerHTML = '<div class="loading">正在读取共享资料库…</div>';
   try {
     await refreshData();
     if (view === "search" || view === "notes") {
@@ -1324,7 +1324,7 @@ async function showNote(id) {
     $("#delete-note").onclick = () =>
       confirmAction(
         "删除这篇笔记？",
-        "笔记将被删除，关联原件仍保留在材料归档中。",
+        "所有账户都将无法查看这篇笔记；关联原件保留。",
         async () => {
           await api("/notes/" + id, { method: "DELETE" });
           closeDialog(true);
@@ -1903,7 +1903,7 @@ async function renderSettings() {
   const shell=document.createElement('div');shell.className='settings-workspace';
   shell.innerHTML=`<div class="settings-tabs" role="tablist" aria-label="设置分类"><button type="button" role="tab" id="settings-tab-account" data-settings-tab="account" aria-controls="settings-account-panel">个人账户</button><button type="button" role="tab" id="settings-tab-models" data-settings-tab="models" aria-controls="settings-models-panel">模型与检索</button><button type="button" role="tab" id="settings-tab-library" data-settings-tab="library" aria-controls="settings-library-panel">分类与标签</button></div>
   <section id="settings-account-panel" class="settings-account-panel" role="tabpanel" aria-labelledby="settings-tab-account"><div class="account-grid"><section class="account-card account-details"><div class="account-identity"><div class="avatar" id="account-card-avatar">${esc(state.user.display_name.slice(0,1))}</div><div><h2 id="account-card-name">${esc(state.user.display_name)}</h2><p>${esc(state.user.username)}</p></div></div><h3>基本资料</h3><div class="account-readonly"><span>登录用户名</span><strong>${esc(state.user.username)}</strong></div><form id="profile-form" class="account-form"><label for="profile-display-name">显示名称</label><input id="profile-display-name" name="display_name" value="${esc(state.user.display_name)}" maxlength="40" autocomplete="nickname" required><p class="account-field-note">用于页面中的账户名称。</p><p class="account-form-error" id="profile-error" role="alert" hidden></p><div class="profile-actions"><span id="profile-status" role="status" aria-live="polite">已保存</span><button class="secondary small" type="button" id="profile-reset" disabled>还原</button><button class="primary small" type="submit" id="profile-save" disabled>保存修改</button></div></form></section>
-  <div class="account-side"><section class="account-card"><h3>当前连接</h3><p class="account-card-note">手机 APP 使用同一服务地址。</p><div class="account-endpoint"><code id="account-service-url">${esc(location.origin+APP_BASE)}</code><button type="button" class="text-button" id="copy-service-url">复制地址</button></div></section><section class="account-card"><h3>资料导出</h3><p class="account-card-note">导出笔记 JSON，不含附件原件。</p><a href="${APP_BASE}/api/export" class="secondary small" download>导出笔记</a></section><section class="account-card account-signout"><div><h3>登录状态</h3><p class="account-card-note">当前账户：${esc(state.user.username)}</p></div><button type="button" class="text-button danger" id="settings-logout">退出登录</button></section></div></div></section>
+  <div class="account-side"><section class="account-card"><h3>当前连接</h3><p class="account-card-note">同一服务内，所有账户共享笔记、类型和标签。</p><div class="account-endpoint"><code id="account-service-url">${esc(location.origin+APP_BASE)}</code><button type="button" class="text-button" id="copy-service-url">复制地址</button></div></section><section class="account-card"><h3>资料导出</h3><p class="account-card-note">导出笔记 JSON，不含附件原件。</p><a href="${APP_BASE}/api/export" class="secondary small" download>导出笔记</a></section><section class="account-card account-signout"><div><h3>登录状态</h3><p class="account-card-note">当前账户：${esc(state.user.username)}</p></div><button type="button" class="text-button danger" id="settings-logout">退出登录</button></section></div></div></section>
   <section id="settings-models-panel" class="settings-models-panel" role="tabpanel" aria-labelledby="settings-tab-models" hidden></section>
   <section id="settings-library-panel" role="tabpanel" aria-labelledby="settings-tab-library" hidden><section class="account-card library-settings-card"><div><h2>分类与标签</h2><p id="taxonomy-summary">${catalogTypes().length} 个资料类型 · ${(state.taxonomy?.tags||[]).length} 个标签</p></div><button type="button" class="primary small" id="manage-settings-taxonomy">管理分类与标签</button></section></section>`;
   modelForm.before(shell);$('#settings-models-panel').append(modelForm);

@@ -392,13 +392,13 @@ func TestMySQLFullWorkflow(t *testing.T) {
 	other := c.request("POST", "/api/auth/login", map[string]any{"username": "second", "password": "second-pass"}, 200)
 	ownerToken := c.token
 	c.token = getString(other, "token")
-	c.request("GET", "/api/notes/"+id, nil, 404)
-	c.request("GET", "/api/attachments/"+attachment.ID+"/file", nil, 404)
+	c.request("GET", "/api/notes/"+id, nil, 200)
+	c.request("GET", "/api/attachments/"+attachment.ID+"/file", nil, 200)
 	c.request("GET", "/api/conversations/"+conversation, nil, 404)
-	c.request("POST", "/api/search", map[string]any{"attachment_ids": []string{attachment.ID}}, 404)
+	c.request("POST", "/api/search", map[string]any{"attachment_ids": []string{attachment.ID}}, 200)
 	found = c.request("POST", "/api/search", map[string]any{"query": "橙子"}, 200)
-	if len(found["items"].([]any)) != 0 {
-		t.Fatal("cross-account retrieval")
+	if len(found["items"].([]any)) != 1 {
+		t.Fatal("shared retrieval failed")
 	}
 	c.request("POST", "/api/auth/logout", nil, 200)
 	c.request("GET", "/api/auth/me", nil, 401)

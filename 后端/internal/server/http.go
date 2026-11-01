@@ -69,6 +69,11 @@ func (a *App) guard(fn authed) http.HandlerFunc {
 		u := a.currentUser(r)
 		sw := &syncResponseWriter{ResponseWriter: w}
 		fn(sw, a.aiSettingsForRequest(r, u), u)
+		if sw.status >= 200 && sw.status < 300 && isLibraryMutation(r) {
+			if _, err := a.DB.Exec("UPDATE shared_library SET revision=revision+1 WHERE id=1"); err != nil {
+				log.Print("共享资料同步版本更新失败，请检查数据库连接")
+			}
+		}
 		if sw.status >= 200 && sw.status < 300 && isSyncedMutation(r) {
 			if _, err := a.DB.Exec("INSERT INTO user_sync(user_id,revision) VALUES (?,1) ON DUPLICATE KEY UPDATE revision=revision+1", u.ID); err != nil {
 				log.Print("同步版本更新失败，请检查数据库连接")

@@ -113,10 +113,11 @@ func TestEditableTaxonomyLifecycle(t *testing.T) {
 	other := c.request("POST", "/api/auth/login", Credentials{Username: "catalog_other", Password: "other-catalog-pass"}, 200)
 	c.token = getString(other, "token")
 	otherCatalog := c.request("GET", "/api/taxonomy", nil, 200)
-	if len(otherCatalog["note_types"].([]any)) != 7 || len(otherCatalog["tags"].([]any)) != 0 {
-		t.Fatal("account isolation failed")
+	if jsonText(otherCatalog) != jsonText(catalog) {
+		t.Fatal("shared catalog differs between accounts")
 	}
-	c.request("POST", "/api/taxonomy", map[string]any{"kind": "type", "action": "delete", "id": custom, "expected_version": otherCatalog["version"]}, 404)
+	c.request("POST", "/api/taxonomy", map[string]any{"kind": "type", "action": "delete", "id": "knowledge", "expected_version": otherCatalog["version"]}, 200)
+	catalog = c.request("GET", "/api/taxonomy", nil, 200)
 	c.token = ownerToken
 	for _, v := range catalog["note_types"].([]any) {
 		id := v.(map[string]any)["id"].(string)

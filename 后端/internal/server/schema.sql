@@ -61,3 +61,8 @@ CREATE TABLE IF NOT EXISTS note_type_links (
  PRIMARY KEY(note_id,type_id), INDEX note_type_lookup(type_id,note_id),
  FOREIGN KEY(note_id) REFERENCES notes(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Shared notes and taxonomy, accounts retain their own sessions, chats and AI keys.
+CREATE TABLE IF NOT EXISTS shared_library (
+ id TINYINT PRIMARY KEY, revision BIGINT UNSIGNED NOT NULL DEFAULT 0, taxonomy JSON NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

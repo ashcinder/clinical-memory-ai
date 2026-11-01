@@ -52,5 +52,5 @@ func TestThumbnailAndSearchEvidence(t *testing.T) {
 		t.Fatal(err)
 	}
 	other := c.request("POST", "/api/auth/login", map[string]any{"username": "other", "password": "other-pass"}, 200)
-	request(getString(other, "token"), 404)
+	request(getString(other, "token"), 200)
 }
