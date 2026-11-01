@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
 )
@@ -18,9 +19,10 @@ import (
 var schema string
 
 type App struct {
-	DB     *sql.DB
-	Config Config
-	Client HTTPDoer
+	DB           *sql.DB
+	Config       Config
+	Client       HTTPDoer
+	aiSettingsMu sync.Mutex
 }
 
 func New(c Config) (*App, error) {
@@ -78,6 +80,7 @@ func scanNote(row scanner) (Note, error) {
 		return n, err
 	}
 	err = jsonUnmarshal(steps, &n.Steps)
+	n.NoteType = noteType(n.Category).ID
 	return n, err
 }
 func jsonUnmarshal(s string, v any) error { return json.Unmarshal([]byte(s), v) }
@@ -91,6 +94,8 @@ func ownedNote(q queryer, id string, userID int64, lock bool) Note {
 		fail(404, "笔记不存在")
 	}
 	check(err)
+	n.NoteTypes = noteTypeIDs(q, id, n.Category, loadTaxonomy(q, userID).Types)
+	n.NoteType = n.NoteTypes[0]
 	rows, err := q.Query("SELECT "+attachmentColumns+" FROM attachments WHERE note_id=? ORDER BY created_at,id", id)
 	check(err)
 	defer rows.Close()
@@ -100,6 +105,7 @@ func ownedNote(q queryer, id string, userID int64, lock bool) Note {
 		n.Attachments = append(n.Attachments, a)
 	}
 	check(rows.Err())
+	n.Version = digest(jsonText(n))
 	return n
 }
 func ownedAttachment(q queryer, id string, userID int64, lock bool) Attachment {
@@ -116,9 +122,35 @@ func ownedAttachment(q queryer, id string, userID int64, lock bool) Attachment {
 }
 func (a *App) saveNote(tx *sql.Tx, in NoteInput, id string, userID int64, isNew bool) Note {
 	in.validate()
+	var owner int64
+	check(tx.QueryRow("SELECT id FROM users WHERE id=? FOR UPDATE", userID).Scan(&owner))
+	catalog := loadTaxonomy(tx, userID).Types
+	var current Note
 	if !isNew {
-		ownedNote(tx, id, userID, true)
+		current = ownedNote(tx, id, userID, true)
+		if in.ExpectedVersion != "" && in.ExpectedVersion != current.Version {
+			fail(409, "这篇笔记已在其他设备更新，请保留当前输入并重新打开最新笔记")
+		}
 	}
+	selected := in.NoteTypes
+	if selected == nil {
+		selected = []string{typeIn(catalog, in.Category).ID}
+		if !isNew {
+			for _, key := range current.NoteTypes {
+				if key != current.NoteType && !contains(selected, key) {
+					selected = append(selected, key)
+				}
+			}
+		}
+	} else {
+		selected = validTypeIDs(catalog, selected)
+		for _, t := range catalog {
+			if t.ID == selected[0] {
+				in.Category = t.Title
+			}
+		}
+	}
+	selected = validTypeIDs(catalog, selected)
 	ids := unique(in.AttachmentIDs)
 	sort.Strings(ids)
 	for _, aid := range ids {
@@ -141,6 +173,7 @@ func (a *App) saveNote(tx *sql.Tx, in NoteInput, id string, userID int64, isNew 
 		_, err := tx.Exec("UPDATE attachments SET note_id=? WHERE id=?", id, aid)
 		check(err)
 	}
+	writeNoteTypes(tx, id, selected)
 	reindex(tx, id, userID)
 	return ownedNote(tx, id, userID, false)
 }
@@ -205,7 +238,13 @@ func reindex(tx *sql.Tx, id string, userID int64) {
 			weights[t]++
 		}
 	}
-	for _, t := range tokens(n.Title + " " + n.Category + " " + strings.Join(n.Tags, " ")) {
+	typeNames := []string{n.Category}
+	for _, t := range loadTaxonomy(tx, userID).Types {
+		if contains(n.NoteTypes, t.ID) {
+			typeNames = append(typeNames, t.Title)
+		}
+	}
+	for _, t := range tokens(n.Title + " " + strings.Join(typeNames, " ") + " " + strings.Join(n.Tags, " ")) {
 		weights[t] += 4
 	}
 	terms := make([]string, 0, len(weights))
@@ -226,9 +265,15 @@ func reindex(tx *sql.Tx, id string, userID int64) {
 	}
 }
 func (a *App) retrieve(query string, userID int64, category string, limit int) []Note {
+	return a.retrieveFiltered(query, userID, category, limit, noteFilter{})
+}
+func (a *App) retrieveFiltered(query string, userID int64, category string, limit int, filter noteFilter) []Note {
 	all := unique(tokens(query))
 	terms := []string{}
-	stop := map[string]bool{"之前": true, "步骤": true, "怎么": true, "什么": true, "一个": true, "我的": true, "请问": true, "帮我": true}
+	stop := map[string]bool{}
+	for _, term := range strings.Fields("之前 步骤 怎么 什么 一个 我的 请问 帮我 记录 资料 图片 查询 查找 历史 内容 虚构 测试 个人 相关 这个 笔记 观察 材料 文字 识别 可见 可能 包括 描述 页面 标记 无法 确认 可以 进行 这张 说明 没有 文件 标签 编号 检索 原始 关联") {
+		stop[term] = true
+	}
 	for _, t := range all {
 		if len([]rune(t)) > 1 && !stop[t] {
 			terms = append(terms, t)
@@ -254,6 +299,12 @@ func (a *App) retrieve(query string, userID int64, category string, limit int) [
 		statement += " AND n.category=?"
 		args = append(args, category)
 	}
+	if filter.Types == nil {
+		filter.Types = loadTaxonomy(a.DB, userID).Types
+	}
+	constraint, filterArgs := filterSQL(filter, "n.")
+	statement += constraint
+	args = append(args, filterArgs...)
 	statement += " GROUP BY n.id ORDER BY relevance DESC,n.id LIMIT ?"
 	args = append(args, limit)
 	rows, err := a.DB.Query(statement, args...)
@@ -283,7 +334,11 @@ func queryText(q queryer, query string, ids []string, userID int64) (string, []s
 		if strings.TrimSpace(a.Text) != "" {
 			texts = append(texts, cut(a.Text, 4000))
 		} else {
-			warnings = append(warnings, a.Filename+" 尚无识别文本，请手动补充或配置识别服务")
+			if strings.HasPrefix(a.MIME, "image/") {
+				warnings = append(warnings, a.Filename+" 未识别到文字，本次使用图片指纹匹配")
+			} else {
+				warnings = append(warnings, a.Filename+" 尚无转写文字，可重新提取或手动补充")
+			}
 		}
 	}
 	return strings.TrimSpace(strings.Join(texts, "\n")), warnings

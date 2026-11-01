@@ -1,0 +1,27 @@
+[Unit]
+Description=Clinical Memory Go application
+After=network-online.target mysql.service
+Wants=network-online.target
+Requires=mysql.service
+
+[Service]
+Type=simple
+User=clinicalmemory
+Group=clinicalmemory
+WorkingDirectory=/srv/clinical-memory/current/后端
+EnvironmentFile=/etc/clinical-memory/clinical-memory.env
+Environment=PATH=/srv/clinical-memory/tools/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/srv/clinical-memory/current/后端/bin/clinical-memory-server
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/clinical-memory
+MemoryMax=1800M
+
+[Install]
+WantedBy=multi-user.target

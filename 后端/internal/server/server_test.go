@@ -67,6 +67,32 @@ func TestBodyLimitAndOrigin(t *testing.T) {
 		t.Fatal(w.Code)
 	}
 }
+
+func TestFrontendCacheRevalidation(t *testing.T) {
+	root := t.TempDir()
+	for _, name := range []string{"index.html", "styles.css", "app.js"} {
+		if err := os.WriteFile(filepath.Join(root, name), []byte("test asset"), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	handler := Headers(http.FileServer(http.Dir(root)))
+	for _, path := range []string{"/", "/index.html", "/styles.css?v=current", "/app.js?v=current"} {
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, httptest.NewRequest("GET", path, nil))
+		expected := http.StatusOK
+		if path == "/index.html" {
+			expected = http.StatusMovedPermanently
+		}
+		if w.Code != expected || w.Header().Get("Cache-Control") != "no-cache" {
+			t.Fatalf("%s: status=%d cache=%q", path, w.Code, w.Header().Get("Cache-Control"))
+		}
+	}
+	w := httptest.NewRecorder()
+	Headers(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(200) })).ServeHTTP(w, httptest.NewRequest("GET", "/api/settings", nil))
+	if w.Header().Get("Cache-Control") != "no-store" {
+		t.Fatal("API must not be cached")
+	}
+}
 func TestCompletionAdapter(t *testing.T) {
 	var payload map[string]any
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -148,8 +174,8 @@ func TestExtractAndASR(t *testing.T) {
 	_ = png.Encode(f, image.NewRGBA(image.Rect(0, 0, 10, 10)))
 	_ = f.Close()
 	_, status, err = app.extract(context.Background(), imagePath, "image/png")
-	if err != nil || status != "needs_transcript" {
-		t.Fatal(status, err)
+	if status != "extraction_failed" || err == nil {
+		t.Fatal("缺少本地 OCR 应明确提示而非伪造文字", status, err)
 	}
 	asr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/audio/transcriptions" {

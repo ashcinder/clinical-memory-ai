@@ -9,6 +9,10 @@
 
 查看数据：在“后端”目录执行 `go run ./cmd/db-info`，或用 Workbench / DBeaver 连接 .env 中的 MySQL 实例。
 
-主要表：users、sessions、notes、attachments、note_terms（中文倒排索引）、conversations、messages、login_attempts、app_state（并发初始化锁）。标签和步骤用 MySQL JSON 字段保存。
+主要表：users、sessions、notes、attachments、note_terms（中文倒排索引）、conversations、messages、login_attempts、app_state（并发初始化锁）、user_sync（跨端同步版本）。标签和步骤用 MySQL JSON 字段保存。
 
 首次启动 Go 后端自动建表。MySQL 应用账户需要本项目库的建表与读写权限。备份前停后端，MySQL 继续运行，执行 `bash backup.sh`。完整备份不包含 .env，但包含账户和隐私资料，仍需妥善保管。
+
+`user_taxonomy` 保存各账户的资料类型和独立标签目录（包括尚未用于笔记的条目）；`config` 为 JSON。查看时可运行 `SELECT user_id, JSON_PRETTY(config) FROM user_taxonomy;`。尚未修改目录的账户按默认七个类型读取。类型、标签的修改请通过界面完成，以便同时更新笔记与检索索引。
+
+`note_type_links(note_id,type_id)` 保存一篇笔记的多个资料类型，删除笔记时自动清除关联。没有关联记录的旧笔记仍根据原 category 分类；笔记正文、材料和旧分类数据不因启动迁移而改写。

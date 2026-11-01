@@ -1,8 +1,9 @@
 'use strict';
 // Match only byte-identical, published demonstration files. This is not OCR or speech recognition.
 window.LinjiDemoSamples = (() => {
+  const base = new URL('.', document.currentScript.src);
   let promise;
-  function data() { return promise ||= fetch('/demo-assets.json').then(r => r.ok ? r.json() : {}).catch(() => ({})); }
+  function data() { return promise ||= fetch(new URL('demo-assets.json',base)).then(r => r.ok ? r.json() : {}).catch(() => ({})); }
   function sha256(buffer) {
     const input = new Uint8Array(buffer), length = input.length, paddedLength = Math.ceil((length + 9) / 64) * 64;
     const padded = new Uint8Array(paddedLength); padded.set(input); padded[length] = 0x80;

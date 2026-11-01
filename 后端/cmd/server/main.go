@@ -36,6 +36,7 @@ func main() {
 			host = "127.0.0.1"
 		}
 		target, _ := url.Parse("http://" + joinAddress(host, port))
+		target.Path = c.BasePath
 		proxy := httputil.NewSingleHostReverseProxy(target)
 		originalDirector := proxy.Director
 		proxy.Director = func(r *http.Request) {
@@ -53,7 +54,7 @@ func main() {
 		mux := http.NewServeMux()
 		mux.Handle("/api/", proxy)
 		mux.Handle("/", http.FileServer(http.Dir(c.WebDir)))
-		handler = server.Headers(mux)
+		handler = server.WithBasePath(server.Headers(mux), c.BasePath)
 		addr = c.WebAddr
 	} else {
 		app, err := server.New(c)

@@ -1,22 +1,198 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#173d4b"><meta name="description" content="临记：医生的个人诊疗笔记、材料归档与多模态经验检索工作台。">
-  <title>临记 · 个人诊疗经验库</title>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/styles.css">
-  <script src="/demo-match.js" defer></script><script src="/app.js" defer></script>
-</head>
-<body>
-  <div id="auth" class="auth-shell" hidden>
-    <div class="auth-story"><div class="brand"><span class="brand-mark">临</span><b>临记<span>CLINICAL MEMORY</span></b></div><div><p class="eyebrow">你的每一次记录，都有迹可循</p><h1>让过去的经验，<br>在需要时回来。</h1><p>笔记、影像、语音材料，汇入同一个个人经验库。<br>从一段描述出发，回到当时的治疗过程。</p><div class="auth-timeline"><span>记录</span><i></i><span>关联</span><i></i><span>回顾</span></div></div><small>个人工作空间 · 原始资料可追溯</small></div>
-    <form id="auth-form" class="auth-form"><p class="eyebrow">欢迎使用临记</p><h2 id="auth-title">登录个人资料库</h2><p id="auth-description" class="muted">继续整理和回顾你的诊疗经验。</p><label>用户名<input id="username" autocomplete="username" required minlength="3" maxlength="64" pattern="[a-zA-Z0-9_.\-]+" placeholder="字母、数字或下划线"></label><label>密码<input id="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128" placeholder="至少 8 位"></label><label id="name-field" hidden>显示名称<input id="display-name" maxlength="40" placeholder="例如：陈医生"></label><p id="auth-error" class="error" role="alert"></p><button class="primary" id="auth-submit">登录</button><small>首次使用需要创建个人账户。资料仅对已登录的账户开放。</small></form>
-  </div>
-  <div id="workspace" class="workspace" hidden>
-    <aside class="sidebar"><a class="brand" href="#search"><span class="brand-mark">临</span><b>临记<span>CLINICAL MEMORY</span></b></a><p class="nav-label">个人工作空间</p><nav aria-label="主导航"><button data-view="search" class="active"><span>⌕</span>经验检索</button><button data-view="notes"><span>▤</span>我的笔记</button><button data-view="materials"><span>▧</span>材料归档</button><button data-view="chat"><span>◌</span>AI 对话</button></nav><div class="sidebar-note"><span class="tiny-dot"></span>每一步，都回到原始记录<p>用笔记串联诊疗过程<br>把经验留给下一次回顾</p></div><div class="sidebar-bottom"><button data-view="settings"><span>⚙</span>服务设置</button><div class="profile"><div class="avatar" id="avatar">医</div><div><b id="profile-name">医生</b><small>个人资料库</small></div><button id="logout" class="icon-button" title="退出登录" aria-label="退出登录">↪</button></div></div></aside>
-    <div class="main-shell"><header class="topbar"><div><span class="muted">个人资料库</span><span class="slash">/</span><b id="page-title">经验检索</b></div><div class="topbar-right"><span id="model-badge" class="status-pill">本地检索模式</span><button class="mobile-settings icon-button" data-view="settings" aria-label="服务设置">⚙</button><button class="primary small" id="new-note"><span>＋</span> 新建笔记</button></div></header><main id="main" tabindex="-1"></main><footer>临记 · 个人经验回顾工具<span>历史经验供回顾，诊疗决策请由医生独立判断</span></footer></div>
-  </div>
-  <dialog id="dialog"><div class="dialog-top"><h2 id="dialog-title"></h2><button id="close-dialog" class="icon-button" aria-label="关闭弹窗">×</button></div><div id="dialog-content"></div></dialog>
-  <div id="toast" class="toast" role="status" hidden></div>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#296b61" />
+    <meta
+      name="description"
+      content="临记：医生的个人诊疗笔记、材料归档与多模态经验检索工作台。"
+    />
+    <title>临记 · 临床学习资料库</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css?v=51f026d01f42" />
+    <script src="demo-match.js?v=171629cf1880" defer></script>
+    <script src="app.js?v=66a8eb20e6bb" defer></script>
+  </head>
+  <body>
+    <div id="auth" class="auth-shell" hidden>
+      <div class="auth-story">
+        <div class="brand">
+          <span class="brand-mark">临</span
+          ><b>临记<span>临床学习资料库</span></b>
+        </div>
+      </div>
+      <form id="auth-form" class="auth-form">
+        <h2 id="auth-title">登录</h2>
+        <label
+          >用户名<input
+            id="username"
+            autocomplete="username"
+            required
+            minlength="3"
+            maxlength="64"
+            pattern="[a-zA-Z0-9_.\-]+"
+            placeholder="字母、数字或下划线" /></label
+        ><label
+          >密码<input
+            id="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            minlength="8"
+            maxlength="128"
+            placeholder="至少 8 位" /></label
+        ><label id="name-field" hidden
+          >显示名称<input
+            id="display-name"
+            maxlength="40"
+            placeholder="例如：陈医生"
+        /></label>
+        <p id="auth-error" class="error" role="alert"></p>
+        <button class="primary" id="auth-submit">登录</button>
+      </form>
+    </div>
+    <div id="workspace" class="workspace" hidden>
+      <aside class="sidebar" id="app-sidebar">
+        <div class="sidebar-header">
+          <a class="brand" href="#search"
+          ><span class="brand-mark">临</span
+          ><b>临记<span>临床学习资料库</span></b></a
+        >
+
+        </div>
+        <nav aria-label="主导航">
+          <button data-view="search" class="active">
+            <span aria-hidden="true"
+              ><svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="19"
+                height="19"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="10.5" cy="10.5" r="6.5" />
+                <path d="m16 16 4 4" /></svg></span
+            >经验检索</button
+          ><button data-view="notes">
+            <span aria-hidden="true"
+              ><svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="19"
+                height="19"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="5" y="3" width="14" height="18" rx="2" />
+                <path d="M9 8h6M9 12h6M9 16h4" /></svg></span
+            >学习资料</button
+          ><button data-view="materials">
+            <span aria-hidden="true"
+              ><svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="19"
+                height="19"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="4" width="18" height="16" rx="2" />
+                <circle cx="8" cy="9" r="1.5" />
+                <path d="m4 17 5-5 4 4 3-3 5 5" /></svg></span
+            >材料归档</button
+          ><div class="nav-chat-item"><button data-view="chat" aria-controls="sidebar-chat">
+            <span aria-hidden="true"
+              ><svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="19"
+                height="19"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M20 11a8 8 0 0 1-8 8H4l1.5-4A8 8 0 1 1 20 11Z"
+                /></svg></span
+            >AI 对话
+          </button><button id="chat-history-toggle" class="nav-context-toggle" aria-label="收起历史对话" title="收起历史对话" aria-expanded="true" aria-controls="sidebar-chat" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg></button></div>
+        </nav>
+        <section id="sidebar-chat" hidden aria-label="对话历史"></section>
+        <div class="sidebar-bottom">
+          <button data-view="settings">
+            <span aria-hidden="true"
+              ><svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="19"
+                height="19"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="m10 3-1 3-3 1-3 3 2 2-1 3 3 3 3-1 2 2 3-1 1-3 3-1v-4l-3-1-1-3-3-1-2 2Z"
+                />
+                <circle cx="11" cy="11" r="3" /></svg></span
+            >设置与服务
+          </button>
+
+          <button id="sidebar-toggle" class="icon-button sidebar-toggle" aria-label="折叠侧栏" title="折叠侧栏" aria-controls="app-sidebar" aria-expanded="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16m6-12-3 4 3 4"/></svg></button>
+        </div>
+      </aside>
+      <div class="main-shell">
+        <header class="topbar">
+          <div class="topbar-heading">
+
+            <b id="page-title">经验检索</b>
+          </div>
+          <div class="topbar-right">
+            <button class="text-button" id="sync-now" title="同步最新数据">
+              同步</button
+            ><span id="model-badge" class="status-pill">本地检索模式</span
+            ><button
+              class="mobile-settings icon-button"
+              data-view="settings"
+              aria-label="设置与服务"
+            >
+              ⚙</button
+            ><button class="primary small" id="new-note">
+              <span>＋</span> 新建笔记
+            </button>
+            <details id="account-menu" class="account-menu">
+              <summary id="account-trigger" class="account-trigger" aria-label="个人账户"><span class="avatar" id="avatar">医</span><b id="profile-name">医生</b><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg></summary>
+              <div class="account-popover"><button type="button" id="account-profile">个人账户</button><button type="button" id="logout" class="danger">退出登录</button></div>
+            </details>
+          </div>
+        </header>
+        <main id="main" tabindex="-1"></main>
+      </div>
+    </div>
+    <dialog id="dialog">
+      <div class="dialog-top">
+        <button id="dialog-back" type="button" hidden>← 返回笔记</button>
+        <h2 id="dialog-title"></h2>
+        <button id="close-dialog" class="icon-button" aria-label="关闭弹窗">
+          ×
+        </button>
+      </div>
+      <div id="dialog-content"></div>
+    </dialog>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
 </html>

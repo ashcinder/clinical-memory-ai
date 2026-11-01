@@ -20,6 +20,10 @@ func Headers(next http.Handler) http.Handler {
 		if strings.HasPrefix(r.URL.Path, "/api/") {
 			w.Header().Set("Cache-Control", "no-store")
 		} else {
+			// Revalidate mutable frontend files so HTML, CSS and JavaScript stay in sync.
+			if r.URL.Path == "/" || strings.HasSuffix(r.URL.Path, ".html") || strings.HasSuffix(r.URL.Path, ".css") || strings.HasSuffix(r.URL.Path, ".js") {
+				w.Header().Set("Cache-Control", "no-cache")
+			}
 			w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'")
 		}
 		if r.Method != "GET" && r.Method != "HEAD" && r.Method != "OPTIONS" && r.Header.Get("Origin") != "" {
@@ -61,7 +65,16 @@ func (a *App) recover(next http.Handler) http.Handler {
 type authed func(http.ResponseWriter, *http.Request, User)
 
 func (a *App) guard(fn authed) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) { fn(w, r, a.currentUser(r)) }
+	return func(w http.ResponseWriter, r *http.Request) {
+		u := a.currentUser(r)
+		sw := &syncResponseWriter{ResponseWriter: w}
+		fn(sw, a.aiSettingsForRequest(r, u), u)
+		if sw.status >= 200 && sw.status < 300 && isSyncedMutation(r) {
+			if _, err := a.DB.Exec("INSERT INTO user_sync(user_id,revision) VALUES (?,1) ON DUPLICATE KEY UPDATE revision=revision+1", u.ID); err != nil {
+				log.Print("同步版本更新失败，请检查数据库连接")
+			}
+		}
+	}
 }
 func (a *App) Handler() http.Handler {
 	mux := http.NewServeMux()
@@ -72,11 +85,18 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/auth/logout", a.guard(func(w http.ResponseWriter, r *http.Request, u User) {
 		_, err := a.DB.Exec("DELETE FROM sessions WHERE token_hash=?", digest(requestToken(r)))
 		check(err)
-		http.SetCookie(w, &http.Cookie{Name: "linji_session", Path: "/", MaxAge: -1, HttpOnly: true, Secure: a.Config.CookieSecure, SameSite: http.SameSiteStrictMode})
+		http.SetCookie(w, &http.Cookie{Name: "linji_session", Path: a.cookiePath(), MaxAge: -1, HttpOnly: true, Secure: a.Config.CookieSecure, SameSite: http.SameSiteStrictMode})
 		respond(w, 200, map[string]bool{"ok": true})
 	}))
+	mux.HandleFunc("PUT /api/auth/me", a.guard(a.updateProfile))
+	mux.HandleFunc("GET /api/sync", a.guard(a.syncState))
 	mux.HandleFunc("GET /api/settings", a.guard(a.settings))
+	mux.HandleFunc("PUT /api/search-settings", a.guard(a.putSearchSettings))
+	mux.HandleFunc("GET /api/ai-config", a.guard(a.getAISettings))
+	mux.HandleFunc("PUT /api/ai-config", a.guard(a.putAISettings))
 	mux.HandleFunc("GET /api/stats", a.guard(a.stats))
+	mux.HandleFunc("GET /api/taxonomy", a.guard(a.taxonomy))
+	mux.HandleFunc("POST /api/taxonomy", a.guard(a.mutateTaxonomy))
 	mux.HandleFunc("GET /api/notes", a.guard(a.listNotes))
 	mux.HandleFunc("POST /api/notes", a.guard(a.createNote))
 	mux.HandleFunc("GET /api/notes/{id}", a.guard(a.getNote))
@@ -85,6 +105,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/attachments", a.guard(a.listAttachments))
 	mux.HandleFunc("POST /api/attachments", a.guard(a.upload))
 	mux.HandleFunc("GET /api/attachments/{id}/file", a.guard(a.attachmentFile))
+	mux.HandleFunc("GET /api/attachments/{id}/thumbnail", a.guard(a.attachmentThumbnail))
 	mux.HandleFunc("PUT /api/attachments/{id}/text", a.guard(a.editExtraction))
 	mux.HandleFunc("POST /api/attachments/{id}/extract", a.guard(a.retryExtraction))
 	mux.HandleFunc("DELETE /api/attachments/{id}", a.guard(a.deleteAttachment))
@@ -100,7 +121,7 @@ func (a *App) Handler() http.Handler {
 		_, _ = w.Write([]byte(apiDocs))
 	})
 	mux.Handle("/", http.FileServer(http.Dir(a.Config.WebDir)))
-	return Headers(a.recover(mux))
+	return WithBasePath(Headers(a.recover(mux)), a.Config.BasePath)
 }
 func (a *App) health(w http.ResponseWriter, r *http.Request) {
 	var count int
@@ -108,9 +129,9 @@ func (a *App) health(w http.ResponseWriter, r *http.Request) {
 	respond(w, 200, map[string]any{"status": "ok", "initialized": count > 0, "database": "mysql", "backend": "go"})
 }
 func (a *App) settings(w http.ResponseWriter, r *http.Request, u User) {
-	_, ocrErr := exec.LookPath("tesseract")
+	c := a.aiConfig(r.Context())
 	_, pdfErr := exec.LookPath("pdftotext")
-	respond(w, 200, map[string]any{"ai_enabled": a.Config.DeepSeekKey != "", "ai_provider": a.Config.AIProvider, "ai_model": a.Config.DeepSeekModel, "deepseek_enabled": a.Config.DeepSeekKey != "", "deepseek_model": a.Config.DeepSeekModel, "vision_provider": a.Config.VisionProvider, "vision_model": a.Config.VisionModel, "vision_enabled": a.Config.VisionKey != "", "asr_enabled": a.Config.ASRKey != "" && a.Config.ASRURL != "", "local_ocr": ocrErr == nil, "pdf_extraction": pdfErr == nil, "max_upload_mb": 20, "database": "MySQL", "backend": "Go", "external_data_notice": "启用云端 AI 后，检索内容、命中笔记片段或上传材料将发送到配置的第三方服务，产生费用；请先脱敏。"})
+	respond(w, 200, map[string]any{"cloud_search_enabled": !c.CloudSearchDisabled, "local_asr": a.localASRReady(), "local_ocr_languages": a.localOCRReady(), "image_fingerprint": true, "ai_enabled": c.DeepSeekKey != "", "ai_provider": c.AIProvider, "ai_model": c.DeepSeekModel, "deepseek_enabled": c.DeepSeekKey != "", "deepseek_model": c.DeepSeekModel, "vision_provider": c.VisionProvider, "vision_model": c.VisionModel, "vision_enabled": c.VisionKey != "", "asr_enabled": c.ASRKey != "" && c.ASRURL != "", "local_ocr": a.localOCRReady(), "pdf_extraction": pdfErr == nil, "max_upload_mb": 20, "database": "MySQL", "backend": "Go", "external_data_notice": "启用云端 AI 后，检索内容、命中笔记片段或上传材料将发送到配置的第三方服务，产生费用；请先脱敏。"})
 }
 func intParam(r *http.Request, key string, defaultValue, minValue, maxValue int) int {
 	raw := r.URL.Query().Get(key)
@@ -134,11 +155,13 @@ GET  /api/notes?limit=100&amp;offset=0        笔记列表
 POST /api/notes                         创建 {title,category,tags,content,steps,occurred_on,attachment_ids}
 GET/PUT/DELETE /api/notes/{id}           查阅、编辑、删除笔记
 GET/POST /api/attachments               材料列表、上传 multipart file（20MB）
+POST /api/taxonomy                     管理资料类型与标签
 GET /api/attachments/{id}/file           鉴权原件
 PUT /api/attachments/{id}/text           修正识别文本 {text}
 POST /api/attachments/{id}/extract       重新提取
 DELETE /api/attachments/{id}             删除材料
-POST /api/search                        检索 {query,attachment_ids,category,limit}
+PUT /api/search-settings               同步云端搜索开关 {cloud_search_enabled}
+POST /api/search                        图片指纹与文字检索 {query,attachment_ids,category,limit}
 POST /api/chat                          对话 {message,mode,conversation_id,attachment_ids}
 GET /api/conversations                  对话列表
 GET/DELETE /api/conversations/{id}       对话历史、删除对话
@@ -147,3 +170,18 @@ GET /api/settings                       服务能力（不返回密钥）
 GET /api/export                         导出笔记 JSON
 POST /api/demo                          空库导入虚构示例
 </pre><p>mode: knowledge 或 general。occurred_on: YYYY-MM-DD。完整启动说明请看项目 README。</p></html>`
+
+func (a *App) cookiePath() string { return a.Config.BasePath + "/" }
+
+// Keep every project's API and session cookie within its own URL namespace.
+func WithBasePath(handler http.Handler, base string) http.Handler {
+	if base == "" {
+		return handler
+	}
+	mux := http.NewServeMux()
+	mux.Handle(base+"/", http.StripPrefix(base, handler))
+	mux.HandleFunc(base, func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, base+"/", http.StatusPermanentRedirect)
+	})
+	return mux
+}

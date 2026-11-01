@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -13,12 +14,16 @@ import (
 )
 
 type Config struct {
+	BasePath                                             string
 	Root, DataDir, WebDir, Addr, WebAddr                 string
 	DBHost, DBPort, DBName, DBUser, DBPassword, DBSocket string
 	DeepSeekKey, DeepSeekURL, DeepSeekModel              string
 	VisionKey, VisionURL, VisionModel                    string
 	AIProvider, VisionProvider                           string
+	ProviderURLs                                         map[string]string
 	ASRKey, ASRURL, ASRModel                             string
+	CloudSearchDisabled                                  bool
+	LocalASRModel, OCRDataDir                            string
 	CookieSecure                                         bool
 }
 
@@ -60,6 +65,10 @@ func LoadConfig() (Config, error) {
 	// The legacy DeepSeek fields hold the selected chat provider so older installations
 	// continue to work. Keys never leave the backend settings response.
 	c.AIProvider = strings.ToLower(env("AI_PROVIDER", "deepseek"))
+	c.ProviderURLs = map[string]string{}
+	for name, defaultURL := range aiProviderURLs {
+		c.ProviderURLs[name] = strings.TrimRight(env(strings.ToUpper(name)+"_BASE_URL", defaultURL), "/")
+	}
 	visionDefault := c.AIProvider
 	c.VisionProvider = strings.ToLower(env("VISION_PROVIDER", visionDefault))
 	provider := func(name string) (string, string, string, error) {
@@ -99,7 +108,13 @@ func LoadConfig() (Config, error) {
 	c.VisionKey = env("VISION_API_KEY", c.VisionKey)
 	c.VisionURL = strings.TrimRight(env("VISION_BASE_URL", c.VisionURL), "/")
 	c.VisionModel = env("VISION_MODEL", c.VisionModel)
+	c.BasePath = strings.TrimRight(env("PUBLIC_BASE_PATH", ""), "/")
+	if !regexp.MustCompile(`^(/[A-Za-z0-9_-]+)*$`).MatchString(c.BasePath) {
+		return Config{}, fmt.Errorf("PUBLIC_BASE_PATH 需为 /clinical-memory 形式的路径")
+	}
 	c.DataDir, _ = filepath.Abs(c.DataDir)
+	c.LocalASRModel = env("LOCAL_ASR_MODEL", filepath.Join(c.DataDir, "models", "ggml-base.bin"))
+	c.OCRDataDir = env("OCR_DATA_DIR", filepath.Join(c.DataDir, "models", "tessdata"))
 	return c, nil
 }
 func (c Config) MySQLConfig() *mysql.Config {

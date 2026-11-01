@@ -33,9 +33,10 @@ func newAIClient() *http.Client {
 	return &http.Client{Timeout: 120 * time.Second, CheckRedirect: func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }}
 }
 func (a *App) completion(ctx context.Context, messages []map[string]any, vision bool) (string, error) {
-	key, base, model := a.Config.DeepSeekKey, a.Config.DeepSeekURL, a.Config.DeepSeekModel
+	c := a.aiConfig(ctx)
+	key, base, model := c.DeepSeekKey, c.DeepSeekURL, c.DeepSeekModel
 	if vision {
-		key, base, model = a.Config.VisionKey, a.Config.VisionURL, a.Config.VisionModel
+		key, base, model = c.VisionKey, c.VisionURL, c.VisionModel
 	}
 	body := map[string]any{"model": model, "messages": messages, "max_tokens": 3000, "stream": false}
 	if parsed, err := url.Parse(base); err == nil && parsed.Hostname() == "api.deepseek.com" {
@@ -123,7 +124,7 @@ func (a *App) extract(ctx context.Context, path, mimetype string) (string, strin
 		if err != nil || dimensions.Width <= 0 || dimensions.Height <= 0 || int64(dimensions.Width)*int64(dimensions.Height) > 50000000 {
 			return "", "", apiError{400, "图片损坏或尺寸过大（最多 5000 万像素）"}
 		}
-		if a.Config.VisionKey != "" {
+		if !a.aiConfig(ctx).CloudSearchDisabled && a.aiConfig(ctx).VisionKey != "" {
 			data, err := os.ReadFile(path)
 			if err != nil {
 				return "", "", err
@@ -135,16 +136,25 @@ func (a *App) extract(ctx context.Context, path, mimetype string) (string, strin
 			}
 			return cut(text, 50000), "ready", nil
 		}
-		if _, err := exec.LookPath("tesseract"); err == nil {
-			text, err := commandText(ctx, "tesseract", path, "stdout", "-l", "chi_sim+eng")
-			if err == nil && strings.TrimSpace(text) != "" {
-				return cut(text, 50000), "ready", nil
-			}
+		text, err := a.localOCR(ctx, path)
+		if err != nil {
+			return "", "extraction_failed", err
+		}
+		if strings.TrimSpace(text) != "" {
+			return cut(text, 50000), "ready", nil
 		}
 		return "", "needs_transcript", nil
 	}
 	if strings.HasPrefix(mimetype, "audio/") {
-		if a.Config.ASRKey == "" || a.Config.ASRURL == "" {
+		c := a.aiConfig(ctx)
+		if c.CloudSearchDisabled || c.ASRKey == "" || c.ASRURL == "" {
+			text, err := a.localTranscribe(ctx, path)
+			if err != nil {
+				return "", "extraction_failed", err
+			}
+			if strings.TrimSpace(text) != "" {
+				return cut(text, 50000), "ready", nil
+			}
 			return "", "needs_transcript", nil
 		}
 		var body bytes.Buffer
@@ -162,7 +172,7 @@ func (a *App) extract(ctx context.Context, path, mimetype string) (string, strin
 		if err != nil {
 			return "", "", err
 		}
-		if err = writer.WriteField("model", a.Config.ASRModel); err != nil {
+		if err = writer.WriteField("model", c.ASRModel); err != nil {
 			return "", "", err
 		}
 		if err = writer.WriteField("language", "zh"); err != nil {
@@ -171,11 +181,11 @@ func (a *App) extract(ctx context.Context, path, mimetype string) (string, strin
 		if err = writer.Close(); err != nil {
 			return "", "", err
 		}
-		req, err := http.NewRequestWithContext(ctx, "POST", a.Config.ASRURL+"/audio/transcriptions", &body)
+		req, err := http.NewRequestWithContext(ctx, "POST", c.ASRURL+"/audio/transcriptions", &body)
 		if err != nil {
 			return "", "", apiError{502, "ASR 服务地址无效"}
 		}
-		req.Header.Set("Authorization", "Bearer "+a.Config.ASRKey)
+		req.Header.Set("Authorization", "Bearer "+c.ASRKey)
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 		response, err := a.Client.Do(req)
 		if err != nil {
@@ -196,7 +206,7 @@ func (a *App) extract(ctx context.Context, path, mimetype string) (string, strin
 // expandQuery adds concise terms while keeping the original searchable. Model
 // output is untrusted and never used as SQL or as a clinical conclusion.
 func (a *App) expandQuery(ctx context.Context, query string) (string, bool, error) {
-	if a.Config.DeepSeekKey == "" {
+	if a.aiConfig(ctx).DeepSeekKey == "" || a.aiConfig(ctx).CloudSearchDisabled {
 		return query, false, nil
 	}
 	ctx, cancel := context.WithTimeout(ctx, 25*time.Second)
@@ -258,9 +268,9 @@ func commandText(parent context.Context, name string, args ...string) (string, e
 	return output.String(), err
 }
 func (a *App) answer(ctx context.Context, message string, notes []Note, history []Message, mode string) (string, string) {
-	if a.Config.DeepSeekKey == "" {
+	if a.aiConfig(ctx).DeepSeekKey == "" || (mode == "knowledge" && a.aiConfig(ctx).CloudSearchDisabled) {
 		if mode == "general" {
-			return "当前为本地演示模式，请在后端 .env 中配置模型服务和密钥并重启，即可进行日常对话。", "local"
+			return "当前为本地演示模式，请在“模型与服务”中选择服务并保存有效 API 密钥，即可进行日常对话。", "local"
 		}
 		if len(notes) == 0 {
 			return "没有找到相关历史记录。请补充关键词或上传材料。本地模式不会生成治疗建议。", "local"
@@ -293,7 +303,7 @@ func (a *App) answer(ctx context.Context, message string, notes []Note, history 
 	messages = append(messages, map[string]any{"role": "user", "content": jsonText(map[string]any{"问题": message, "历史笔记": sources})})
 	text, err := a.completion(ctx, messages, false)
 	check(err)
-	provider := a.Config.AIProvider
+	provider := a.aiConfig(ctx).AIProvider
 	if provider == "" {
 		provider = "deepseek"
 	}
