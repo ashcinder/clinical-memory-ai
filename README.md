@@ -8,11 +8,15 @@
 
 ## 服务器部署
 
-当前为公网分支 `codex/public-multiselect`，Web 入口为 https://124.221.183.247/clinical-memory/，Android 2.16.0 首次连接预填同一公网 HTTPS 地址。原内网分支 `codex/intranet-deployment` 保留独立代码与配置。
+当前为公网分支 `codex/public-multiselect`，Web 入口为 https://124.221.183.247/clinical-memory/，Android 2.16.1 首次连接预填同一公网 HTTPS 地址。原内网分支 `codex/intranet-deployment` 保留独立代码与配置。
 
 一篇笔记可选择多个资料类型及多个标签。筛选时类型按“匹配任一种”、标签按“同时满足”组合；所有已选条件分组展示，支持单独取消或清空。资料类型删除只解除该类型，仍保留其他类型；没有剩余类型时归入保留类型。
 
 已支持通过 `PUBLIC_BASE_PATH=/clinical-memory` 使用独立子路径部署，网页资源、API 和登录 Cookie 均使用该路径。Android 的后端地址也可包含此路径。部署配置与运维说明见 [后端/deploy/README.md](后端/deploy/README.md)，初始密码和实际测试记录仅保存在本机已忽略的 `后端/output/` 中。
+
+## 笔记回顾修复（2.16.1）
+
+点击“回顾这篇记录”会准备可直接发送的草稿，保留取消操作前的输入，并清除旧会话附件。发送时按笔记 ID 固定来源；历史会话中的后续追问保持同一笔记，笔记删除后明确返回错误。
 
 ## 共享资料库（2.16.0）
 

@@ -34,6 +34,7 @@ const state = {
   mode: "knowledge",
   messages: [],
   chatDraft: "",
+  recallNoteId: "",
   busy: false,
   searching: false,
   chatting: false,
@@ -348,7 +349,7 @@ function showAuth(isInitialized) {
   state.chatFiles = [];
   state.messages = [];
   state.chatDraft = "";
-  state.conversation = null;
+  state.conversation = null; state.recallNoteId = "";
   state.lastQuery = "";
   state.completedQuery = "";
   state.resultFiles = [];
@@ -1295,6 +1296,22 @@ async function toggleRecording(target) {
     toast("无法开始录音，请允许麦克风权限或上传音频文件。");
   }
 }
+async function startNoteRecall(note) {
+  if (!canLeavePage()) return;
+  if (state.view !== "chat" && (state.chatDraft.trim() || state.chatFiles.length) &&
+      !window.confirm("开始回顾这篇笔记会替换尚未发送的内容，是否继续？")) return;
+  closeDialog(true);
+  if ($("#dialog").open) return;
+  state.conversation = null; state.recallNoteId = "";
+  state.messages = [];
+  state.chatFiles = [];
+  state.mode = "knowledge";
+  // Set the draft before rendering: the normal input lifecycle sizes it and enables Send.
+  state.chatDraft = `请回顾「${note.title}」的记录与已保存步骤`;
+  state.recallNoteId = note.id;
+  await navigate("chat");
+  $("#chat-input")?.focus();
+}
 async function showNote(id) {
   if (!allowDiscard()) return;
   try {
@@ -1305,14 +1322,7 @@ async function showNote(id) {
       `<div class="reader-meta"><span class="note-type-badges">${typeBadges(n)}</span><time>${dateLabel(n.occurred_on)}</time></div><h1 class="note-detail-title">${esc(n.title)}</h1><div class="tags">${n.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div><section class="reader-section"><h3>${esc(type.content_label)}</h3><div class="note-body">${esc(n.content) || '<span class="muted">尚未填写正文</span>'}</div></section><section class="reader-section"><h3>${esc(type.steps_label)} <span>${n.steps.length} 项</span></h3>${n.steps.length ? `<ol class="step-list">${n.steps.map((step, i) => `<li><span class="step-number">${i + 1}</span><span class="step-text">${esc(step)}</span></li>`).join("")}</ol>` : '<p class="muted">尚未记录步骤，可编辑补充。</p>'}</section><section class="reader-section"><h3>原始材料 <span>${n.attachments.length} 份</span></h3><div class="reader-materials">${n.attachments.map((a) => `<button class="reader-file" data-material="${a.id}">${a.mime.startsWith("image/") ? `<img src="${APP_BASE}/api/attachments/${a.id}/thumbnail" alt="${esc(a.filename)}" loading="lazy">` : icon(a.mime.startsWith("audio/") ? "mic" : "file")}<span><b>${esc(a.filename)}</b><small>${extractionLabel(a)}</small></span>${icon("arrow")}</button>`).join("") || '<p class="muted">尚无关联材料</p>'}</div></section><div class="detail-meta">最后更新 ${dateLabel(n.updated_at)}</div><div class="form-actions reader-actions"><button class="text-button danger" id="delete-note">删除笔记</button><button class="secondary" id="recall-note">回顾这篇记录</button><button class="primary" id="edit-note">编辑笔记</button></div>`,
     );
     $("#edit-note").onclick = () => editNote(n);
-    $("#recall-note").onclick = async () => {
-      closeDialog(true);
-      state.conversation = null;
-      state.messages = [];
-      state.mode = "knowledge";
-      await navigate("chat");
-      $("#chat-input").value = `请回顾「${n.title}」的记录与已保存步骤`;
-    };
+    $("#recall-note").onclick = () => startNoteRecall(n);
     $$("[data-material]").forEach(
       (b) =>
         (b.onclick = () =>
@@ -1730,7 +1740,7 @@ function requestConversationDelete(id) {
     try {
       await api("/conversations/" + encodeURIComponent(id), {method:"DELETE"});
       if (active) {
-        state.conversation = null; state.messages = []; state.chatDraft = ""; state.chatFiles = [];
+        state.conversation = null; state.recallNoteId = ""; state.messages = []; state.chatDraft = ""; state.chatFiles = [];
         if ($("#chat-input")) { $("#chat-input").value = ""; $("#chat-files").innerHTML = ""; $("#chat-error").hidden = true; drawMessages("latest"); sizeChatInput(); }
       }
       deletedConversations.add(id);
@@ -1755,7 +1765,7 @@ function bindChatHistory(root = document) {
     try {
       const h = await api("/conversations/" + button.dataset.history);
       if (state.view !== "chat") return;
-      state.conversation = h.conversation.id; state.mode = h.conversation.mode;
+      state.conversation = h.conversation.id; state.recallNoteId = h.conversation.note_id || ""; state.mode = h.conversation.mode;
       state.messages = h.messages; state.chatFiles = []; state.chatDraft = "";
       if ($("#dialog").open) closeDialog();
       await renderChat();
@@ -1774,7 +1784,7 @@ function drawChatHistory(history) {
 }
 function newChat() {
   if (!canLeavePage()) return;
-  state.conversation = null; state.messages = []; state.chatFiles = []; state.chatDraft = "";
+  state.conversation = null; state.recallNoteId = ""; state.messages = []; state.chatFiles = []; state.chatDraft = "";
   renderChat().then(() => $("#chat-input")?.focus()).catch((e) => toast(e.message));
 }
 async function openChatHistory(initialQuery = "") {
@@ -1806,7 +1816,7 @@ async function renderChat() {
   $("#new-chat").onclick = newChat; bindFileChips("chat");
   $$("[data-mode]").forEach((b) => b.onclick = () => {
     if (state.mode === b.dataset.mode || !canLeavePage()) return;
-    state.mode = b.dataset.mode; state.conversation = null; state.messages = []; state.chatFiles = []; state.chatDraft = "";
+    state.mode = b.dataset.mode; state.conversation = null; state.recallNoteId = ""; state.messages = []; state.chatFiles = []; state.chatDraft = "";
     renderChat().catch((e) => toast(e.message));
   });
   $("#chat-form").onsubmit = sendChat; bindImagePaste($("#chat-form"), "chat", sizeChatInput); bindSearchSwitch();
@@ -1840,7 +1850,7 @@ async function sendChat(e) {
   $$(".chat-toolbar button,#sidebar-chat button,.chat-composer button,.chat-composer input").forEach((b) => b.disabled = true);
   const turn = {role:"user",content:message,sources:[]}; state.messages.push(turn); drawMessages("bottom");
   try {
-    const reply = await api("/chat", {method:"POST", body:{message,mode:state.mode,conversation_id:state.conversation,attachment_ids:state.chatFiles.map((a) => a.id)}});
+    const reply = await api("/chat", {method:"POST", body:{message,mode:state.mode,note_id:state.recallNoteId || undefined,conversation_id:state.conversation,attachment_ids:state.chatFiles.map((a) => a.id)}});
     state.conversation = reply.conversation_id; state.messages.push({role:"assistant",...reply});
     state.chatFiles = []; state.chatDraft = ""; input.value = "";
     $("#chat-files").innerHTML = "";
