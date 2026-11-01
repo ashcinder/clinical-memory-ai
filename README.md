@@ -2,6 +2,22 @@
 
 医生个人诊疗笔记与材料库：保存治疗过程，用文字、图片和音频检索历史经验，查看原始步骤与资料来源，接入可配置的 AI 模型进行检索辅助、经验回顾或日常对话。
 
+## 技术文档与学习
+
+完整说明见 [项目技术文档](项目技术文档.md)：覆盖实际架构、11 张数据库表、32 个 API 路由、文字/图片/音频检索、AI 接入、跨端同步、Web 与 Java Android 实现、本地启动、腾讯云部署、备份恢复和测试边界，并提供源码阅读路线与动手练习。文档依据 2026-10-28 当前工作区整理，不含真实凭据。
+
+## 服务器部署
+
+**当前分支为内网部署版本**：手机 App 与电脑网页连接同一个内网 HTTPS 入口，后端可调用外部 AI。完整步骤、Linux 部署包、内部 CA、数据迁移与验收见 [内网部署说明](后端/deploy/intranet/README.md)。
+
+```bash
+bash 后端/deploy/intranet/build-bundle.sh
+```
+
+App 不再默认连接公网；首次使用填写实际内网服务地址，或构建时用 `-PlinjiServerUrl=https://你的内网域名/clinical-memory` 设置默认地址。已有安装保留原地址，升级后需在连接页切换。同一账户共用资料；本分支不增加多人开户或共享权限。现有云端部署说明保留作历史部署参考。
+
+已支持通过 `PUBLIC_BASE_PATH=/clinical-memory` 使用独立子路径部署，网页资源、API 和登录 Cookie 均使用该路径。Android 的后端地址也可包含此路径。部署配置与运维说明见 [后端/deploy/README.md](后端/deploy/README.md)，初始密码和实际测试记录仅保存在本机已忽略的 `后端/output/` 中。
+
 ## 当前技术栈与四个目录
 
 | 目录 | 内容 |
@@ -139,40 +155,15 @@ APK：`前端APP/app/build/outputs/apk/debug/app-debug.apk`。业务源码全部
 
 ## 配置 AI 模型、图片和音频
 
-在 `后端/.env` 中配置服务，保存后重启 Go 后端；密钥只保存在后端，**不要发送到聊天中**。对话及检索关键词使用 `AI_PROVIDER`，图片识别使用 `VISION_PROVIDER`，可以分别选择不同服务。示例使用 DeepSeek：
+登录 Web 的“服务设置”或 Android 的“设置”，即可选择对话模型和图片模型，配置 DeepSeek、GLM、Kimi、MiniMax 的 API 密钥及模型名；也可以配置兼容 `/audio/transcriptions` 的音频转写服务地址、模型和密钥。保存后立即生效，无需重启。各平台账号需要拥有相应模型的 API 权限与额度。
 
-```dotenv
-AI_PROVIDER=deepseek
-DEEPSEEK_API_KEY=在此填写你的密钥
-DEEPSEEK_MODEL=deepseek-flash
-VISION_PROVIDER=deepseek
-VISION_MODEL=deepseek-flash
-```
+1. 选择“对话与检索”和“图片理解”使用的服务；两项可以不同，也可以关闭。
+2. 填写对应服务的 API 密钥，并检查对话模型和图片模型名称。可选配置音频转写服务。
+3. 点击“保存模型设置”。已保存的密钥不会显示；留空会保留原密钥，勾选“清除”可以删除。
 
-也可以选择下列服务。先在对应平台确认账号拥有该模型的 API 权限与额度；模型名可根据平台当前提供的型号更改。各服务通过兼容 `/chat/completions` 的接口调用，实际可用性以服务商为准。 可参考 [DeepSeek API](https://api-docs.deepseek.com/api/create-chat-completion/)、[智谱 GLM-4.6V](https://docs.bigmodel.cn/cn/guide/models/vlm/glm-4.6v)、[MiniMax OpenAI SDK](https://platform.minimax.cn/docs/api-reference/text-openai-api) 和 [Kimi API 配置](https://www.kimi.com/help/kimi-api/api-troubleshooting)。
+默认模型名称可按平台当前型号修改。各模型通过兼容 `/chat/completions` 的接口调用；图片模型需支持图片输入。可参考 [DeepSeek API](https://api-docs.deepseek.com/api/create-chat-completion/)、[智谱 GLM-4.6V](https://docs.bigmodel.cn/cn/guide/models/vlm/glm-4.6v)、[MiniMax OpenAI SDK](https://platform.minimax.cn/docs/api-reference/text-openai-api) 和 [Kimi API 配置](https://www.kimi.com/help/kimi-api/api-troubleshooting)。音频服务地址应为 HTTPS 基础地址，例如 `https://服务地址/v1`（本机测试可用 localhost HTTP）。
 
-| AI_PROVIDER / VISION_PROVIDER | 对话密钥 | 对话模型设置 | 图片模型示例 |
-| --- | --- | --- | --- |
-| `deepseek` | `DEEPSEEK_API_KEY` | `DEEPSEEK_MODEL=deepseek-flash` | `VISION_MODEL=deepseek-flash` |
-| `glm` | `GLM_API_KEY` | `GLM_MODEL=glm-4.5` | `VISION_MODEL=glm-4.6v` |
-| `kimi` | `KIMI_API_KEY` | `KIMI_MODEL=kimi-k2.5` | `VISION_MODEL=kimi-k2.5` |
-| `minimax` | `MINIMAX_API_KEY` | `MINIMAX_MODEL=MiniMax-M3.1-Flash` | `VISION_MODEL=MiniMax-M3.1-Flash` |
-| `none` | 不需要 | 关闭该能力 | 关闭云端视觉 |
-
-例如同时使用 MiniMax 对话与 GLM 视觉，在现有 `.env` 中**修改已有的同名行**并填写密钥：
-
-```dotenv
-AI_PROVIDER=minimax
-MINIMAX_API_KEY=填写MiniMax密钥
-MINIMAX_MODEL=MiniMax-M3.1-Flash
-VISION_PROVIDER=glm
-GLM_API_KEY=填写智谱密钥
-VISION_MODEL=glm-4.6v
-```
-
-`VISION_MODEL` 必须与选定的视觉服务对应；原项目的 `.env` 可能已有 `VISION_MODEL=deepseek-flash`，切换视觉服务时要一起修改。未设置 `VISION_PROVIDER` 时默认跟随对话服务，并使用该服务默认的视觉模型。仅当需要使用其他兼容网关时，才覆盖 `VISION_BASE_URL` / `VISION_API_KEY`。不要把 `VISION_API_KEY=` 留为空行，空值会关闭视觉调用。详见 [配置示例](后端/.env.example)。
-
-语音转写需单独设置 `ASR_BASE_URL`、`ASR_API_KEY`、`ASR_MODEL`，使用兼容 `/audio/transcriptions` 的服务。对话模型密钥本身不会自动开通语音转写。PDF 的文字层本地提取；扫描件可作为图片上传。
+模型设置按软件账户分开保存在 `数据库数据/ai-settings/`，文件权限为 0600，密钥不会返回给前端；它们**未进行静态加密**，请保护后端机器及数据目录。该目录已加入 Git 忽略，也不包含在普通备份中；恢复备份后需要重新输入 API 密钥。通过局域网 HTTP 配置时网络传输不加密，跨设备使用应配置 HTTPS。旧 `.env` 的 AI 设置在尚未通过界面保存配置时仍可作为所有账户的共享默认值；界面设置保存后该账户使用自己的配置。服务地址由管理员通过 `*_BASE_URL` 配置，保存账户模型设置或切换搜索开关后仍保留配置的兼容网关地址。数据库连接仍使用 `.env`。
 
 对话或关键词整理将问题和已识别的查询内容发送给对话服务；图片上传/重新提取会将图片发送给视觉服务；经验回顾还会发送命中笔记的片段。调用可能产生费用，真实患者资料应先脱敏并确认所选平台的数据处理方式。
 
@@ -180,11 +171,21 @@ VISION_MODEL=glm-4.6v
 
 Web 录音需 localhost / HTTPS 与麦克风权限。局域网 HTTP 下可上传已有音频；Android 原生录音不受这一浏览器限制。单个文件限 20MB。
 
+## Web 与 Android 同步
+
+两端连接同一个 Go 后端并登录同一个软件账户，即共用笔记、材料、对话、个人信息和模型配置。模拟器的 `10.0.2.2` 对应电脑的 `127.0.0.1`；真机需使用电脑局域网地址。
+
+- 笔记统一为 UTF-8 纯文本正文、标签数组、按顺序保存的步骤数组、分类、记录日期和附件 ID；多行正文和步骤顺序保持一致。
+- 两端在前台空闲时约每 5 秒检查更新，也可点击 Web 顶栏“同步”或 APP 顶部账户状态手动刷新。切回窗口时会检查更新。
+- 编辑笔记、输入查询或修改配置时暂缓自动刷新，避免覆盖未保存内容；旧版本的笔记或模型配置保存时会返回冲突提示。
+- 显示名称可在设置页编辑，用户名保持不变；账户信息保存在 MySQL。模型配置由同一后端按账户保存，两端不用重复填写密钥。
+- 这不是离线同步；两端需能访问同一后端。已有检索结果在资料更新后需重新发起检索，不会自动产生新的 AI 调用。
+
 ## 检索和数据保存
 
 Go 将笔记、标签、步骤和附件文本分成中文单字/双字及英文词，持久写入 MySQL 的 `note_terms` 倒排索引，按匹配权重排序。无需修改 MySQL 的 ngram 配置或添加向量数据库。修改正文/材料文本、关联/解除关联及删除时通过事务同步更新索引。
 
-配置对话服务后，模型先从查询中整理关键词和同义词，MySQL 再按文字倒排索引检索；历史经验对话最多取 5 篇所属账户的笔记供模型总结，页面显示可打开的来源。图片在上传时先由视觉模型生成可核对的描述，既有图片可在材料页面选择“重新提取”，关联笔记的索引会更新。结果是基于识别文本和关键词的检索，并非图像向量相似度匹配；模型可能误识别或遗漏穴位，结果必须核对原图与笔记。AI 关键词整理失败时回退到原文检索并提示。日常对话不自动读取资料库，主动附加的材料除外。
+配置对话服务后，模型先从查询中整理关键词和同义词，MySQL 召回候选，再由模型筛掉仅因通用词命中的无关条目（候选最多 40 篇）；历史经验对话最多取 5 篇所属账户的笔记供模型总结，页面显示可打开的来源。图片在上传时先由视觉模型生成可核对的描述，既有图片可在材料页面选择“重新提取”，关联笔记的索引会更新。结果是基于识别文本和关键词的检索，并非图像向量相似度匹配；模型可能误识别或遗漏穴位，结果必须核对原图与笔记。AI 关键词整理失败时回退到原文检索并提示。日常对话不自动读取资料库，主动附加的材料除外。
 
 删除笔记会保留原始材料；删除材料会移除文件与识别文本。旧对话仍保存当时的来源摘要，删除笔记不会改写历史回复。
 
@@ -208,9 +209,35 @@ bash backup.sh
 bash backup.sh -output '/你选择的目录/临记备份.tar.gz'
 ```
 
-默认输出到 `数据库数据/backups/`，包含 `linji.sql` 和 `uploads/`，不包含 `.env` 或密钥。使用本机 mysqldump，连接密码通过权限为 0600 的临时配置传入，不放在命令行参数中。找不到命令时设置 `MYSQLDUMP_BIN=/usr/local/mysql/bin/mysqldump`。
+默认输出到 `数据库数据/backups/`，包含 `linji.sql` 和 `uploads/`，不包含 `.env`、模型配置文件或密钥。使用本机 mysqldump，连接密码通过权限为 0600 的临时配置传入，不放在命令行参数中。找不到命令时设置 `MYSQLDUMP_BIN=/usr/local/mysql/bin/mysqldump`。
 
 恢复时先备份现有资料并停后端，将 `linji.sql` 导入**专用空数据库**，再恢复 `uploads/`，调整 `.env` 指向恢复库。SQL 中含账户/会话及隐私资料，请妥善保管。页面“导出笔记 JSON”是便于查看的导出，不是含附件原件的完整备份。
+
+## 本地检索与云端开关
+
+Web 和 Android 的检索页、历史经验对话及服务设置都有“云端 AI 搜索”开关，同一账户在设备间同步。关闭后，**新上传材料的识别、经验检索与历史回顾不调用云端 AI**，已保存的 API 密钥仍保留；“日常对话”是独立的主动云端功能。
+
+- 图片：SHA-256 精确匹配 + pHash / dHash 与颜色校验，匹配相同或近似图片并返回其关联笔记。首次查询会给旧图片补建指纹，缓存在 MySQL 的 image_fingerprints 表；删除材料时级联删除。指纹适合原图、缩放与压缩版本，不识别不同角度照片的穴位语义。
+- 图片文字：macOS 使用系统 Vision；其他系统使用 Tesseract 中英文语言包。提取文字后进入原有文字索引。
+- 音频文字：本地 whisper.cpp（Whisper base 多语言模型）+ FFmpeg，支持 **120 秒以内**的录音。转写可能有错字，点击材料可核对和修正；已保存的转写文字也能直接搜索。超过时长会提示分段，不会默默截断。
+
+这台 Mac 已准备好本地识别组件。迁移到其他电脑时，在联网环境中执行一次：
+
+```bash
+bash 后端/setup-local-search.sh
+```
+
+首次下载引擎与模型，完成后识别无需联网。模型在 `数据库数据/models/`，已忽略 Git；MySQL 和原始材料仍保留在原位置。Linux 需安装 tesseract、whisper-cli、ffmpeg、ffprobe，再执行脚本下载语言包与模型。可选 `LOCAL_ASR_MODEL`、`OCR_DATA_DIR` 用于自定义本机模型位置；模型服务 API 仍在前端设置。
+
+关闭开关后，已有云端识别文字会继续作为已保存数据参与本地搜索；开关不会删除或自动重写已有材料。对旧的未识别材料可点击“重新提取”。
+
+## 图片粘贴与结果阅读
+
+在 Web 的经验检索框、AI 对话框或笔记编辑框中，复制截图或图片后按 **⌘V / Ctrl+V** 即可添加图片。支持 PNG、JPG、WebP，单文件不超过 20MB；一次检索或对话最多关联 5 份材料。复制图片网址会按文字处理，需要复制图片本身。上传后可预览、查看识别状态或移除；图片识别依赖设置中配置的图片服务，未识别时可点击材料补充文本。仅粘贴图片也可以发送对话。
+
+Web 与 Android 的检索结果展示匹配关键词、匹配位置、原文片段、已记录步骤和原始材料。图片使用鉴权缩略图，可点击查看原件；音频与文档可打开核对。步骤较多时先显示前三项，打开完整记录查看全部。分类数量只统计本次结果；语义相关但没有直接文字匹配时会提示核对原文。
+
+升级后重启 Go 后端，Web 强制刷新，Android 安装新版 APK。缩略图和匹配信息由新版后端提供。
 
 ## 验证
 
@@ -237,3 +264,13 @@ MYSQL_TEST_DSN='root@tcp(127.0.0.1:3307)/?charset=utf8mb4&parseTime=true' go tes
 ## 许可证
 
 项目代码采用 [MIT License](LICENSE)。测试图片的来源及授权说明见 [测试资料使用说明](数据库数据/测试资料/使用说明.md)。
+
+## 临床学习资料目录（2.5）
+
+检索结果以已保存原文、对应条目和原始材料为中心。资料按用途分为诊疗记录、操作教程、知识要点、经验复盘、随访记录、图谱资料，另外保留自定义分类；标签可补充主题、部位和待复习/待带教确认等学习线索。旧“教程”“知识”“经验总结”“诊疗笔记”等名称会归入统一目录，原 category 和正文不被重写。
+
+`GET /api/taxonomy` 返回统一目录、数量和学习标签提示；笔记响应的 `note_type` 是派生类型。列表和检索可传 `note_type` 与 `tag`，在数据库 LIMIT 前过滤。检索 `search_match.passages` 返回实际命中的正文、材料或步骤；短原文尽量完整显示，长原文定位命中段落，并可在结果页展开全文。它们是历史来源文本，不是 AI 自动生成的操作指令。
+
+## 三处同步更新
+
+按用户要求，后续功能修改同时更新腾讯云、公网源码、内网/局域网源码和本机 localhost:8000，并覆盖 Web 与 APP。共享代码核对和构建差异见 [多版本同步](多版本同步.md)。

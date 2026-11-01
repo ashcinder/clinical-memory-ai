@@ -15,7 +15,7 @@ final class LineIcon extends View {
         this.name=name;
         pen.setColor(color);
         pen.setStyle(Paint.Style.STROKE);
-        pen.setStrokeWidth(1.8f);
+        pen.setStrokeWidth(1.6f);
         pen.setStrokeCap(Paint.Cap.ROUND);
         pen.setStrokeJoin(Paint.Join.ROUND);
         setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
@@ -26,6 +26,20 @@ final class LineIcon extends View {
         canvas.save();canvas.translate((getWidth()-24*scale)/2,(getHeight()-24*scale)/2);canvas.scale(scale,scale);
         Path path=new Path();
         switch(name) {
+            case "图片":
+                canvas.drawRoundRect(3,4,21,20,2,2,pen);canvas.drawCircle(8,9,1.5f,pen);path.moveTo(4,17);path.lineTo(9,12);path.lineTo(13,16);path.lineTo(16,13);path.lineTo(20,17);canvas.drawPath(path,pen);break;
+            case "关闭":
+                canvas.drawLine(7,7,17,17,pen);canvas.drawLine(17,7,7,17,pen);break;
+            case "筛选":
+                canvas.drawLine(4,7,20,7,pen);canvas.drawLine(7,12,17,12,pen);canvas.drawLine(10,17,14,17,pen);break;
+            case "发送":
+                canvas.drawLine(12,19,12,5,pen);path.moveTo(6,11);path.lineTo(12,5);path.lineTo(18,11);canvas.drawPath(path,pen);break;
+            case "附件":
+                path.moveTo(8,14);path.lineTo(15,7);path.cubicTo(18,4,22,8,19,11);path.lineTo(10,20);path.cubicTo(5,24,0,17,4,13);path.lineTo(13,4);canvas.drawPath(path,pen);break;
+            case "录音":
+                canvas.drawRoundRect(9,3,15,15,3,3,pen);path.moveTo(5,11);path.cubicTo(5,21,19,21,19,11);canvas.drawPath(path,pen);canvas.drawLine(12,19,12,23,pen);canvas.drawLine(8,23,16,23,pen);break;
+            case "历史":
+                canvas.drawRoundRect(4,4,20,20,3,3,pen);canvas.drawLine(9,4,9,20,pen);canvas.drawLine(13,9,17,9,pen);canvas.drawLine(13,13,17,13,pen);break;
             case "检索":
                 canvas.drawCircle(10.4f,10.4f,5.8f,pen);canvas.drawLine(14.7f,14.7f,19.5f,19.5f,pen);break;
             case "笔记":

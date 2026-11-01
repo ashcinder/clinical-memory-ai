@@ -21,3 +21,19 @@
 .playwright-cli/
 后端/output/
 后端/验证记录.md
+
+# Account-specific AI credentials
+数据库数据/ai-settings/
+
+# Downloaded offline recognition models
+数据库数据/models/
+
+# Machine-specific environment overrides and private credentials
+**/.env.*
+!**/.env.example
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.jks
+**/*.keystore

@@ -74,7 +74,7 @@ func (a *App) createSession(w http.ResponseWriter, userID int64) string {
 	check(err)
 	_, err = a.DB.Exec("INSERT INTO sessions(token_hash,user_id,expires_at) VALUES (?,?,?)", digest(token), userID, time.Now().Add(7*24*time.Hour).Unix())
 	check(err)
-	http.SetCookie(w, &http.Cookie{Name: "linji_session", Value: token, Path: "/", MaxAge: 7 * 86400, HttpOnly: true, Secure: a.Config.CookieSecure, SameSite: http.SameSiteStrictMode})
+	http.SetCookie(w, &http.Cookie{Name: "linji_session", Value: token, Path: a.cookiePath(), MaxAge: 7 * 86400, HttpOnly: true, Secure: a.Config.CookieSecure, SameSite: http.SameSiteStrictMode})
 	return token
 }
 func withTx[T any](a *App, fn func(*sql.Tx) T) T {
@@ -86,10 +86,7 @@ func withTx[T any](a *App, fn func(*sql.Tx) T) T {
 	return out
 }
 func (a *App) rateLimit(r *http.Request) {
-	ip, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		ip = r.RemoteAddr
-	}
+	ip := remoteClientIP(r)
 	ip = cut(ip, 64)
 	timestamp := time.Now().Unix()
 	allowed := withTx(a, func(tx *sql.Tx) bool {
@@ -151,4 +148,18 @@ func (a *App) login(w http.ResponseWriter, r *http.Request) {
 		fail(401, "用户名或密码错误")
 	}
 	respond(w, 200, map[string]any{"token": a.createSession(w, u.ID), "user": u})
+}
+
+func remoteClientIP(r *http.Request) string {
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		ip = r.RemoteAddr
+	}
+	// Only a loopback reverse proxy may supply the original client address.
+	if parsed := net.ParseIP(ip); parsed != nil && parsed.IsLoopback() {
+		if client := net.ParseIP(r.Header.Get("X-Real-IP")); client != nil {
+			return client.String()
+		}
+	}
+	return ip
 }

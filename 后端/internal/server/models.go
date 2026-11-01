@@ -30,26 +30,32 @@ type Attachment struct {
 	ExtractionError *string `json:"extraction_error,omitempty"`
 }
 type Note struct {
-	ID             string       `json:"id"`
-	Title          string       `json:"title"`
-	Category       string       `json:"category"`
-	Tags           []string     `json:"tags"`
-	Content        string       `json:"content"`
-	Steps          []string     `json:"steps"`
-	OccurredOn     string       `json:"occurred_on"`
-	CreatedAt      string       `json:"created_at"`
-	UpdatedAt      string       `json:"updated_at"`
-	Attachments    []Attachment `json:"attachments"`
-	AttachmentText string       `json:"attachment_text,omitempty"`
+	NoteType       string          `json:"note_type"`
+	NoteTypes      []string        `json:"note_types"`
+	SearchMatch    *SearchEvidence `json:"search_match,omitempty"`
+	Version        string          `json:"version"`
+	ID             string          `json:"id"`
+	Title          string          `json:"title"`
+	Category       string          `json:"category"`
+	Tags           []string        `json:"tags"`
+	Content        string          `json:"content"`
+	Steps          []string        `json:"steps"`
+	OccurredOn     string          `json:"occurred_on"`
+	CreatedAt      string          `json:"created_at"`
+	UpdatedAt      string          `json:"updated_at"`
+	Attachments    []Attachment    `json:"attachments"`
+	AttachmentText string          `json:"attachment_text,omitempty"`
 }
 type NoteInput struct {
-	Title         string   `json:"title"`
-	Category      string   `json:"category"`
-	Tags          []string `json:"tags"`
-	Content       string   `json:"content"`
-	Steps         []string `json:"steps"`
-	OccurredOn    string   `json:"occurred_on"`
-	AttachmentIDs []string `json:"attachment_ids"`
+	NoteTypes       []string `json:"note_types"`
+	ExpectedVersion string   `json:"expected_version,omitempty"`
+	Title           string   `json:"title"`
+	Category        string   `json:"category"`
+	Tags            []string `json:"tags"`
+	Content         string   `json:"content"`
+	Steps           []string `json:"steps"`
+	OccurredOn      string   `json:"occurred_on"`
+	AttachmentIDs   []string `json:"attachment_ids"`
 }
 type Source struct {
 	ID         string `json:"id"`
@@ -70,6 +76,10 @@ type Conversation struct {
 	CreatedAt string `json:"created_at"`
 }
 type SearchInput struct {
+	NoteTypes     []string `json:"note_types,omitempty"`
+	Tags          []string `json:"tags,omitempty"`
+	NoteType      string   `json:"note_type,omitempty"`
+	Tag           string   `json:"tag,omitempty"`
 	Query         string   `json:"query"`
 	AttachmentIDs []string `json:"attachment_ids"`
 	Category      string   `json:"category"`

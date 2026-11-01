@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"database/sql"
 	"net/http"
 	"strings"
@@ -34,12 +35,21 @@ func (a *App) deleteNote(w http.ResponseWriter, r *http.Request, u User) {
 	respond(w, 200, map[string]bool{"ok": true})
 }
 func (a *App) noteList(userID int64, category string, limit, offset int) ([]Note, int) {
+	return a.noteListFiltered(userID, category, limit, offset, noteFilter{})
+}
+func (a *App) noteListFiltered(userID int64, category string, limit, offset int, filter noteFilter) ([]Note, int) {
+	if filter.Types == nil {
+		filter.Types = loadTaxonomy(a.DB, userID).Types
+	}
 	where := "user_id=?"
 	args := []any{userID}
 	if category != "" {
 		where += " AND category=?"
 		args = append(args, category)
 	}
+	constraint, filterArgs := filterSQL(filter, "notes.")
+	where += constraint
+	args = append(args, filterArgs...)
 	var total int
 	check(a.DB.QueryRow("SELECT COUNT(*) FROM notes WHERE "+where, args...).Scan(&total))
 	rows, err := a.DB.Query("SELECT id FROM notes WHERE "+where+" ORDER BY occurred_on DESC,updated_at DESC,id LIMIT ? OFFSET ?", append(args, limit, offset)...)
@@ -61,7 +71,9 @@ func (a *App) noteList(userID int64, category string, limit, offset int) ([]Note
 func (a *App) listNotes(w http.ResponseWriter, r *http.Request, u User) {
 	limit := intParam(r, "limit", 100, 1, 100)
 	offset := intParam(r, "offset", 0, 0, 10000000)
-	items, total := a.noteList(u.ID, r.URL.Query().Get("category"), limit, offset)
+	filter := noteFilter{Type: r.URL.Query().Get("note_type"), Tag: r.URL.Query().Get("tag"), TypeIDs: r.URL.Query()["note_types"], Tags: r.URL.Query()["tags"], Types: loadTaxonomy(a.DB, u.ID).Types}
+	filter.validate()
+	items, total := a.noteListFiltered(u.ID, r.URL.Query().Get("category"), limit, offset, filter)
 	respond(w, 200, map[string]any{"total": total, "items": items})
 }
 func (a *App) stats(w http.ResponseWriter, r *http.Request, u User) {
@@ -87,6 +99,9 @@ func (a *App) search(w http.ResponseWriter, r *http.Request, u User) {
 	decode(r, &in)
 	bounded("关键词", in.Query, 0, 2000)
 	bounded("分类", in.Category, 0, 40)
+	filter := noteFilter{Type: in.NoteType, Tag: in.Tag, TypeIDs: in.NoteTypes, Tags: in.Tags, Types: loadTaxonomy(a.DB, u.ID).Types}
+	filter.validate()
+	r = r.WithContext(context.WithValue(r.Context(), noteFilterKey{}, filter))
 	if in.Limit == 0 {
 		in.Limit = 20
 	}
@@ -94,18 +109,25 @@ func (a *App) search(w http.ResponseWriter, r *http.Request, u User) {
 		fail(422, "limit 应介于 1 和 100 之间")
 	}
 	query, warnings := queryText(a.DB, in.Query, in.AttachmentIDs, u.ID)
-	if query == "" {
-		fail(422, "请输入关键词，或为图片 / 音频补充识别文本")
+	if query == "" && len(in.AttachmentIDs) == 0 {
+		if len(filter.typeIDs()) == 0 && len(filter.tags()) == 0 {
+			fail(422, "请输入关键词、选择类型或标签，或添加图片、录音")
+		}
+		notes, total := a.noteListFiltered(u.ID, in.Category, in.Limit, 0, filter)
+		for i := range notes {
+			notes[i].SearchMatch = searchEvidence(notes[i], "")
+		}
+		respond(w, 200, map[string]any{"query": "", "warnings": warnings, "items": notes, "total": total, "engine": "资料类型与标签筛选"})
+		return
 	}
-	searchQuery, enhanced, err := a.expandQuery(r.Context(), query)
-	if err != nil {
-		warnings = append(warnings, "AI 关键词整理失败，已使用原文检索；请检查模型服务配置")
-	}
-	engine := "MySQL · 中文双字倒排索引"
+
+	notes, enhanced, extraWarnings := a.retrieveInput(r.Context(), query, in.AttachmentIDs, u.ID, in.Category, in.Limit)
+	warnings = append(warnings, extraWarnings...)
+	engine := "本地图片指纹 + 图片/音频文字索引"
 	if enhanced {
-		engine += " + AI 关键词"
+		engine += " + AI 关键词与相关性筛选"
 	}
-	respond(w, 200, map[string]any{"query": query, "warnings": warnings, "items": a.retrieve(searchQuery, u.ID, in.Category, in.Limit), "engine": engine})
+	respond(w, 200, map[string]any{"query": query, "warnings": warnings, "items": notes, "engine": engine})
 }
 func (a *App) export(w http.ResponseWriter, r *http.Request, u User) {
 	items, _ := a.noteList(u.ID, "", 100000000, 0)
@@ -168,11 +190,9 @@ func (a *App) chat(w http.ResponseWriter, r *http.Request, u User) {
 	query, warnings := queryText(a.DB, in.Message, in.AttachmentIDs, u.ID)
 	notes := []Note{}
 	if in.Mode == "knowledge" {
-		searchQuery, _, err := a.expandQuery(r.Context(), query)
-		if err != nil {
-			warnings = append(warnings, "AI 关键词整理失败，已使用原文检索")
-		}
-		notes = a.retrieve(searchQuery, u.ID, "", 5)
+		var extraWarnings []string
+		notes, _, extraWarnings = a.retrieveInput(r.Context(), query, in.AttachmentIDs, u.ID, "", 5)
+		warnings = append(warnings, extraWarnings...)
 		if len(notes) == 0 && strings.Contains("|继续|继续回顾|然后呢|还有呢|详细说说|", "|"+in.Message+"|") {
 			for i := len(history) - 1; i >= 0; i-- {
 				if history[i].Role == "user" {
