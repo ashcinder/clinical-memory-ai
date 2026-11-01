@@ -70,6 +70,7 @@ type Message struct {
 	CreatedAt string   `json:"created_at,omitempty"`
 }
 type Conversation struct {
+	NoteID    string `json:"note_id,omitempty"`
 	ID        string `json:"id"`
 	Mode      string `json:"mode"`
 	Title     string `json:"title"`
@@ -86,6 +87,7 @@ type SearchInput struct {
 	Limit         int      `json:"limit"`
 }
 type ChatInput struct {
+	NoteID         string   `json:"note_id,omitempty"`
 	Message        string   `json:"message"`
 	Mode           string   `json:"mode"`
 	ConversationID *string  `json:"conversation_id"`

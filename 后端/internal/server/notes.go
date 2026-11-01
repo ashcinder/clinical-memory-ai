@@ -166,6 +166,10 @@ func (a *App) chat(w http.ResponseWriter, r *http.Request, u User) {
 	if in.Mode != "knowledge" && in.Mode != "general" {
 		fail(422, "对话模式无效")
 	}
+	bounded("引用笔记", in.NoteID, 0, 32)
+	if in.NoteID != "" && in.Mode != "knowledge" {
+		fail(422, "引用笔记仅用于笔记回顾")
+	}
 	id := newID()
 	history := []Message{}
 	if in.ConversationID != nil {
@@ -174,6 +178,10 @@ func (a *App) chat(w http.ResponseWriter, r *http.Request, u User) {
 		if convo.Mode != in.Mode {
 			fail(409, "请新建对话后切换模式")
 		}
+		if in.NoteID != "" && in.NoteID != convo.NoteID {
+			fail(409, "请新建对话后更换回顾笔记")
+		}
+		in.NoteID = convo.NoteID
 		rows, err := a.DB.Query("SELECT role,content FROM messages WHERE conversation_id=? ORDER BY id DESC LIMIT 12", id)
 		check(err)
 		for rows.Next() {
@@ -189,7 +197,10 @@ func (a *App) chat(w http.ResponseWriter, r *http.Request, u User) {
 	}
 	query, warnings := queryText(a.DB, in.Message, in.AttachmentIDs, u.ID)
 	notes := []Note{}
-	if in.Mode == "knowledge" {
+	if in.Mode == "knowledge" && in.NoteID != "" {
+		// An explicit selection is authoritative: do not replace it with similarly titled notes.
+		notes = append(notes, ownedNote(a.DB, in.NoteID, u.ID, false))
+	} else if in.Mode == "knowledge" {
 		var extraWarnings []string
 		notes, _, extraWarnings = a.retrieveInput(r.Context(), query, in.AttachmentIDs, u.ID, "", 5)
 		warnings = append(warnings, extraWarnings...)
@@ -212,6 +223,10 @@ func (a *App) chat(w http.ResponseWriter, r *http.Request, u User) {
 	for _, n := range notes {
 		sources = append(sources, Source{n.ID, n.Title, n.OccurredOn})
 	}
+	userSources := []Source{}
+	if in.NoteID != "" {
+		userSources = sources
+	}
 	withTx(a, func(tx *sql.Tx) bool {
 		if in.ConversationID == nil {
 			_, err := tx.Exec("INSERT INTO conversations(id,user_id,mode,title,created_at) VALUES (?,?,?,?,?)", id, u.ID, in.Mode, cut(in.Message, 60), now())
@@ -224,11 +239,11 @@ func (a *App) chat(w http.ResponseWriter, r *http.Request, u User) {
 			}
 			check(err)
 		}
-		_, err := tx.Exec("INSERT INTO messages(conversation_id,role,content,sources,created_at) VALUES (?,?,?,?,?),(?,?,?,?,?)", id, "user", query, "[]", now(), id, "assistant", content, jsonText(sources), now())
+		_, err := tx.Exec("INSERT INTO messages(conversation_id,role,content,sources,created_at) VALUES (?,?,?,?,?),(?,?,?,?,?)", id, "user", query, jsonText(userSources), now(), id, "assistant", content, jsonText(sources), now())
 		check(err)
 		return true
 	})
-	respond(w, 200, map[string]any{"conversation_id": id, "content": content, "sources": sources, "provider": provider, "warnings": warnings})
+	respond(w, 200, map[string]any{"conversation_id": id, "note_id": in.NoteID, "content": content, "sources": sources, "provider": provider, "warnings": warnings})
 }
 func (a *App) ownedConversation(id string, userID int64) Conversation {
 	c := Conversation{}
@@ -237,6 +252,20 @@ func (a *App) ownedConversation(id string, userID int64) Conversation {
 		fail(404, "对话不存在")
 	}
 	check(err)
+	// Only explicitly selected notes are recorded in the first user message's sources.
+	// Existing conversations have an empty user-source list and keep their normal search behavior.
+	var raw string
+	err = a.DB.QueryRow("SELECT sources FROM messages WHERE conversation_id=? AND role='user' ORDER BY id LIMIT 1", id).Scan(&raw)
+	if err != nil && err != sql.ErrNoRows {
+		check(err)
+	}
+	if err == nil {
+		var sources []Source
+		check(jsonUnmarshal(raw, &sources))
+		if len(sources) == 1 {
+			c.NoteID = sources[0].ID
+		}
+	}
 	return c
 }
 func (a *App) conversations(w http.ResponseWriter, r *http.Request, u User) {
