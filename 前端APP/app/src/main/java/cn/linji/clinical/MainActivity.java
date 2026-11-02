@@ -379,12 +379,12 @@ public final class MainActivity extends Activity {
         String origin=api.baseUrl.replaceAll("/+$", "");android.net.Uri allowed=android.net.Uri.parse(origin);
         web.setWebChromeClient(new android.webkit.WebChromeClient(){@Override public boolean onJsConfirm(android.webkit.WebView v,String url,String message,android.webkit.JsResult result){new AlertDialog.Builder(MainActivity.this).setMessage(message).setPositiveButton("确定",(d,w)->result.confirm()).setNegativeButton("取消",(d,w)->result.cancel()).setOnCancelListener(d->result.cancel()).show();return true;}});
         web.setWebViewClient(new android.webkit.WebViewClient(){
-            @Override public boolean shouldOverrideUrlLoading(android.webkit.WebView v,android.webkit.WebResourceRequest req){android.net.Uri uri=req.getUrl();if(!allowed.getScheme().equals(uri.getScheme())||!allowed.getAuthority().equals(uri.getAuthority()))return true;String q=uri.getQueryParameter("anatomy_q");if(q!=null){searchDraft=q;showScreen("检索");return true;}return !uri.getPath().equals(allowed.getPath()+"/anatomy/index.html");}
+            @Override public boolean shouldOverrideUrlLoading(android.webkit.WebView v,android.webkit.WebResourceRequest req){android.net.Uri uri=req.getUrl();if(!allowed.getScheme().equals(uri.getScheme())||!allowed.getAuthority().equals(uri.getAuthority()))return true;String q=uri.getQueryParameter("anatomy_q");if(q!=null){searchDraft=q;showScreen("检索");return true;}return !(uri.getPath().equals(allowed.getPath()+"/anatomy/index.html")||uri.getPath().equals(allowed.getPath()+"/anatomy/"));}
         });
         android.webkit.CookieManager cookies=android.webkit.CookieManager.getInstance();cookies.setAcceptCookie(true);cookies.setAcceptThirdPartyCookies(web,false);
         String cookie="linji_session="+api.token+"; Path="+(allowed.getPath().isEmpty()?"/":allowed.getPath()+"/")+"; HttpOnly; SameSite=Strict"+("https".equals(allowed.getScheme())?"; Secure":"");
         screenHost.removeAllViews();screenHost.addView(web,new LinearLayout.LayoutParams(-1,-1));
-        cookies.setCookie(origin+"/",cookie,ok->{cookies.flush();web.loadUrl(origin+"/anatomy/index.html");});
+        cookies.setCookie(origin+"/",cookie,ok->{cookies.flush();web.loadUrl(origin+"/anatomy/");});
     }
     private void notesScreen(){
         body.setPadding(dp(20),dp(12),dp(20),dp(24));
