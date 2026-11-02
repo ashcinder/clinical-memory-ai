@@ -338,7 +338,7 @@ function prettySize(size) {
     : Math.ceil(size / 1024) + " KB";
 }
 function heading(eyebrow, title, subtitle) {
-  return `<section class="page-heading"><h1>${esc(title)}</h1></section>`;
+  return `<h1 class="visually-hidden">${esc(title)}</h1>`;
 }
 function showAuth(isInitialized) {
   document.body.classList.remove("chat-open");
@@ -570,6 +570,7 @@ async function navigate(view) {
   }
   libraryRequest++;
   state.view = view;
+  $("#main").dataset.view = view;
   $("#main").classList.remove("reading-results", "chat-page", "library-page");
   document.body.classList.toggle("chat-open", view === "chat");
   $(".main-shell").classList.toggle("chat-active", view === "chat");
@@ -837,7 +838,7 @@ function libraryFilterBar(visible,filtered,hasResults,search) {
  const quick=[...tags].sort((a,b)=>Number(state.tagFilters.includes(b.name))-Number(state.tagFilters.includes(a.name))).slice(0,6);
  const active=state.categories.length+state.tagFilters.length,total=hasResults?visible.length:state.stats.notes,count=hasResults?filtered.length:state.total;
  const choice=(value,title,count,selected,attr)=>`<button class="facet-choice ${selected?"is-selected":""}" ${attr}="${esc(value)}" aria-pressed="${selected}"><span class="facet-check" aria-hidden="true">${selected?icon("check"):""}</span><span>${esc(title)}</span>${count!==null?`<small>${count}</small>`:""}</button>`;
- return `<div class="retrieval-filter-panel multi-filters"><div class="section-heading"><h2>${hasResults?"检索结果":search?"最近资料":"全部资料"}<span class="count-badge">${count}</span>${hasResults&&active?`<small class="filtered-total">/ ${total} 篇</small>`:""}</h2><div class="section-actions"><button class="text-button" id="manage-library-taxonomy">管理分类与标签</button>${hasResults?`<span class="result-engine">${(state.results.engine||"").includes("AI")?"AI 辅助":"本地匹配"}</span><label class="sort-control"><span class="visually-hidden">结果排序</span><select id="result-sort"><option value="relevance" ${state.resultSort==="relevance"?"selected":""}>按匹配顺序</option><option value="date" ${state.resultSort==="date"?"selected":""}>按记录日期</option></select></label><button class="text-button" id="clear-search">结束检索</button>`:`<button class="text-button" id="library-action">${search?"全部笔记 "+icon("arrow"):"导出笔记"}</button>`}</div></div>
+ return `<div class="retrieval-filter-panel multi-filters"><div class="section-heading"><h2>${hasResults?"检索结果":search?"最近资料":"全部资料"}<span class="count-badge">${count}</span>${hasResults&&active?`<small class="filtered-total">/ ${total} 篇</small>`:""}</h2><div class="section-actions">${hasResults ? "" : statsStrip()}<button class="text-button" id="manage-library-taxonomy">管理分类与标签</button>${hasResults?`<span class="result-engine">${(state.results.engine||"").includes("AI")?"AI 辅助":"本地匹配"}</span><label class="sort-control"><span class="visually-hidden">结果排序</span><select id="result-sort"><option value="relevance" ${state.resultSort==="relevance"?"selected":""}>按匹配顺序</option><option value="date" ${state.resultSort==="date"?"selected":""}>按记录日期</option></select></label><button class="text-button" id="clear-search">结束检索</button>`:`<button class="text-button" id="library-action">${search?"全部笔记 "+icon("arrow"):"导出笔记"}</button>`}</div></div>
  <div class="facet-row"><span class="facet-label" id="type-filter-label">资料类型<small>匹配任一种</small></span><div class="facet-options" role="group" aria-labelledby="type-filter-label">${choice("","全部",null,!state.categories.length,"data-category")}${types.map((t)=>choice(t.id,t.title,t.count,state.categories.includes(t.id),"data-category")).join("")}</div></div>
  <div class="facet-row"><span class="facet-label" id="tag-filter-label">标签<small>同时满足</small></span><div class="facet-options" role="group" aria-labelledby="tag-filter-label">${choice("","全部",null,!state.tagFilters.length,"data-tag")}${quick.map((t)=>choice(t.name,t.name,t.count,state.tagFilters.includes(t.name),"data-tag")).join("")}<button class="tag-picker-trigger" id="open-tag-picker" type="button">${icon("search")}查找标签<span>${tags.length}</span></button></div></div>
  ${active?`<div class="active-filters multi-selected"><span class="selection-count">已选 <b>${active}</b></span>${selectionChips(state.categories,state.tagFilters)}<button type="button" class="text-button" id="clear-library-filters">清除筛选</button></div>`:""}</div>`;
@@ -972,7 +973,7 @@ function renderLibrary() {
   $("#main").classList.add("library-page");
   $("#main").classList.toggle("reading-results", hasResults);
   $("#main").innerHTML =
-    `<section class="page-heading library-heading"><h1>${search ? "查阅历史笔记" : "学习资料"}</h1>${hasResults ? "" : statsStrip()}</section>` +
+    `<h1 class="visually-hidden">${search ? "经验检索" : "学习资料"}</h1>` +
     (search
       ? `<section class="search-panel ${hasResults ? "has-results" : ""}"><form id="search-form" class="search-form"><div class="search-input-wrap">${icon("search")}<label class="visually-hidden" for="query">检索内容</label><textarea id="query" class="search-input" placeholder="搜索笔记，或粘贴图片" maxlength="2000" rows="2">${esc(state.lastQuery || "")}</textarea></div><div id="search-files" class="attachment-chips">${fileChips(state.searchFiles, "search")}</div><div class="search-tools"><div class="input-actions"><button type="button" class="tool-btn" id="search-upload" aria-label="添加图片、音频或文档" title="图片、音频或文档">${icon("image")}材料</button><button type="button" class="tool-btn" id="search-record">${icon("mic")}录音</button></div><button class="primary" id="search-submit">检索记录 ${icon("arrow")}</button></div><div class="search-preferences"><div class="search-range-controls" role="group" aria-label="检索范围"><div class="search-scope"><span>资料类型</span><button id="search-scope" type="button" aria-label="选择检索资料类型" aria-haspopup="dialog"></button></div><div class="search-scope"><span>标签</span><button id="search-scope-tags" type="button" aria-label="选择检索标签" aria-haspopup="dialog"></button></div></div>${searchSwitch(true)}</div><div id="search-scope-selection" class="search-scope-selection" aria-label="检索条件" hidden></div><div id="search-busy" class="busy-text" hidden>正在上传并识别材料，请稍候…</div><p id="search-error" class="error" role="alert" hidden></p></form><div class="search-help"><span>可直接粘贴图片 · 单份不超过 20 MB</span><span class="keyboard-hint"><kbd>⌘</kbd> / <kbd>Ctrl</kbd> + <kbd>Enter</kbd> 检索</span></div></section>`
       : "") +

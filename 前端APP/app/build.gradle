@@ -6,8 +6,8 @@ android {
   applicationId (project.findProperty('linjiPreviewId') ?: 'cn.linji.clinical')
   minSdk 26
   targetSdk 33
-  versionCode 26
-  versionName '2.16.2'
+  versionCode 30
+  versionName '2.16.6'
   buildConfigField 'String', 'DEFAULT_SERVER_URL', '"https://124.221.183.247/clinical-memory"'
  }
  buildFeatures { buildConfig true }

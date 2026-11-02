@@ -151,7 +151,7 @@ public final class MainActivity extends Activity {
     private EditText input(LinearLayout p,String label,String value){return input(p,label,value,false);}
     private LinearLayout card(LinearLayout parent){LinearLayout c=column();c.setPadding(dp(22),dp(24),dp(22),dp(22));c.setBackground(bg(Color.WHITE,16,border));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.bottomMargin=dp(16);parent.addView(c,p);return c;}
     private TextView chip(String value,int color,int fill){TextView t=new TextView(this);t.setText(value);t.setTextColor(color);t.setTextSize(11);t.setTypeface(null,Typeface.BOLD);t.setPadding(dp(9),dp(5),dp(9),dp(5));t.setBackground(bg(fill,6,null));return t;}
-    private void pageHeading(String title,String subtitle){TextView h=text(body,title,27,ink,true);h.setLetterSpacing(-.01f);LinearLayout.LayoutParams p=(LinearLayout.LayoutParams)h.getLayoutParams();p.bottomMargin=dp(22);}
+    private void pageHeading(String title,String subtitle){TextView h=text(body,title,27,ink,true);h.setLetterSpacing(-.01f);LinearLayout.LayoutParams p=(LinearLayout.LayoutParams)h.getLayoutParams();p.bottomMargin=dp(14);}
     private void toast(String message){Toast.makeText(this,message,Toast.LENGTH_LONG).show();}
     private <T> void work(Callable<T> action,Consumer<T> done){work(action,done,e->{});}
     private <T> void work(Callable<T> action,Consumer<T> done,Consumer<Exception> failed){
@@ -197,7 +197,7 @@ public final class MainActivity extends Activity {
         TextView add=chip("＋",Color.WHITE,teal);add.setBackground(new RippleDrawable(ColorStateList.valueOf(mint),bg(teal,13,null),null));add.setTextSize(22);add.setGravity(Gravity.CENTER);add.setPadding(0,0,0,0);add.setContentDescription("对话".equals(screen)?"新建对话":"新建诊疗笔记");add.setOnClickListener(v->{if(working)toast("请等待当前操作完成");else if("对话".equals(screen))resetChat(chatMode);else editNote(null,null);});head.addView(add,new LinearLayout.LayoutParams(dp(40),dp(40)));root.addView(head);
         busyIndicator=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);busyIndicator.setIndeterminate(true);busyIndicator.setIndeterminateTintList(ColorStateList.valueOf(teal));busyIndicator.setVisibility(View.INVISIBLE);root.addView(busyIndicator,new LinearLayout.LayoutParams(-1,dp(2)));
         ScrollView scroll=new ScrollView(this);mainScroll=scroll;scroll.setFillViewport(false);scroll.setClipToPadding(false);scroll.setVerticalScrollBarEnabled(false);
-        body=column();body.setPadding(dp(20),dp(28),dp(20),dp(28));scroll.addView(body);screenHost=column();root.addView(screenHost,new LinearLayout.LayoutParams(-1,0,1));screenHost.addView(scroll,new LinearLayout.LayoutParams(-1,-1));
+        body=column();body.setPadding(dp(20),dp(16),dp(20),dp(24));scroll.addView(body);screenHost=column();root.addView(screenHost,new LinearLayout.LayoutParams(-1,0,1));screenHost.addView(scroll,new LinearLayout.LayoutParams(-1,-1));
         LinearLayout nav=row();nav.setGravity(Gravity.CENTER);nav.setPadding(dp(8),dp(9),dp(8),dp(9));nav.setBackgroundColor(Color.WHITE);
         for(String item:Arrays.asList("检索","笔记","材料","对话","设置")){
             boolean active=screen.equals(item);LinearLayout tab=column();tab.setGravity(Gravity.CENTER);tab.setPadding(0,dp(3),0,dp(3));tab.setBackground(new RippleDrawable(ColorStateList.valueOf(mint),bg(Color.WHITE,10,null),null));
@@ -294,7 +294,7 @@ public final class MainActivity extends Activity {
         }
     }
     private void searchScreen(){
-        body.setPadding(dp(20),dp(12),dp(20),dp(20));TextView heading=text(body,"查阅历史笔记",21,ink,true);((LinearLayout.LayoutParams)heading.getLayoutParams()).bottomMargin=dp(10);
+        body.setPadding(dp(20),dp(8),dp(20),dp(20));TextView heading=text(body,"经验检索",21,ink,true);((LinearLayout.LayoutParams)heading.getLayoutParams()).bottomMargin=dp(8);
         LinearLayout search=card(body);search.setPadding(dp(16),dp(12),dp(16),dp(10));search.setBackground(bg(Color.WHITE,14,border));
         LinearLayout entry=row();entry.setGravity(Gravity.TOP);LineIcon magnifier=new LineIcon(this,"检索",Color.rgb(124,147,143));LinearLayout.LayoutParams ip=new LinearLayout.LayoutParams(dp(21),dp(21));ip.topMargin=dp(7);ip.rightMargin=dp(10);entry.addView(magnifier,ip);
         EditText query=new EditText(this);query.setTextSize(16);query.setTextColor(ink);query.setHintTextColor(Color.rgb(139,155,158));query.setHint("搜索笔记或关键词");query.setText(searchDraft);query.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);query.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(2000)});query.setGravity(Gravity.TOP);query.setMinLines(2);query.setMaxLines(5);query.setMinHeight(dp(60));query.setPadding(0,dp(3),0,dp(10));query.setBackgroundColor(Color.TRANSPARENT);query.setTag("search-query");query.setContentDescription("检索内容");entry.addView(query,new LinearLayout.LayoutParams(0,-2,1));search.addView(entry);
@@ -371,6 +371,7 @@ public final class MainActivity extends Activity {
         }
     }
     private void notesScreen(){
+        body.setPadding(dp(20),dp(12),dp(20),dp(24));
         pageHeading("学习资料","按用途整理笔记，以标签连接同一主题。");
         work(()->{loadLearningCatalog();return (JSONObject)api.request("/notes?limit=100"+filterURL(browseTypes,browseTags));},data->{
             LinearLayout controls=row();Button type=button("资料类型："+(browseTypes.isEmpty()?"全部":browseTypes.size()+" 项"),false,()->chooseTypes(browseTypes,selected->{replace(browseTypes,selected);showScreen("笔记");}));type.setTextSize(12);controls.addView(type,new LinearLayout.LayoutParams(0,dp(44),1));Button tag=button("标签："+(browseTags.isEmpty()?"全部":browseTags.size()+" 项"),false,()->chooseTags(null,browseTags,selected->{replace(browseTags,selected);showScreen("笔记");}));tag.setTextSize(12);controls.addView(tag,new LinearLayout.LayoutParams(0,dp(44),1));body.addView(controls);selectedFilters(body,browseTypes,browseTags,()->showScreen("笔记"));addButton(body,"管理分类与标签",this::showTaxonomyManager);sectionLabel(body,"资料列表",data.optInt("total")+" 篇");LinearLayout results=column();body.addView(results);listNotes(results,array(data,"items"));int[] offset={array(data,"items").length()};Button more=button("加载更多资料",false,()->{});more.setVisibility(offset[0]<data.optInt("total")?View.VISIBLE:View.GONE);more.setOnClickListener(v->work(()->(JSONObject)api.request("/notes?offset="+offset[0]+filterURL(browseTypes,browseTags)),next->{JSONArray items=array(next,"items");listNotes(results,items);offset[0]+=items.length();more.setVisibility(offset[0]<next.optInt("total")?View.VISIBLE:View.GONE);}));body.addView(more);
