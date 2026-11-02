@@ -44,6 +44,8 @@ final class LineIcon extends View {
                 canvas.drawCircle(10.4f,10.4f,5.8f,pen);canvas.drawLine(14.7f,14.7f,19.5f,19.5f,pen);break;
             case "笔记":
                 canvas.drawRoundRect(5,3.5f,19,20.5f,2.5f,2.5f,pen);canvas.drawLine(8.5f,8.5f,15.5f,8.5f,pen);canvas.drawLine(8.5f,12,15.5f,12,pen);canvas.drawLine(8.5f,15.5f,13.5f,15.5f,pen);break;
+            case "穴位":
+                canvas.drawCircle(12,4,2,pen);path.moveTo(8,8);path.lineTo(16,8);path.lineTo(19,13);path.moveTo(8,8);path.lineTo(5,13);path.moveTo(9,9);path.lineTo(10,15);path.lineTo(8,22);path.moveTo(15,9);path.lineTo(14,15);path.lineTo(16,22);path.moveTo(10,15);path.lineTo(14,15);canvas.drawPath(path,pen);canvas.drawCircle(12,11,1,pen);break;
             case "材料":
                 path.moveTo(3.5f,7);path.lineTo(3.5f,18);path.quadTo(3.5f,20,5.5f,20);path.lineTo(18.5f,20);path.quadTo(20.5f,20,20.5f,18);path.lineTo(20.5f,9);path.quadTo(20.5f,7,18.5f,7);path.lineTo(11,7);path.lineTo(9.2f,5);path.lineTo(5.5f,5);path.quadTo(3.5f,5,3.5f,7);canvas.drawPath(path,pen);break;
             case "对话":
