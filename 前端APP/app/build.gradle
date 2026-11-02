@@ -81,8 +81,8 @@ android {
         applicationId (project.findProperty('linjiPreviewId') ?: 'cn.linji.clinical')
         minSdk 26
         targetSdk 33
-        versionCode 26
-        versionName (localTest ? '2.16.2-local' : '2.16.2-intranet')
+        versionCode 31
+        versionName (localTest ? '2.17.0-local' : '2.17.0-intranet')
         buildConfigField 'String', 'DEFAULT_SERVER_URL', JsonOutput.toJson(intranetUrl)
     }
     buildFeatures { buildConfig true }

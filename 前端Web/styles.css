@@ -4249,3 +4249,24 @@ main.library-page { padding-top:24px; }
  .library-page .search-panel .search-input { min-height:64px; }
  .library-page .search-help { padding:9px 16px; }
 }
+
+/* Search title already appears in the top bar; keep counts compact. */
+.library-page .library-heading { justify-content:flex-end; margin-bottom:10px; min-height:22px; }
+.library-page .library-heading.heading-empty { margin:0; min-height:0; }
+
+/* Library totals share the existing toolbar instead of occupying a separate row. */
+.retrieval-filter-panel .overview-strip { display:flex; align-items:center; flex-wrap:wrap; gap:12px; min-height:0; margin:0; padding:0; border:0; color:var(--muted); font-size:12px; }
+.retrieval-filter-panel .overview-strip strong { color:var(--ink); font-size:13px; margin-right:3px; }
+
+/* Align page content with the compact library layout while leaving chat's canvas unchanged. */
+main[data-view="materials"], main[data-view="settings"] { padding-top:24px; }
+main[data-view="materials"] .upload-zone { padding:18px 22px; margin-bottom:18px; }
+main[data-view="settings"] .settings-tabs { margin-top:0; margin-bottom:18px; }
+@media(max-width:760px) {
+ main[data-view="materials"], main[data-view="settings"] { padding-top:16px; }
+ main[data-view="materials"] .upload-zone { padding:16px; margin-bottom:16px; }
+ main[data-view="settings"] .settings-tabs { margin-bottom:16px; }
+}
+
+/* The library card is the first visible content on the notes page. */
+main[data-view="notes"] .retrieval-filter-panel { margin-top:0; }

@@ -86,6 +86,9 @@ func mergeLegacyCatalogs(catalogs []taxonomyConfig) taxonomyConfig {
 }
 
 func isLibraryMutation(r *http.Request) bool {
+	if r.URL.Path == "/api/anatomy" && r.Method == "PUT" {
+		return true
+	}
 	if r.Method == http.MethodGet || r.Method == http.MethodHead {
 		return false
 	}
