@@ -109,13 +109,14 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onStart(){super.onStart();handler.postDelayed(syncLoop,1000);}
     private boolean hasDraftText(View view){if(view instanceof EditText)return !((EditText)view).getText().toString().trim().isEmpty();if(view instanceof ViewGroup){ViewGroup group=(ViewGroup)view;for(int i=0;i<group.getChildCount();i++)if(hasDraftText(group.getChildAt(i)))return true;}return false;}
-    private boolean hasSyncDraft(){return settingsDirty || ("检索".equals(screen)&&!queryFiles.isEmpty()) || ("对话".equals(screen)&&!chatFiles.isEmpty()) || (body!=null&&hasDraftText(body));}
+    private android.webkit.WebView anatomyWeb;
+    private boolean hasSyncDraft(){return "穴位".equals(screen) || settingsDirty || ("检索".equals(screen)&&!queryFiles.isEmpty()) || ("对话".equals(screen)&&!chatFiles.isEmpty()) || (body!=null&&hasDraftText(body));}
     private void pollSync(){
         if(api==null||api.token.isEmpty()||working||syncChecking||!hasWindowFocus()||recorder!=null||isFinishing())return;
         syncChecking=true;executor.execute(()->{try{JSONObject remote=(JSONObject)api.request("/sync");runOnUiThread(()->{syncChecking=false;if(isDestroyed()||api.token.isEmpty())return;String version=str(remote,"version");if(syncVersion.isEmpty()){syncVersion=version;return;}if(!syncVersion.equals(version)){if(working||!hasWindowFocus()||hasSyncDraft()){if(status!=null)status.setText("其他设备有更新 · 点击同步");return;}syncVersion=version;displayName=str(remote.optJSONObject("user"),"display_name");reloadSyncedScreen();}});}catch(Exception ignored){runOnUiThread(()->syncChecking=false);}});
     }
     private void reloadSyncedScreen(){lastSearch=null;if("对话".equals(screen)&&conversationId!=null){String target=conversationId;work(()->(JSONObject)api.request("/conversations/"+target),data->{if(target.equals(conversationId)){chatMessages.clear();chatMessages.addAll(objects(array(data,"messages")));showScreen(screen);}});}else showScreen(screen);}
-    private void syncNow(){if(working)return;if(hasSyncDraft()){new AlertDialog.Builder(this).setTitle("同步最新数据？").setMessage("将重新载入当前页面，尚未保存的输入会被放弃。").setNegativeButton("取消",null).setPositiveButton("同步",(d,w)->{queryFiles.clear();chatFiles.clear();searchDraft="";chatDraft="";settingsDirty=false;reloadSyncedScreen();}).show();}else reloadSyncedScreen();}
+    private void syncNow(){if(working)return;if(anatomyWeb!=null){anatomyWeb.evaluateJavascript("document.querySelector('[data-action=reload]').click()",null);return;}if(hasSyncDraft()){new AlertDialog.Builder(this).setTitle("同步最新数据？").setMessage("将重新载入当前页面，尚未保存的输入会被放弃。").setNegativeButton("取消",null).setPositiveButton("同步",(d,w)->{queryFiles.clear();chatFiles.clear();searchDraft="";chatDraft="";settingsDirty=false;reloadSyncedScreen();}).show();}else reloadSyncedScreen();}
     private void editProfile(JSONObject user){
         Panel p=panel("个人账户");if(p.dialog.getWindow()!=null)p.dialog.getWindow().setLayout(getResources().getDisplayMetrics().widthPixels-dp(28),Math.min(dp(440),(int)(getResources().getDisplayMetrics().heightPixels*.85)));String saved=str(user,"display_name");text(p.root,"登录用户名",11,muted,false);text(p.root,str(user,"username"),14,ink,true);EditText name=input(p.root,"显示名称",saved);name.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(40)});name.setSingleLine(true);TextView status=text(p.root,"已保存",11,muted,false),error=text(p.root,"",12,Color.rgb(163,77,67),false);error.setVisibility(View.GONE);LinearLayout actions=row();
         Button reset=button("还原",false,()->{name.setText(saved);name.setSelection(name.length());}),save=button("保存修改",true,()->{});actions.addView(reset,new LinearLayout.LayoutParams(0,dp(44),1));LinearLayout.LayoutParams saveParams=new LinearLayout.LayoutParams(0,dp(44),1);saveParams.leftMargin=dp(8);actions.addView(save,saveParams);p.root.addView(actions);p.dialog.dirty=()->!saved.equals(name.getText().toString().trim());
@@ -199,7 +200,7 @@ public final class MainActivity extends Activity {
         ScrollView scroll=new ScrollView(this);mainScroll=scroll;scroll.setFillViewport(false);scroll.setClipToPadding(false);scroll.setVerticalScrollBarEnabled(false);
         body=column();body.setPadding(dp(20),dp(16),dp(20),dp(24));scroll.addView(body);screenHost=column();root.addView(screenHost,new LinearLayout.LayoutParams(-1,0,1));screenHost.addView(scroll,new LinearLayout.LayoutParams(-1,-1));
         LinearLayout nav=row();nav.setGravity(Gravity.CENTER);nav.setPadding(dp(8),dp(9),dp(8),dp(9));nav.setBackgroundColor(Color.WHITE);
-        for(String item:Arrays.asList("检索","笔记","材料","对话","设置")){
+        for(String item:Arrays.asList("检索","笔记","穴位","材料","对话","设置")){
             boolean active=screen.equals(item);LinearLayout tab=column();tab.setGravity(Gravity.CENTER);tab.setPadding(0,dp(3),0,dp(3));tab.setBackground(new RippleDrawable(ColorStateList.valueOf(mint),bg(Color.WHITE,10,null),null));
             LinearLayout iconPill=row();iconPill.setGravity(Gravity.CENTER);iconPill.setBackground(bg(active?mint:Color.WHITE,11,null));LineIcon icon=new LineIcon(this,item,active?teal:muted);iconPill.addView(icon,new LinearLayout.LayoutParams(dp(22),dp(22)));tab.addView(iconPill,new LinearLayout.LayoutParams(dp(48),dp(30)));
             TextView label=new TextView(this);label.setText("笔记".equals(item)?"学习资料":item);label.setGravity(Gravity.CENTER);label.setTextSize(10.5f);label.setTextColor(active?teal:muted);label.setTypeface(null,active?Typeface.BOLD:Typeface.NORMAL);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.topMargin=dp(3);tab.addView(label,lp);
@@ -208,7 +209,7 @@ public final class MainActivity extends Activity {
         }
         root.addView(nav);setContentView(root);
     }
-    private void showScreen(String name){searchInputChanged=()->{};searchAttachmentList=null;screen=name;settingsDirty=false;shell();switch(name){case "检索":searchScreen();break;case "笔记":notesScreen();break;case "材料":materialsScreen();break;case "对话":chatScreen();break;default:settingsScreen();}}
+    private void showScreen(String name){if(anatomyWeb!=null){anatomyWeb.destroy();anatomyWeb=null;}searchInputChanged=()->{};searchAttachmentList=null;screen=name;settingsDirty=false;shell();switch(name){case "检索":searchScreen();break;case "笔记":notesScreen();break;case "材料":materialsScreen();break;case "穴位":anatomyScreen();break;case "对话":chatScreen();break;default:settingsScreen();}}
     private JSONArray ids(List<JSONObject> files){List<String> ids=new ArrayList<>();for(JSONObject f:files)ids.add(id(f));return array(ids);}
     private String fileSummary(List<JSONObject> files){List<String> labels=new ArrayList<>();for(JSONObject f:files)labels.add(str(f,"filename")+(str(f,"extracted_text").startsWith("【固定演示")?" · 示例预置文本":("ready".equals(str(f,"status"))?" · 已识别":str(f,"mime").startsWith("image/")?" · 可按指纹检索":" · 待补充文本")));return String.join("\n",labels);}
     private void addSearchFile(JSONObject f,TextView label){if(queryFiles.size()>=5){toast("最多添加 5 份搜索材料");return;}queryFiles.add(f);if(label!=null){label.setText(fileSummary(queryFiles));label.setVisibility(View.VISIBLE);}renderSearchAttachments();searchInputChanged.run();View clear=body.findViewWithTag("clear-search-files");if(clear!=null)clear.setVisibility(View.VISIBLE);if(!"ready".equals(str(f,"status"))&&!str(f,"mime").startsWith("image/"))showAttachment(f);}
@@ -370,6 +371,21 @@ public final class MainActivity extends Activity {
             c.setFocusable(true);c.setClickable(true);c.setContentDescription("打开笔记："+str(note,"title"));c.setOnClickListener(v->showNote(id(note)));
         }
     }
+    private void anatomyScreen(){
+        android.webkit.WebView web=new android.webkit.WebView(this);anatomyWeb=web;
+        web.getSettings().setJavaScriptEnabled(true);web.getSettings().setDomStorageEnabled(true);
+        web.getSettings().setAllowFileAccess(false);web.getSettings().setAllowContentAccess(false);
+        web.getSettings().setMixedContentMode(android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+        String origin=api.baseUrl.replaceAll("/+$", "");android.net.Uri allowed=android.net.Uri.parse(origin);
+        web.setWebChromeClient(new android.webkit.WebChromeClient(){@Override public boolean onJsConfirm(android.webkit.WebView v,String url,String message,android.webkit.JsResult result){new AlertDialog.Builder(MainActivity.this).setMessage(message).setPositiveButton("确定",(d,w)->result.confirm()).setNegativeButton("取消",(d,w)->result.cancel()).setOnCancelListener(d->result.cancel()).show();return true;}});
+        web.setWebViewClient(new android.webkit.WebViewClient(){
+            @Override public boolean shouldOverrideUrlLoading(android.webkit.WebView v,android.webkit.WebResourceRequest req){android.net.Uri uri=req.getUrl();if(!allowed.getScheme().equals(uri.getScheme())||!allowed.getAuthority().equals(uri.getAuthority()))return true;String q=uri.getQueryParameter("anatomy_q");if(q!=null){searchDraft=q;showScreen("检索");return true;}return !(uri.getPath().equals(allowed.getPath()+"/anatomy/index.html")||uri.getPath().equals(allowed.getPath()+"/anatomy/"));}
+        });
+        android.webkit.CookieManager cookies=android.webkit.CookieManager.getInstance();cookies.setAcceptCookie(true);cookies.setAcceptThirdPartyCookies(web,false);
+        String cookie="linji_session="+api.token+"; Path="+(allowed.getPath().isEmpty()?"/":allowed.getPath()+"/")+"; HttpOnly; SameSite=Strict"+("https".equals(allowed.getScheme())?"; Secure":"");
+        screenHost.removeAllViews();screenHost.addView(web,new LinearLayout.LayoutParams(-1,-1));
+        cookies.setCookie(origin+"/",cookie,ok->{cookies.flush();web.loadUrl(origin+"/anatomy/");});
+    }
     private void notesScreen(){
         body.setPadding(dp(20),dp(12),dp(20),dp(24));
         pageHeading("学习资料","按用途整理笔记，以标签连接同一主题。");
@@ -396,7 +412,7 @@ public final class MainActivity extends Activity {
     private void divider(LinearLayout parent,int before,int after){View v=new View(this);v.setBackgroundColor(border);LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,dp(1));p.topMargin=dp(before);p.bottomMargin=dp(after);parent.addView(v,p);}
     private void sectionLabel(LinearLayout parent,String title,String count){LinearLayout r=row();TextView h=new TextView(this);h.setText(title);h.setTextSize(13);h.setTypeface(null,Typeface.BOLD);h.setTextColor(ink);r.addView(h,new LinearLayout.LayoutParams(0,-2,1));TextView c=new TextView(this);c.setText(count);c.setTextSize(11);c.setTextColor(muted);r.addView(c);LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.topMargin=dp(18);p.bottomMargin=dp(13);parent.addView(r,p);}
     private void stepRow(LinearLayout parent,String value,int index,JSONArray terms){LinearLayout r=row();r.setGravity(Gravity.TOP);r.setPadding(dp(12),dp(12),dp(14),dp(12));r.setBackground(bg(soft,11,null));TextView number=chip(String.valueOf(index),teal,mint);number.setGravity(Gravity.CENTER);number.setPadding(0,0,0,0);r.addView(number,new LinearLayout.LayoutParams(dp(27),dp(27)));TextView t=new TextView(this);t.setText(value);t.setTextSize(15);t.setTextColor(ink);t.setLineSpacing(dp(5),1);t.setTextIsSelectable(true);highlightMatches(t,terms);LinearLayout.LayoutParams tp=new LinearLayout.LayoutParams(0,-2,1);tp.leftMargin=dp(12);r.addView(t,tp);LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.bottomMargin=dp(8);parent.addView(r,p);}
-    private void navigateScreen(String target){if(screen.equals(target))return;if("对话".equals(screen)){EditText draft=body.findViewWithTag("chat-input");if(draft!=null)chatDraft=draft.getText().toString();}if(settingsDirty){new AlertDialog.Builder(this).setTitle("设置尚未保存").setMessage("保存后才能在其他设备使用，是否放弃修改？").setNegativeButton("继续编辑",null).setPositiveButton("放弃修改",(d,w)->showScreen(target)).show();}else showScreen(target);}
+    private void navigateScreen(String target){if(screen.equals(target))return;if(anatomyWeb!=null){anatomyWeb.evaluateJavascript("document.querySelector('#atlas-root')?.dataset.dirty === 'true'",value->{if("true".equals(value))new AlertDialog.Builder(this).setMessage("有未保存的图谱修改，确定放弃吗？").setNegativeButton("继续编辑",null).setPositiveButton("放弃修改",(d,w)->showScreen(target)).show();else showScreen(target);});return;}if("对话".equals(screen)){EditText draft=body.findViewWithTag("chat-input");if(draft!=null)chatDraft=draft.getText().toString();}if(settingsDirty){new AlertDialog.Builder(this).setTitle("设置尚未保存").setMessage("保存后才能在其他设备使用，是否放弃修改？").setNegativeButton("继续编辑",null).setPositiveButton("放弃修改",(d,w)->showScreen(target)).show();}else showScreen(target);}
     private void showNote(String noteId){work(()->(JSONObject)api.request("/notes/"+noteId),note->{
         Panel p=panel("完整记录");LinearLayout root=p.root;text(root,typeNames(note)+"  ·  "+str(note,"occurred_on"),11,teal,false);text(root,str(note,"title"),23,ink,true);text(root,String.join("  ·  ",strings(array(note,"tags"))),11,muted,false);
         sectionLabel(root,str(learningType(note),"content_label"),"");TextView content=text(root,str(note,"content").isEmpty()?"尚未填写正文":str(note,"content"),15,ink,false);content.setTextIsSelectable(true);
@@ -624,5 +640,6 @@ public final class MainActivity extends Activity {
     private void cancelRecording(){handler.removeCallbacks(recordingTimeout);if(recorder!=null){try{recorder.stop();}catch(Exception ignored){}recorder.release();recorder=null;}if(recordingFile!=null)recordingFile.delete();if(recordingDialog!=null)recordingDialog.dismiss();recordingDialog=null;}
     private void clearExports(){File dir=new File(getCacheDir(),"exports");File[] files=dir.listFiles();if(files!=null)for(File f:files)f.delete();dir.delete();}
     @Override protected void onStop(){handler.removeCallbacks(syncLoop);super.onStop();if(recorder!=null){cancelRecording();toast("录音已取消，可返回后重新录制");}}
-    @Override protected void onDestroy(){cancelRecording();executor.shutdownNow();super.onDestroy();}
+    @Override public void onBackPressed(){if(anatomyWeb!=null){navigateScreen("检索");return;}super.onBackPressed();}
+    @Override protected void onDestroy(){if(anatomyWeb!=null){anatomyWeb.destroy();anatomyWeb=null;}cancelRecording();executor.shutdownNow();super.onDestroy();}
 }

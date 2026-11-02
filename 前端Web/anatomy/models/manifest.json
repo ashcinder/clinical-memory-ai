@@ -1,0 +1,18 @@
+{
+  "source": "https://github.com/kblood/CharacterCreator/blob/master/output/base_body.glb",
+  "license": "CC0-1.0 (generated assets only)",
+  "upstream_license": "https://github.com/kblood/CharacterCreator/blob/master/LICENSE-NOTES.md",
+  "source_sha256": "b5b450af89f6fbf8debf387eda8da40cd0a8c3253a2d59871c730ce7e7f46469",
+  "model_units_height": 2,
+  "clinical_validated": false,
+  "files": {
+    "male.glb": {
+      "bytes": 896004,
+      "sha256": "8aa49db78e54514cf248acac19e76d30e194a608de47f0141d47adf5dad21df6"
+    },
+    "female.glb": {
+      "bytes": 896000,
+      "sha256": "4a6db29ac8c16e5780839c3a06c20b94fb5761550a0be1a5d2a9d6a17e1b88f6"
+    }
+  }
+}

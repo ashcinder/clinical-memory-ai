@@ -99,6 +99,8 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("PUT /api/search-settings", a.guard(a.putSearchSettings))
 	mux.HandleFunc("GET /api/ai-config", a.guard(a.getAISettings))
 	mux.HandleFunc("PUT /api/ai-config", a.guard(a.putAISettings))
+	mux.HandleFunc("GET /api/anatomy", a.guard(a.getAnatomy))
+	mux.HandleFunc("PUT /api/anatomy", a.guard(a.putAnatomy))
 	mux.HandleFunc("GET /api/stats", a.guard(a.stats))
 	mux.HandleFunc("GET /api/taxonomy", a.guard(a.taxonomy))
 	mux.HandleFunc("POST /api/taxonomy", a.guard(a.mutateTaxonomy))

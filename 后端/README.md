@@ -27,7 +27,3 @@ GET /api/sync 提供账户同步版本；PUT /api/auth/me 修改显示名称。�
 `LINJI_RUN_OFFLINE=1 go test -v ./internal/server -run TestLiveOfflineExtraction` 验证实际本地识别引擎。`MYSQL_TEST_DSN=... go test -race ./...` 包含断言云端请求次数为零的关闭开关测试、精确与压缩图匹配、权限和缓存验证。
 
 分类与标签由 MySQL 的 `user_taxonomy` 按账户保存，启动时自动建表。`GET /api/taxonomy` 返回可编辑目录、使用数量及 `version`；`POST /api/taxonomy` 接受 `kind`（type/tag）、`action`（create/rename/delete）、`id`、`name`、`expected_version`。修改在事务中同步更新笔记分类/标签、全文索引和同步版本，版本冲突返回 409；删除类型将笔记移到保留类型，删除标签只移除关联。预设类型保留稳定 ID 与旧分类别名，自定义类型使用独立 ID。
-
-多类型笔记：`NoteInput.note_types` / `Note.note_types` 为类型 ID 数组，旧标量字段保持兼容。`note_type_links` 保存多对多关联；旧笔记按原 category 读取，无需改写正文。列表支持重复 `note_types`、`tags` 查询参数；搜索 JSON 支持 `note_types`、`tags` 数组。多个类型按 OR，标签按 AND，在数据库分页前过滤。删除类型会保留笔记的其他类型，旧客户端未提交数组时会保留附加类型。
-
-当 `/api/search` 没有文字和附件但提供 `note_types` 或 `tags` 时，按条件查找并返回 `total`（数量上限仍受 limit 限制），不调用云端模型；没有任何输入或条件仍返回 422。条件查找的原文片段不会标成文字命中。

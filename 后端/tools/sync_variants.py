@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 def shared_files(root):
-    fixed = ['AGENTS.md', '多版本同步.md', '后端/tools/sync_variants.py',
+    fixed = ['AGENTS.md', '多版本同步.md', '后端/tools/sync_variants.py', '后端/tools/verify_anatomy.mjs', '后端/deploy/intranet/build-bundle.sh',
              '后端/go.mod', '后端/go.sum', '后端/internal/server/schema.sql', '数据库数据/schema.sql']
     result = {Path(p) for p in fixed if (root / p).is_file()}
     for folder, patterns in [('后端/cmd', ['*.go']), ('后端/internal/server', ['*.go']),
@@ -18,7 +18,7 @@ def shared_files(root):
     # Explicit Web assets; never touch downloads, runtime settings, or generated output.
     for name in ['index.html', 'app.js', 'styles.css', 'demo-match.js', 'favicon.svg', 'demo-assets.json']:
         if (root / '前端Web' / name).is_file(): result.add(Path('前端Web') / name)
-    for p in (root / '前端Web/demo-files').rglob('*'):
+    for p in list((root / '前端Web/demo-files').rglob('*'))+list((root / '前端Web/anatomy').rglob('*')):
         if p.is_file(): result.add(p.relative_to(root))
     return sorted(result)
 

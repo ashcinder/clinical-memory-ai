@@ -22,7 +22,7 @@ for tool in server backup db-info; do
   CGO_ENABLED=0 GOOS="$target_os" GOARCH="$target_arch" go build -trimpath -o "$bundle/后端/bin/linji-$tool" "./cmd/$tool"
 done
 # Explicit allowlist: never bundle .env, SQL dumps, uploads, models or user keys.
-for asset in index.html app.js styles.css demo-match.js favicon.svg demo-assets.json demo-files; do
+for asset in index.html app.js styles.css demo-match.js favicon.svg demo-assets.json demo-files anatomy; do
   cp -R "$task_root/前端Web/$asset" "$bundle/前端Web/"
 done
 mkdir -p "$bundle/后端/deploy/intranet"

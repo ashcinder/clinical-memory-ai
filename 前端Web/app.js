@@ -44,6 +44,7 @@ const titles = {
   search: "经验检索",
   notes: "学习资料",
   materials: "材料归档",
+  anatomy: "穴位图谱",
   chat: "AI 对话",
   settings: "服务设置",
 };
@@ -271,12 +272,13 @@ function bindDraft(form, extra = () => "") {
     }
   });
 }
+let anatomyView = null;
 function canLeavePage() {
   if (state.busy || state.searching || state.chatting || conversationDeleting || taxonomySaving || profileSaving || modelSettingsSaving) {
     toast("请等待当前操作完成");
     return false;
   }
-  const dirty =
+  const dirty = anatomyView?.hasChanges() ||
     $("#ai-settings-form")?.dataset.dirty === "true" ||
     $("#profile-form")?.dataset.dirty === "true" ||
     !!$("#chat-input")?.value.trim();
@@ -408,6 +410,7 @@ async function refreshData() {
 }
 function hasSyncDraft() {
   return (
+    anatomyView?.hasChanges() ||
     $("#dialog").open ||
     recorder?.state === "recording" ||
     (state.view === "search" && state.searchFiles.length > 0) ||
@@ -568,6 +571,7 @@ async function navigate(view) {
     toast("请先结束当前录音");
     return;
   }
+  anatomyView?.dispose(); anatomyView=null;
   libraryRequest++;
   state.view = view;
   $("#main").dataset.view = view;
@@ -595,6 +599,7 @@ async function navigate(view) {
       state.total = data.total;
       renderLibrary();
     } else if (view === "materials") await renderMaterials();
+    else if (view === "anatomy") await renderAnatomy();
     else if (view === "chat") await renderChat();
     else await renderSettings();
   } catch (e) {
@@ -2053,4 +2058,14 @@ async function openTaxonomyManager(initialKind = "type") {
   $('#taxonomy-search').oninput=(e)=>{query=e.target.value;editing=null;deleting=null;draw();};
   $$('[data-manage-kind]').forEach((b)=>b.onclick=()=>{if(taxonomySaving)return;if(!allowDiscard())return;kind=b.dataset.manageKind;editing=null;deleting=null;query="";$('#taxonomy-search').value="";$('#taxonomy-new-name').value="";error.hidden=true;draw();});
   draw();$('#taxonomy-new-name').focus();
+}
+
+async function renderAnatomy() {
+ $("#main").innerHTML='<div id="anatomy-view"></div>';
+ const node=$("#anatomy-view");
+ const {mountAtlas}=await import(siteURL('/anatomy/viewer.js'));
+ if(!node.isConnected)return;
+ const view=await mountAtlas(node,APP_BASE);
+ if(node.isConnected)anatomyView=view;else view.dispose();
+ node.addEventListener('anatomy-search',e=>{state.lastQuery=e.detail;navigate('search');});
 }

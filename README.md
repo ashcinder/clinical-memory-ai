@@ -8,9 +8,13 @@
 
 ## 服务器部署
 
-当前为公网分支 `codex/public-multiselect`，Web 入口为 https://124.221.183.247/clinical-memory/，Android 2.16.2 首次连接预填同一公网 HTTPS 地址。原内网分支 `codex/intranet-deployment` 保留独立代码与配置。
+**当前分支为内网部署版本**：手机 App 与电脑网页连接同一个内网 HTTPS 入口，后端可调用外部 AI。完整步骤、Linux 部署包、内部 CA、数据迁移与验收见 [内网部署说明](后端/deploy/intranet/README.md)。
 
-一篇笔记可选择多个资料类型及多个标签。筛选时类型按“匹配任一种”、标签按“同时满足”组合；所有已选条件分组展示，支持单独取消或清空。资料类型删除只解除该类型，仍保留其他类型；没有剩余类型时归入保留类型。
+```bash
+bash 后端/deploy/intranet/build-bundle.sh
+```
+
+App 不再默认连接公网；首次使用填写实际内网服务地址，或构建时用 `-PlinjiServerUrl=https://你的内网域名/clinical-memory` 设置默认地址。已有安装保留原地址，升级后需在连接页切换。同一账户共用资料；本分支不增加多人开户或共享权限。现有云端部署说明保留作历史部署参考。
 
 已支持通过 `PUBLIC_BASE_PATH=/clinical-memory` 使用独立子路径部署，网页资源、API 和登录 Cookie 均使用该路径。Android 的后端地址也可包含此路径。部署配置与运维说明见 [后端/deploy/README.md](后端/deploy/README.md)，初始密码和实际测试记录仅保存在本机已忽略的 `后端/output/` 中。
 
