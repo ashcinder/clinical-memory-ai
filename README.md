@@ -8,7 +8,7 @@
 
 ## 服务器部署
 
-当前为公网分支 `codex/public-multiselect`，Web 入口为 https://124.221.183.247/clinical-memory/，Android 2.16.1 首次连接预填同一公网 HTTPS 地址。原内网分支 `codex/intranet-deployment` 保留独立代码与配置。
+当前为公网分支 `codex/public-multiselect`，Web 入口为 https://124.221.183.247/clinical-memory/，Android 2.16.2 首次连接预填同一公网 HTTPS 地址。原内网分支 `codex/intranet-deployment` 保留独立代码与配置。
 
 一篇笔记可选择多个资料类型及多个标签。筛选时类型按“匹配任一种”、标签按“同时满足”组合；所有已选条件分组展示，支持单独取消或清空。资料类型删除只解除该类型，仍保留其他类型；没有剩余类型时归入保留类型。
 

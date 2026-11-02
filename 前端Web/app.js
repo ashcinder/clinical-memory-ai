@@ -570,7 +570,7 @@ async function navigate(view) {
   }
   libraryRequest++;
   state.view = view;
-  $("#main").classList.remove("reading-results", "chat-page");
+  $("#main").classList.remove("reading-results", "chat-page", "library-page");
   document.body.classList.toggle("chat-open", view === "chat");
   $(".main-shell").classList.toggle("chat-active", view === "chat");
   $("#sidebar-chat").hidden = view !== "chat";
@@ -969,21 +969,13 @@ function renderLibrary() {
   const visible = hasResults ? state.results.items : state.notes;
   let filtered=visible.filter((n)=>matchesTypes(n,state.categories)&&matchesTags(n,state.tagFilters));
   if(hasResults&&state.resultSort==="date")filtered.sort((a,b)=>b.occurred_on.localeCompare(a.occurred_on));
+  $("#main").classList.add("library-page");
   $("#main").classList.toggle("reading-results", hasResults);
   $("#main").innerHTML =
-    heading(
-      "",
-      search ? "查阅历史笔记" : "学习资料",
-      search
-        ? hasResults
-          ? "直接阅读命中的原文与条目，必要时对照原件。"
-          : "输入主题、技能名称或图片，查阅已有教程、知识与诊疗笔记。"
-        : "把观察、过程与原始材料，留在同一份记录里。",
-    ) +
+    `<section class="page-heading library-heading"><h1>${search ? "查阅历史笔记" : "学习资料"}</h1>${hasResults ? "" : statsStrip()}</section>` +
     (search
       ? `<section class="search-panel ${hasResults ? "has-results" : ""}"><form id="search-form" class="search-form"><div class="search-input-wrap">${icon("search")}<label class="visually-hidden" for="query">检索内容</label><textarea id="query" class="search-input" placeholder="搜索笔记，或粘贴图片" maxlength="2000" rows="2">${esc(state.lastQuery || "")}</textarea></div><div id="search-files" class="attachment-chips">${fileChips(state.searchFiles, "search")}</div><div class="search-tools"><div class="input-actions"><button type="button" class="tool-btn" id="search-upload" aria-label="添加图片、音频或文档" title="图片、音频或文档">${icon("image")}材料</button><button type="button" class="tool-btn" id="search-record">${icon("mic")}录音</button></div><button class="primary" id="search-submit">检索记录 ${icon("arrow")}</button></div><div class="search-preferences"><div class="search-range-controls" role="group" aria-label="检索范围"><div class="search-scope"><span>资料类型</span><button id="search-scope" type="button" aria-label="选择检索资料类型" aria-haspopup="dialog"></button></div><div class="search-scope"><span>标签</span><button id="search-scope-tags" type="button" aria-label="选择检索标签" aria-haspopup="dialog"></button></div></div>${searchSwitch(true)}</div><div id="search-scope-selection" class="search-scope-selection" aria-label="检索条件" hidden></div><div id="search-busy" class="busy-text" hidden>正在上传并识别材料，请稍候…</div><p id="search-error" class="error" role="alert" hidden></p></form><div class="search-help"><span>可直接粘贴图片 · 单份不超过 20 MB</span><span class="keyboard-hint"><kbd>⌘</kbd> / <kbd>Ctrl</kbd> + <kbd>Enter</kbd> 检索</span></div></section>`
       : "") +
-    (hasResults ? "" : statsStrip()) +
     `<section id="library-results" aria-label="${hasResults ? "检索结果" : "笔记列表"}" tabindex="-1">${libraryFilterBar(visible, filtered, hasResults, search)}${hasResults ? searchSummary() : ""}<div class="notes-grid ${hasResults ? "search-results" : ""}" id="note-list" aria-live="polite">${hasResults ? searchCards(filtered) : cards(filtered)}</div>${!hasResults && state.notes.length < state.total ? '<button class="secondary load-more" id="load-more">加载更多笔记</button>' : ""}</section>`;
   bindCards();
   bindResultMaterials(filtered);
