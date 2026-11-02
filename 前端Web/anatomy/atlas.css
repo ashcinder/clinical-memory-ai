@@ -3,3 +3,21 @@
 /* Local realistic atlas controls. */
 .a-sex{display:flex;border:1px solid var(--a-line);border-radius:9px;padding:3px;gap:3px;background:#fff}.atlas .a-sex button{border:0;min-height:35px;padding:6px 13px}.atlas .a-sex button[aria-pressed=true]{background:#e3eeea;color:#1e655b;font-weight:600}.a-visibility{display:flex;align-items:center;gap:7px;white-space:nowrap;font-size:13px}.atlas .a-visibility input{accent-color:var(--a-teal);width:17px;height:17px}.a-side-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.a-model-name{color:#6c7e78;font-size:12px}.a-point-label{position:absolute;pointer-events:none;transform:translate(-50%,-135%);background:#fffef5f2;color:#5b4524;border:1px solid #d7bb78;border-radius:6px;padding:4px 8px;font-size:12px;white-space:nowrap;box-shadow:0 3px 12px #253b3510}.a-model-loading{position:absolute;inset:0;background:#f1f6f3dc;display:grid;place-items:center;color:#4b7067;font-size:14px}.a-model-loading[hidden],.a-point-label[hidden]{display:none}.a-legacy{font-size:11px;color:#8b684b;border-top:1px solid var(--a-line);padding-top:10px}.atlas-head .a-status{min-width:120px}.a-editing canvas{cursor:crosshair}.atlas-stage{background:radial-gradient(ellipse at 50% 40%,#fff,#e9efec)}
 @media(max-width:850px){.atlas-head .a-status{order:1;flex-basis:100%;font-size:12px}.atlas-head{row-gap:8px}.a-sex{margin-right:3px}.a-visibility{font-size:12px}.atlas-stage{height:490px}.a-side-head{margin-bottom:8px}}
+
+/* One local point-visibility control. */
+.atlas .a-views{align-items:center;max-width:calc(100% - 24px)}
+.atlas .a-all-points{position:relative;display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:7px 10px;border:1px solid var(--a-line);border-radius:9px;background:#ffffffee;color:#49675f;cursor:pointer;font-size:12px;user-select:none}
+.atlas .a-all-points input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.a-switch-track{position:relative;width:26px;height:16px;flex-shrink:0;background:#bdcac5;border-radius:10px;transition:background .15s}
+.a-switch-track::after{content:'';position:absolute;left:3px;top:3px;width:10px;height:10px;border-radius:50%;background:#fff;transition:transform .15s}
+.a-all-points input:checked + .a-switch-track{background:#226a60}
+.a-all-points input:checked + .a-switch-track::after{transform:translateX(10px)}
+.atlas .a-all-points:has(input:focus-visible){outline:2px solid var(--a-teal);outline-offset:2px}
+.atlas .a-orientation{top:auto;bottom:60px;right:14px;font-size:11px;color:#6c8178}
+@media(max-width:850px){.atlas .a-views{right:12px;max-width:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:5px}.atlas .a-views button{padding:6px 8px}.atlas .a-all-points{gap:5px;padding:6px 8px;min-height:40px;font-size:11px}}
+
+/* Visible names sit in two ordered side columns, linked to their surface points. */
+.a-name-layer{position:absolute;inset:0;pointer-events:none;z-index:1}.a-name-layer[hidden]{display:none}.a-name-lines{position:absolute;inset:0;width:100%;height:100%;overflow:hidden}.a-callout-line{fill:none;stroke:#648d80;stroke-width:.7;opacity:.32}.a-callout-line.is-selected{stroke:#b47e25;stroke-width:1.1;opacity:.95}
+.atlas .a-callout{position:absolute;transform:translateY(-50%);min-height:18px;height:18px;line-height:16px;padding:0 3px;font-size:11px;font-weight:500;border:1px solid #d8e5dfaa;border-radius:4px;background:#fffffff2;color:#315d51;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:auto;box-shadow:none}
+.atlas .a-callout:hover,.atlas .a-callout[aria-pressed=true]{color:#765015;border-color:#d2aa57;background:#fff9e9;z-index:2}.atlas .a-views{z-index:3}.a-model-loading{z-index:4}.a-point-label{z-index:2}
+@media(max-width:850px){.atlas .a-callout{font-size:11px;min-height:17px;height:17px;line-height:15px;padding:0 2px}.a-callout-line{opacity:.28;stroke-width:.65}.atlas-stage{min-height:440px}}
