@@ -9,6 +9,8 @@ import (
 )
 
 type AnatomyPoint struct {
+	Model       string     `json:"model,omitempty"`
+	Hidden      bool       `json:"hidden,omitempty"`
 	ID          string     `json:"id"`
 	Name        string     `json:"name"`
 	Code        string     `json:"code"`
@@ -29,6 +31,9 @@ func validateAtlas(points []AnatomyPoint) {
 	}
 	ids := map[string]bool{}
 	for _, p := range points {
+		if p.Model != "" && p.Model != "male-real-v1" && p.Model != "female-real-v1" {
+			fail(422, "未知人体模型")
+		}
 		bounded("标注ID", p.ID, 1, 64)
 		bounded("名称", p.Name, 1, 80)
 		bounded("编号", p.Code, 0, 40)
