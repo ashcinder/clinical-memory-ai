@@ -4226,3 +4226,26 @@ dialog.facet-picker-dialog {
 }
 
 @media(max-width:760px) { .sidebar-bottom>.sidebar-toggle { display:none; } }
+
+/* Keep the query and library together; counts belong to the heading, not a spacer. */
+main.library-page { padding-top:24px; }
+.library-page .library-heading { align-items:center; flex-wrap:wrap; gap:8px 20px; margin-bottom:16px; }
+.library-page .library-heading h1 { font-size:24px; line-height:1.4; letter-spacing:-.4px; }
+.library-heading .overview-strip { display:flex; flex-wrap:wrap; align-items:center; gap:16px; margin:0; padding:0; border:0; min-height:0; font-size:12px; color:var(--muted); }
+.library-heading .overview-strip strong { font-size:14px; font-weight:600; margin-right:4px; color:var(--ink); }
+.library-page .search-panel { margin-bottom:18px; }
+.library-page .search-panel .search-form { padding:16px 22px 12px; }
+.library-page .search-panel .search-input { min-height:60px; }
+.library-page .search-panel .search-tools { margin-top:6px; }
+.library-page .search-preferences { margin-top:12px; padding-top:10px; }
+.library-page .search-help { padding:10px 22px; }
+@media(max-width:760px) {
+ main.library-page { padding-top:16px; }
+ .library-page .library-heading { margin-bottom:12px; gap:6px 12px; }
+ .library-page .library-heading h1 { font-size:21px; }
+ .library-heading .overview-strip { gap:12px; font-size:11px; }
+ .library-heading .overview-strip strong { font-size:13px; }
+ .library-page .search-panel .search-form { padding:14px 16px 12px; }
+ .library-page .search-panel .search-input { min-height:64px; }
+ .library-page .search-help { padding:9px 16px; }
+}
