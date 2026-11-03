@@ -4271,36 +4271,65 @@ main[data-view="settings"] .settings-tabs { margin-top:0; margin-bottom:18px; }
 /* The library card is the first visible content on the notes page. */
 main[data-view="notes"] .retrieval-filter-panel { margin-top:0; }
 
-/* Compact clinical worksheet: short identity row, optional extended fields. */
-#note-form > .form-grid { gap:14px; }
+/* Clinical worksheet: consistent surfaces, aligned controls, quiet secondary actions. */
+#note-form > .form-grid { gap:16px; align-items:start; }
 #note-form .editor-types { padding:10px 12px; }
 #note-form .editor-type-options label { min-height:36px; padding:4px 8px; }
 #note-form .editor-type-options input { min-height:0; padding:0; }
 #note-form .selection-preview { font-size:11px; margin-top:6px; }
-.editor-details { padding:14px 16px; border:1px solid #dce6e3; border-radius:10px; background:#fff; }
-.detail-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
-.editor-details h4 { margin:0; font-size:14px; color:#213f3d; }.editor-details h4 small { margin-left:6px; font-size:11px; font-weight:400; color:#748683; }
-#detail-progress { font-size:11px; color:#748683; }
-.detail-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:10px 12px; }
-.detail-field { min-width:0; grid-column:span 2; }.detail-field-wide { grid-column:span 3; }
-.detail-field > label { display:flex; align-items:center; gap:6px; font-size:12px; margin:0 0 5px; color:#536e67; }
-.detail-field label small { font-size:10px; color:#788b86; font-weight:400; }
-.editor-details .detail-field input:not([type="hidden"]),.editor-details .detail-field select { min-height:38px; height:38px; padding:7px 10px; font-size:13px; }
-.editor-details .detail-field textarea { min-height:56px; padding:8px 10px; font-size:13px; line-height:1.5; resize:vertical; }
-#detail-extra { border-top:1px solid #e5ece9; margin-top:12px; padding-top:2px; }
-#detail-extra > summary,.detail-custom > summary { cursor:pointer; min-height:36px; align-content:center; font-size:12px; color:#32695e; }
-#detail-extra > summary { display:flex; align-items:center; justify-content:space-between; gap:8px; }
-#detail-extra > summary::after { content:'展开 ⌄'; font-size:11px; }#detail-extra[open]>summary::after{content:'收起 ⌃';}
-#detail-extra > summary small { font-size:11px; font-weight:400; color:#7b8c87; margin-left:5px; }
-.detail-extra-status { margin-left:auto; font-size:11px; color:#7b8c87; }
-#detail-extra[open]>.detail-grid { margin-top:6px; }
-.detail-custom { margin-top:4px; }.detail-add { display:flex; align-items:center; gap:8px; }.detail-add input { flex:1; min-width:0; min-height:38px; font-size:13px; }.detail-add button{flex-shrink:0;}
-.detail-multi { padding:6px 8px; border:1px solid #d9e3db; border-radius:7px; background:#fff; }
-.detail-multi:focus-within{border-color:#619a8c;box-shadow:0 0 0 2px #e4f1eb;}
-.detail-token-list{display:flex; flex-wrap:wrap; gap:5px; }.detail-token-list:empty{display:none;}
-.detail-token{display:inline-flex;align-items:center;gap:7px;max-width:100%;overflow-wrap:anywhere;padding:4px 7px;border:0;border-radius:5px;background:#e9f3ef;color:#236758;font-size:12px;text-align:left;min-height:28px;}
-.detail-token span{color:#627e74;}.detail-token-entry{display:flex;align-items:center;gap:4px;}
-.editor-details .detail-token-entry input{border:0;background:transparent;box-shadow:none;flex:1;height:32px;min-height:32px;padding:4px 2px;}
-.detail-token-add{border:0;background:transparent;color:#276d5b;font-size:18px;min-width:36px;min-height:36px;}
+#note-form > .form-grid > label { position:relative; gap:6px; }
+#note-form .editor-tags { display:flex; flex-direction:column; gap:6px; }
+#note-form .editor-tags small { position:absolute; right:0; top:0; font-size:11px; color:#82918c; }
+#note-form > .form-grid > label > input { height:42px; min-height:42px; font-size:13px; padding:9px 12px; }
+.editor-details { border:1px solid #dce5e1; border-radius:12px; background:#fff; overflow:hidden; }
+.detail-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-bottom:1px solid #e9eeeb; }
+.editor-details h4 { display:flex;align-items:center;gap:8px;margin:0;font-size:14px;font-weight:600;color:#29483f; }
+.editor-details h4::before { content:'';width:3px;height:14px;border-radius:2px;background:#2b7764;margin-right:2px; }
+.editor-details h4 small { font-size:10px;font-weight:400;line-height:18px;padding:0 6px;border-radius:4px;background:#f1f5f3;color:#71847c; }
+#detail-progress { font-size:11px; color:#82918b; font-variant-numeric:tabular-nums; }
+#detail-fields { padding:16px 18px; }
+.detail-identity { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:12px;background:#f5f8f6;border:1px solid #edf1ee;border-radius:8px; }
+.detail-identity[data-columns="1"]{grid-template-columns:1fr}.detail-identity[data-columns="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+.detail-clinical { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px;align-items:start; }
+.detail-clinical > :only-child { grid-column:1/-1; }
+.detail-grid { display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px; }
+.detail-field { min-width:0; }.detail-grid>.detail-field{grid-column:span 2}.detail-grid>.detail-field-wide{grid-column:span 3}
+.detail-field > label { display:flex;align-items:center;gap:6px;font-size:12px;line-height:18px;height:18px;margin:0 0 6px;color:#526e61; }
+.detail-field label small { font-size:10px;line-height:16px;padding:0 5px;border-radius:4px;background:#f1f5f3;color:#7b8d83; }
+.editor-details .detail-field input:not([type="hidden"]),.editor-details .detail-field select { min-height:40px;height:40px;padding:8px 10px;border:1px solid #d9e3dd;border-radius:7px;background:#fff;font-size:13px;color:#2e483e; }
+.editor-details .detail-field textarea { display:block;min-height:88px;height:88px;padding:10px 12px;border:1px solid #d9e3dd;border-radius:8px;line-height:1.6;font-size:13px;resize:vertical;background:#fff; }
+.editor-details input::placeholder,.editor-details textarea::placeholder{color:#9aa89f;font-size:12px;}
+.editor-details :is(input,textarea,select):focus{outline:none;border-color:#528d77;box-shadow:0 0 0 3px #edf5f0;}
+.detail-multi { display:flex;flex-direction:column;justify-content:flex-start;gap:6px;min-height:88px;padding:10px;border:1px solid #d9e3dd;border-radius:8px;background:#fff; }
+.detail-multi:focus-within { border-color:#528d77;box-shadow:0 0 0 3px #edf5f0; }
+.detail-token-list { display:flex;flex-wrap:wrap;gap:5px; }.detail-token-list:empty{display:none}
+.detail-token { display:inline-flex;align-items:center;gap:7px;max-width:100%;overflow-wrap:anywhere;min-height:26px;padding:3px 7px;border:1px solid #dbeae1;border-radius:5px;background:#edf5f0;color:#32654f;font-size:12px;line-height:18px;text-align:left; }
+.detail-token span { color:#799584; }
+.detail-token-entry { display:flex;align-items:center;gap:8px;min-height:32px;flex:1; }
+.editor-details .detail-field .detail-token-entry input { border:0;border-radius:0;background:transparent;box-shadow:none!important;outline:none;flex:1;min-width:0;height:32px;min-height:32px;padding:4px 0; }
+.detail-token-add { display:grid;place-items:center;flex-shrink:0;width:30px;height:30px;min-height:30px;padding:0;border:1px solid #dce9e1;border-radius:6px;background:#f0f6f2;color:#39775e;font-size:19px;line-height:1; }
+.detail-token-add:hover { background:#e5f0e9;border-color:#aac8b7; }
+.detail-footer { display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;column-gap:14px;min-height:46px;margin:0 18px;padding:4px 0;border-top:1px solid #e7ede9; }
+#detail-more-slot:has(#detail-extra[open]){grid-column:1/-1;}
+#detail-extra { margin:0;padding:0;border:0; }
+#detail-extra > summary,.detail-custom > summary { display:flex;align-items:center;gap:7px;min-height:38px;padding:4px 0;cursor:pointer;list-style:none;font-size:12px;color:#4c6b5b; }
+.editor-details summary::-webkit-details-marker{display:none}
+#detail-extra > summary small { display:inline-block;min-width:19px;line-height:18px;margin-left:4px;padding:0 5px;border-radius:4px;background:#f0f4f1;color:#839088;font-size:10px;text-align:center; }
+.detail-extra-status { font-size:10px;color:#85958b; }
+.detail-chevron { width:6px;height:6px;margin:0 4px;border-right:1px solid #6f8b79;border-bottom:1px solid #6f8b79;transform:rotate(45deg); }
+#detail-extra[open]>summary .detail-chevron{transform:rotate(225deg)}
+#detail-extra[open]>.detail-grid { padding:10px 0 14px; }
+.detail-custom { margin:0;justify-self:end; }
+.detail-custom[open] { grid-column:1/-1;justify-self:stretch;border-top:1px solid #edf1ee;padding-bottom:10px; }
+.detail-custom-plus{font-size:15px;color:#629078;}
+.detail-add { display:flex;align-items:center;gap:8px; }.detail-add input{flex:1;min-width:0;min-height:38px;font-size:13px;}.detail-add button{flex-shrink:0;}
 .detail-values { margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 20px; }.detail-values dt { font-size:12px; color:#627a77; margin-bottom:4px; }.detail-values dd { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; }
-@media(max-width:600px){.editor-details{padding:12px}.detail-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.detail-field{grid-column:span 1}.detail-field-wide{grid-column:1/-1}.detail-values{grid-template-columns:1fr}.detail-extra-status{display:none}#note-form .editor-type-options{gap:5px}#note-form .editor-type-options label{font-size:11px;padding:4px 6px;gap:4px}}
+
+@media(max-width:600px){
+ .detail-heading{padding:12px}.editor-details h4{font-size:13px}#detail-progress{font-size:10px}
+ #detail-fields{padding:12px}.detail-identity{gap:8px;padding:10px;grid-template-columns:repeat(2,minmax(0,1fr));}.detail-identity>.detail-field:last-child:nth-child(odd){grid-column:1/-1}
+ .detail-clinical{grid-template-columns:1fr;gap:12px;margin-top:12px}.detail-footer{margin:0 12px;gap:8px}
+ .detail-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.detail-grid>.detail-field{grid-column:span 1}.detail-grid>.detail-field-wide{grid-column:1/-1}
+ .detail-values{grid-template-columns:1fr}.detail-extra-status{display:none}
+ #note-form .editor-type-options{gap:5px}#note-form .editor-type-options label{font-size:11px;padding:4px 6px;gap:4px}
+}
