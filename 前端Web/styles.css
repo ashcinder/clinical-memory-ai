@@ -4270,3 +4270,9 @@ main[data-view="settings"] .settings-tabs { margin-top:0; margin-bottom:18px; }
 
 /* The library card is the first visible content on the notes page. */
 main[data-view="notes"] .retrieval-filter-panel { margin-top:0; }
+
+.editor-details { padding:20px; border:1px solid var(--border, #dbe6e4); border-radius:12px; background:#f5faf8; }
+.editor-details h4 { margin:0 0 8px; }.editor-details h4 small { font-weight:400; color:#627a77; }.editor-details p { font-size:13px; margin:0 0 18px; }
+.editor-details textarea { min-height:64px; resize:vertical; }.detail-add { display:flex; gap:12px; margin-top:16px; align-items:center; }.detail-add input { flex:1; min-width:0; }.detail-add button { flex-shrink:0; }
+.detail-values { margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px 24px; }.detail-values dt { font-size:12px; color:#627a77; margin-bottom:5px; }.detail-values dd { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; }
+@media(max-width:600px){.detail-values{grid-template-columns:1fr}.editor-details{padding:14px}.detail-add{flex-wrap:wrap}}

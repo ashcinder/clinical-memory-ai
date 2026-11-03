@@ -134,7 +134,7 @@ func taxonomyPayload(q queryer, userID int64) map[string]any {
 	}
 	check(linked.Err())
 	linked.Close()
-	return map[string]any{"note_types": types, "tags": taxonomyTags(q, userID, c), "version": taxonomyVersion(c), "editable": true}
+	return map[string]any{"note_types": types, "tags": taxonomyTags(q, userID, c), "version": taxonomyVersion(c), "editable": true, "detail_templates": detailTemplates}
 }
 func (a *App) taxonomy(w http.ResponseWriter, r *http.Request, u User) {
 	respond(w, 200, taxonomyPayload(a.DB, u.ID))
