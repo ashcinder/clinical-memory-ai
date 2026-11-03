@@ -1366,7 +1366,7 @@ function editNote(note) {
   let files = [...(note?.attachments || [])];
   openDialog(
     note?.id ? "编辑笔记" : "新建笔记",
-    `<form id="note-form"><div class="form-grid"><label class="full">笔记标题<input name="title" value="${esc(note?.title || "")}" maxlength="160" placeholder="输入标题" required></label><fieldset class="full editor-types"><legend>资料类型 <small>可多选</small></legend><div class="editor-type-options">${catalogTypes().map((t)=>`<label><input type="checkbox" name="note_types" value="${esc(t.id)}" ${chosenTypes.includes(t.id)?"checked":""}><span>${esc(t.title)}</span></label>`).join("")}</div><div id="editor-type-summary" class="selection-preview"></div></fieldset><section class="full editor-details"><h4>专属信息 <small>选填</small></h4><p class="muted">按资料类型填写；可添加自己的字段。切换类型会保留已填写内容。</p><div id="detail-fields" class="form-grid"></div><div class="detail-add"><input id="detail-name" aria-label="自定义字段名称" maxlength="60" placeholder="如：职业、疗程、文献编号"><button type="button" class="text-button" id="add-detail">＋ 添加字段</button></div></section><label>就诊 / 记录日期<input type="date" name="occurred_on" value="${note?.occurred_on || today()}" required></label><label class="full">标签 <small>用逗号分隔</small><input name="tags" value="${esc(note?.tags.join("，") || "")}" placeholder="如：咳嗽，复诊，观察记录"></label><label class="full"><span id="editor-content-label">笔记正文</span><textarea name="content" rows="7" maxlength="50000" placeholder="输入笔记内容">${esc(note?.content || "")}</textarea></label><label class="full"><span id="editor-steps-label">记录条目</span> <small>每行一条</small><textarea name="steps" rows="5" placeholder="核对初诊记录&#10;整理处置过程&#10;回顾随访变化">${esc(note?.steps.join("\n") || "")}</textarea></label><div class="full learning-editor-tools"><button type="button" class="text-button" id="insert-outline">插入整理提纲</button><span>仅用于空白正文</span></div><div class="editor-files full"><div class="inline-row between"><h4>关联原始材料</h4><button type="button" class="text-button" id="editor-upload">＋ 上传材料</button></div><div id="editor-file-list"></div><div class="busy-text" id="editor-busy" hidden>正在上传和识别…</div></div></div><p id="note-error" class="error" role="alert"></p><div class="form-actions"><button class="secondary" type="button" id="cancel-note">取消</button><button class="primary" id="save-note">保存笔记</button></div></form>`,
+    `<form id="note-form"><div class="form-grid"><label class="full">笔记标题<input name="title" value="${esc(note?.title || "")}" maxlength="160" placeholder="输入标题" required></label><fieldset class="full editor-types"><legend>资料类型 <small>可多选</small></legend><div class="editor-type-options">${catalogTypes().map((t)=>`<label><input type="checkbox" name="note_types" value="${esc(t.id)}" ${chosenTypes.includes(t.id)?"checked":""}><span>${esc(t.title)}</span></label>`).join("")}</div><div id="editor-type-summary" class="selection-preview"></div></fieldset><section class="full editor-details"><div class="detail-heading"><h4>专属信息 <small>选填</small></h4><span id="detail-progress"></span></div><div id="detail-fields"></div><details class="detail-custom"><summary>＋ 自定义字段</summary><div class="detail-add"><input id="detail-name" aria-label="自定义字段名称" maxlength="60" placeholder="如：职业、疗程、文献编号"><button type="button" class="text-button" id="add-detail">添加</button></div></details></section><label>就诊 / 记录日期<input type="date" name="occurred_on" value="${note?.occurred_on || today()}" required></label><label class="full">标签 <small>用逗号分隔</small><input name="tags" value="${esc(note?.tags.join("，") || "")}" placeholder="如：咳嗽，复诊，观察记录"></label><label class="full"><span id="editor-content-label">笔记正文</span><textarea name="content" rows="7" maxlength="50000" placeholder="输入笔记内容">${esc(note?.content || "")}</textarea></label><label class="full"><span id="editor-steps-label">记录条目</span> <small>每行一条</small><textarea name="steps" rows="5" placeholder="核对初诊记录&#10;整理处置过程&#10;回顾随访变化">${esc(note?.steps.join("\n") || "")}</textarea></label><div class="full learning-editor-tools"><button type="button" class="text-button" id="insert-outline">插入整理提纲</button><span>仅用于空白正文</span></div><div class="editor-files full"><div class="inline-row between"><h4>关联原始材料</h4><button type="button" class="text-button" id="editor-upload">＋ 上传材料</button></div><div id="editor-file-list"></div><div class="busy-text" id="editor-busy" hidden>正在上传和识别…</div></div></div><p id="note-error" class="error" role="alert"></p><div class="form-actions"><button class="secondary" type="button" id="cancel-note">取消</button><button class="primary" id="save-note">保存笔记</button></div></form>`,
   );
   function drawFiles() {
     $("#editor-file-list").innerHTML = files.length
@@ -1407,14 +1407,48 @@ function editNote(note) {
   const editorTypeIDs=()=>$$('#note-form [name="note_types"]:checked').map((e)=>e.value);
   const editorType=()=>catalogTypes().find((t)=>t.id===editorTypeIDs()[0])||catalogTypes().find((t)=>t.id==="other");
   const details = new Map(Object.entries(note?.details || {}));
-  let visibleDetailNames = [];
-  function captureDetails(){ $$('#detail-fields [data-detail]').forEach((e)=>details.set(e.dataset.detail,e.value)); }
-  function drawDetails(){
-    captureDetails();
-    visibleDetailNames=[...new Set([...editorTypeIDs().flatMap((id)=>state.taxonomy?.detail_templates?.[id]||[]), ...[...details.keys()].filter((k)=>details.get(k)?.trim()||!visibleDetailNames.includes(k))])];
-    $('#detail-fields').innerHTML=visibleDetailNames.map((key)=>`<label>${esc(key)}<textarea rows="2" maxlength="4000" name="detail:${esc(key)}" data-detail="${esc(key)}" placeholder="填写${esc(key)}（选填）">${esc(details.get(key)||"")}</textarea></label>`).join('');
+  let visibleDetailNames = [], extraOpen = false;
+  const knownDetailNames=new Set(Object.values(state.taxonomy?.detail_templates||{}).flat());
+  const customDetailNames=new Set([...details.keys()].filter((key)=>!knownDetailNames.has(key)));
+  const fieldSpec=(key)=>state.taxonomy?.detail_field_specs?.[key]||{kind:'short'};
+  const multiItems=(value)=>[...new Set(value.split(/[、，,;；\n]/).map((s)=>s.trim()).filter(Boolean))];
+  function captureDetails(){
+    $$('#detail-fields [data-detail]').forEach((e)=>{
+      const pending=e.closest('.detail-multi')?.querySelector('[data-multi-entry]');
+      if(pending?.value.trim()){e.value=[...new Set([...multiItems(e.value),...multiItems(pending.value)])].join('\n');pending.value='';}
+      details.set(e.dataset.detail,e.value);
+    });
   }
-  $('#add-detail').onclick=()=>{const input=$('#detail-name'),key=input.value.trim();if(!key)return toast('请输入字段名称');if(visibleDetailNames.includes(key)){return toast('该字段已存在');}if(details.size>=100)return toast('最多 100 个字段');details.set(key,'');input.value='';drawDetails();$$('#detail-fields [data-detail]').at(-1)?.focus();$('#note-form').dispatchEvent(new Event('input',{bubbles:true}));};
+  function detailProgress(){const filled=$$('#detail-fields [data-detail]').filter((e)=>e.value.trim()).length;$('#detail-progress').textContent=filled?`已填 ${filled} 项`:'仅填写需要的信息';}
+  function detailField(key,index){
+    const spec=fieldSpec(key),value=details.get(key)||'',id='detail-field-'+index,attrs=`id="${id}" name="detail:${esc(key)}" data-detail="${esc(key)}"`;
+    let control;
+    if(spec.kind==='multi'){
+      control=`<div class="detail-multi"><input type="hidden" ${attrs} value="${esc(value)}"><div class="detail-token-list"></div><div class="detail-token-entry"><input id="${id}-entry" data-multi-entry name="detail-pending:${esc(key)}" aria-label="添加${esc(key)}" list="${id}-choices" maxlength="4000" placeholder="输入或选择，可添加多项"><button type="button" class="detail-token-add" aria-label="添加${esc(key)}选项">＋</button><datalist id="${id}-choices">${(spec.options||[]).map((v)=>`<option value="${esc(v)}">`).join('')}</datalist></div></div>`;
+    }else if(spec.kind==='single'&&key==='性别'){
+      control=`<select ${attrs}><option value="">未填写</option>${[...new Set([...(spec.options||[]),...(value?[value]:[])])].map((v)=>`<option value="${esc(v)}" ${value===v?'selected':''}>${esc(v)}</option>`).join('')}</select>`;
+    }else if(spec.kind==='long')control=`<textarea ${attrs} rows="2" maxlength="4000" placeholder="简要记录">${esc(value)}</textarea>`;
+    else control=`<input ${attrs} type="${spec.kind==='date'&&(!value||/^\d{4}-\d{2}-\d{2}$/.test(value))?'date':'text'}" value="${esc(value)}" maxlength="4000" ${spec.options?.length?`list="${id}-choices"`:''} placeholder="${key==='年龄'?'如 35岁 / 6个月':'未填写'}">${spec.options?.length?`<datalist id="${id}-choices">${spec.options.map((v)=>`<option value="${esc(v)}">`).join('')}</datalist>`:''}`;
+    return `<div class="detail-field ${spec.kind==='long'||spec.kind==='multi'?'detail-field-wide':''}"><label for="${spec.kind==='multi'?id+'-entry':id}">${esc(key)}${spec.kind==='multi'?'<small>多选</small>':''}</label>${control}</div>`;
+  }
+  function drawDetails(){
+    const previous=$('#detail-extra');if(previous)extraOpen=previous.open;
+    captureDetails();
+    visibleDetailNames=[...new Set([...editorTypeIDs().flatMap((id)=>state.taxonomy?.detail_templates?.[id]||[]),...[...details.keys()].filter((k)=>details.get(k)?.trim()||customDetailNames.has(k))])];
+    const primary=new Set(editorTypeIDs().flatMap((id)=>state.taxonomy?.detail_primary_fields?.[id]||state.taxonomy?.detail_templates?.[id]?.slice(0,4)||[]));
+    const main=visibleDetailNames.filter((k)=>primary.has(k)),extra=visibleDetailNames.filter((k)=>!primary.has(k));
+    let index=0;
+    $('#detail-fields').innerHTML=`<div class="detail-grid">${main.map((k)=>detailField(k,index++)).join('')}</div>${extra.length?`<details id="detail-extra" ${extraOpen?'open':''}><summary><span>更多信息 <small>${extra.length} 项</small></span><span class="detail-extra-status">${extra.filter((k)=>details.get(k)?.trim()).length?'含已填内容':'按需展开'}</span></summary><div class="detail-grid">${extra.map((k)=>detailField(k,index++)).join('')}</div></details>`:''}`;
+    $$('.detail-multi').forEach((box)=>{
+      const hidden=box.querySelector('[data-detail]'),entry=box.querySelector('[data-multi-entry]');
+      function paint(){box.querySelector('.detail-token-list').innerHTML=multiItems(hidden.value).map((v,i)=>`<button type="button" class="detail-token" data-token-index="${i}" aria-label="移除${esc(hidden.dataset.detail)}：${esc(v)}">${esc(v)}<span aria-hidden="true">×</span></button>`).join('');box.querySelectorAll('[data-token-index]').forEach((b)=>b.onclick=()=>{const values=multiItems(hidden.value);values.splice(Number(b.dataset.tokenIndex),1);hidden.value=values.join('\n');changed();paint();});}
+      function changed(){details.set(hidden.dataset.detail,hidden.value);hidden.dispatchEvent(new Event('input',{bubbles:true}));detailProgress();}
+      function add(){const values=[...new Set([...multiItems(hidden.value),...multiItems(entry.value)])];if(values.join('\n').length>4000)return toast('该字段内容过长');hidden.value=values.join('\n');entry.value='';changed();paint();entry.focus();}
+      box.querySelector('.detail-token-add').onclick=add;entry.onkeydown=(e)=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();add();}};paint();
+    });
+    $('#detail-fields').oninput=detailProgress;detailProgress();
+  }
+  $('#add-detail').onclick=()=>{const input=$('#detail-name'),key=input.value.trim();if(!key)return toast('请输入字段名称');if(visibleDetailNames.includes(key))return toast('该字段已存在');if(details.size>=100)return toast('最多 100 个字段');captureDetails();details.set(key,'');customDetailNames.add(key);extraOpen=true;const extra=$('#detail-extra');if(extra)extra.open=true;input.value='';drawDetails();$$('#detail-fields [data-detail]').at(-1)?.focus();$('#note-form').dispatchEvent(new Event('input',{bubbles:true}));};
   function updateLabels(){drawDetails();const type=editorType();$('#editor-content-label').textContent=type.content_label;$('#editor-steps-label').textContent=type.steps_label;$('#editor-type-summary').textContent="已选："+editorTypeIDs().map((id)=>catalogTypes().find((t)=>t.id===id).title).join("、");}
   $$('#note-form [name="note_types"]').forEach((input)=>input.onchange=()=>{if(input.checked){if(input.value==="other")$$('#note-form [name="note_types"]').forEach((e)=>e.checked=e===input);else $('#note-form [name="note_types"][value="other"]').checked=false;}if(!editorTypeIDs().length)$('#note-form [name="note_types"][value="other"]').checked=true;updateLabels();});updateLabels();
   $("#insert-outline").onclick = () => {
