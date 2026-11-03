@@ -4271,8 +4271,36 @@ main[data-view="settings"] .settings-tabs { margin-top:0; margin-bottom:18px; }
 /* The library card is the first visible content on the notes page. */
 main[data-view="notes"] .retrieval-filter-panel { margin-top:0; }
 
-.editor-details { padding:20px; border:1px solid var(--border, #dbe6e4); border-radius:12px; background:#f5faf8; }
-.editor-details h4 { margin:0 0 8px; }.editor-details h4 small { font-weight:400; color:#627a77; }.editor-details p { font-size:13px; margin:0 0 18px; }
-.editor-details textarea { min-height:64px; resize:vertical; }.detail-add { display:flex; gap:12px; margin-top:16px; align-items:center; }.detail-add input { flex:1; min-width:0; }.detail-add button { flex-shrink:0; }
-.detail-values { margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px 24px; }.detail-values dt { font-size:12px; color:#627a77; margin-bottom:5px; }.detail-values dd { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; }
-@media(max-width:600px){.detail-values{grid-template-columns:1fr}.editor-details{padding:14px}.detail-add{flex-wrap:wrap}}
+/* Compact clinical worksheet: short identity row, optional extended fields. */
+#note-form > .form-grid { gap:14px; }
+#note-form .editor-types { padding:10px 12px; }
+#note-form .editor-type-options label { min-height:36px; padding:4px 8px; }
+#note-form .editor-type-options input { min-height:0; padding:0; }
+#note-form .selection-preview { font-size:11px; margin-top:6px; }
+.editor-details { padding:14px 16px; border:1px solid #dce6e3; border-radius:10px; background:#fff; }
+.detail-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.editor-details h4 { margin:0; font-size:14px; color:#213f3d; }.editor-details h4 small { margin-left:6px; font-size:11px; font-weight:400; color:#748683; }
+#detail-progress { font-size:11px; color:#748683; }
+.detail-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:10px 12px; }
+.detail-field { min-width:0; grid-column:span 2; }.detail-field-wide { grid-column:span 3; }
+.detail-field > label { display:flex; align-items:center; gap:6px; font-size:12px; margin:0 0 5px; color:#536e67; }
+.detail-field label small { font-size:10px; color:#788b86; font-weight:400; }
+.editor-details .detail-field input:not([type="hidden"]),.editor-details .detail-field select { min-height:38px; height:38px; padding:7px 10px; font-size:13px; }
+.editor-details .detail-field textarea { min-height:56px; padding:8px 10px; font-size:13px; line-height:1.5; resize:vertical; }
+#detail-extra { border-top:1px solid #e5ece9; margin-top:12px; padding-top:2px; }
+#detail-extra > summary,.detail-custom > summary { cursor:pointer; min-height:36px; align-content:center; font-size:12px; color:#32695e; }
+#detail-extra > summary { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+#detail-extra > summary::after { content:'展开 ⌄'; font-size:11px; }#detail-extra[open]>summary::after{content:'收起 ⌃';}
+#detail-extra > summary small { font-size:11px; font-weight:400; color:#7b8c87; margin-left:5px; }
+.detail-extra-status { margin-left:auto; font-size:11px; color:#7b8c87; }
+#detail-extra[open]>.detail-grid { margin-top:6px; }
+.detail-custom { margin-top:4px; }.detail-add { display:flex; align-items:center; gap:8px; }.detail-add input { flex:1; min-width:0; min-height:38px; font-size:13px; }.detail-add button{flex-shrink:0;}
+.detail-multi { padding:6px 8px; border:1px solid #d9e3db; border-radius:7px; background:#fff; }
+.detail-multi:focus-within{border-color:#619a8c;box-shadow:0 0 0 2px #e4f1eb;}
+.detail-token-list{display:flex; flex-wrap:wrap; gap:5px; }.detail-token-list:empty{display:none;}
+.detail-token{display:inline-flex;align-items:center;gap:7px;max-width:100%;overflow-wrap:anywhere;padding:4px 7px;border:0;border-radius:5px;background:#e9f3ef;color:#236758;font-size:12px;text-align:left;min-height:28px;}
+.detail-token span{color:#627e74;}.detail-token-entry{display:flex;align-items:center;gap:4px;}
+.editor-details .detail-token-entry input{border:0;background:transparent;box-shadow:none;flex:1;height:32px;min-height:32px;padding:4px 2px;}
+.detail-token-add{border:0;background:transparent;color:#276d5b;font-size:18px;min-width:36px;min-height:36px;}
+.detail-values { margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 20px; }.detail-values dt { font-size:12px; color:#627a77; margin-bottom:4px; }.detail-values dd { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; }
+@media(max-width:600px){.editor-details{padding:12px}.detail-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.detail-field{grid-column:span 1}.detail-field-wide{grid-column:1/-1}.detail-values{grid-template-columns:1fr}.detail-extra-status{display:none}#note-form .editor-type-options{gap:5px}#note-form .editor-type-options label{font-size:11px;padding:4px 6px;gap:4px}}
