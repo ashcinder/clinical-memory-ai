@@ -278,7 +278,7 @@ func (a *App) answer(ctx context.Context, message string, notes []Note, history 
 		var text strings.Builder
 		text.WriteString("本地检索摘录（未调用大模型）：\n")
 		for _, n := range notes {
-			fmt.Fprintf(&text, "\n【%s】[笔记:%s]\n%s\n", n.Title, n.ID, cut(n.Content, 500))
+			fmt.Fprintf(&text, "\n【%s】[笔记:%s]\n%s\n", n.Title, n.ID, cut(n.Content+"\n"+detailsText(n.Details), 1500))
 			for i, s := range n.Steps {
 				fmt.Fprintf(&text, "%d. %s\n", i+1, s)
 			}
@@ -298,7 +298,7 @@ func (a *App) answer(ctx context.Context, message string, notes []Note, history 
 	}
 	sources := []map[string]any{}
 	for _, n := range notes {
-		sources = append(sources, map[string]any{"id": n.ID, "title": n.Title, "content": cut(n.Content, 6000), "steps": n.Steps, "materials": cut(n.AttachmentText, 6000)})
+		sources = append(sources, map[string]any{"id": n.ID, "title": n.Title, "content": cut(n.Content, 6000), "steps": n.Steps, "details": n.Details, "materials": cut(n.AttachmentText, 6000)})
 	}
 	messages = append(messages, map[string]any{"role": "user", "content": jsonText(map[string]any{"问题": message, "历史笔记": sources})})
 	text, err := a.completion(ctx, messages, false)

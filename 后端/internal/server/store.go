@@ -105,6 +105,13 @@ func ownedNote(q queryer, id string, userID int64, lock bool) Note {
 		n.Attachments = append(n.Attachments, a)
 	}
 	check(rows.Err())
+	n.Details = map[string]string{}
+	var rawDetails string
+	detailErr := q.QueryRow("SELECT fields FROM note_details WHERE note_id=?", id).Scan(&rawDetails)
+	if detailErr != sql.ErrNoRows {
+		check(detailErr)
+		check(jsonUnmarshal(rawDetails, &n.Details))
+	}
 	n.Version = digest(jsonText(n))
 	return n
 }
@@ -173,6 +180,10 @@ func (a *App) saveNote(tx *sql.Tx, in NoteInput, id string, userID int64, isNew 
 		_, err := tx.Exec("UPDATE attachments SET note_id=? WHERE id=?", id, aid)
 		check(err)
 	}
+	if in.Details != nil {
+		_, err := tx.Exec("INSERT INTO note_details(note_id,fields) VALUES (?,?) ON DUPLICATE KEY UPDATE fields=VALUES(fields)", id, jsonText(in.Details))
+		check(err)
+	}
 	writeNoteTypes(tx, id, selected)
 	reindex(tx, id, userID)
 	return ownedNote(tx, id, userID, false)
@@ -230,7 +241,7 @@ func reindex(tx *sql.Tx, id string, userID int64) {
 	_, err := tx.Exec("DELETE FROM note_terms WHERE note_id=?", id)
 	check(err)
 	weights := map[string]int{}
-	for _, t := range tokens(n.Content + " " + strings.Join(n.Steps, " ")) {
+	for _, t := range tokens(n.Content + " " + detailsText(n.Details) + " " + strings.Join(n.Steps, " ")) {
 		weights[t]++
 	}
 	for _, a := range n.Attachments {

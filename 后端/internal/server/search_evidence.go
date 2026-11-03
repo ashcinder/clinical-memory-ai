@@ -28,7 +28,7 @@ type SearchPassage struct {
 
 func readingPassages(n Note, terms []string) []SearchPassage {
 	type source struct{ field, label, text, id string }
-	sources := []source{{"content", "笔记正文", n.Content, ""}}
+	sources := []source{{"content", "笔记正文", n.Content, ""}, {"details", "专属信息", detailsText(n.Details), ""}}
 	for _, f := range n.Attachments {
 		sources = append(sources, source{"attachment", f.Filename, f.Text, f.ID})
 	}
@@ -96,7 +96,7 @@ func searchEvidence(n Note, query string) *SearchEvidence {
 		return terms[i] < terms[j]
 	})
 	type field struct{ key, text, source, id string }
-	fields := []field{{"title", n.Title, "标题", ""}, {"tags", strings.Join(n.Tags, " · "), "标签", ""}, {"content", n.Content, "正文", ""}, {"steps", strings.Join(n.Steps, "\n"), "步骤", ""}}
+	fields := []field{{"title", n.Title, "标题", ""}, {"tags", strings.Join(n.Tags, " · "), "标签", ""}, {"content", n.Content, "正文", ""}, {"details", detailsText(n.Details), "专属信息", ""}, {"steps", strings.Join(n.Steps, "\n"), "步骤", ""}}
 	for _, f := range n.Attachments {
 		fields = append(fields, field{"attachment", f.Text, f.Filename, f.ID})
 	}
