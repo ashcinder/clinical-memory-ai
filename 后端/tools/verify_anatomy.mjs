@@ -89,6 +89,13 @@ try {
  await page.getByRole('button',{name:'正面',exact:true}).click();await page.waitForTimeout(100);
  assert.equal(await page.locator('.a-selected-ring').isVisible(),true);
  await page.locator('.a-list button').filter({hasText:'中脘'}).click();await page.waitForTimeout(100);
+ // The current label must follow a surface point near the upper canvas edge.
+ await page.locator('.a-list button').filter({hasText:'迎香 · 右'}).click();await free.click();await pan.click();await page.waitForTimeout(100);
+ const tracking=()=>page.evaluate(()=>{const r=document.querySelector('.a-selected-ring').getBoundingClientRect(),l=document.querySelector('.a-focus-callout').getBoundingClientRect(),c=document.querySelector('canvas').getBoundingClientRect();return {ring:r.y+r.height/2,label:l.y+l.height/2,top:c.y,x:c.x+c.width/2,start:c.y+c.height/2};});
+ const t0=await tracking(),dy=t0.top+10-t0.ring;
+ await page.mouse.move(t0.x,t0.start);await page.mouse.down();await page.mouse.move(t0.x,t0.start+dy,{steps:10});await page.mouse.up();await page.waitForTimeout(100);
+ const t1=await tracking();assert.ok(Math.abs((t1.label-t0.label)-(t1.ring-t0.ring))<2,'label must follow vertical panning at the upper edge');
+ await reset.click();await free.click();await page.locator('.a-list button').filter({hasText:'中脘'}).click();await page.waitForTimeout(100);
  const singlePixels=await model.evaluate(c=>c.toDataURL());assert.notEqual(singlePixels,allPixels,'current-only mode must clear the other markers');
  await page.screenshot({path:'/tmp/atlas-male-no-points.png',fullPage:true});await page.locator('#a-show').uncheck();
  await page.locator('#a-query').fill('百会');assert.equal(await page.locator('.a-list button').count(),1);
@@ -116,6 +123,6 @@ try {
  for(const width of [1440,390]){await page.setViewportSize({width,height:760});await page.evaluate(()=>{const r=document.querySelector('.atlas-stage').getBoundingClientRect();window.scrollTo(0,scrollY+r.top+220)});await page.waitForTimeout(100);
  const tools=await page.locator('.a-views').boundingBox();assert.ok(tools.y>=0&&tools.y<=16,'camera toolbar must stick to the viewport');
  assert.equal(await page.locator('[data-action=reset-view]').evaluate(e=>{const r=e.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('button')===e}),true);}
- assert.deepEqual(errors,[]);console.log(JSON.stringify({male:51,female:49,realMeshes:true,allVisibleNames:true,nonOverlappingNames:true,toggle:true,selectionKeepsCamera:true,selectedRing:true,currentName:true,stableViewport:true,stickyToolbar:true,occlusionLabel:true,freeView:true,pan:true,chooseCenter:true,reset:true,surfaceMark:true,notesPersist:true,genderIsolation:true,deletedPresetStaysDeleted:true,mobileOverflow:false,errors}));
+ assert.deepEqual(errors,[]);console.log(JSON.stringify({male:51,female:49,realMeshes:true,allVisibleNames:true,nonOverlappingNames:true,toggle:true,selectionKeepsCamera:true,selectedRing:true,currentName:true,verticalLabelTracking:true,stableViewport:true,stickyToolbar:true,occlusionLabel:true,freeView:true,pan:true,chooseCenter:true,reset:true,surfaceMark:true,notesPersist:true,genderIsolation:true,deletedPresetStaysDeleted:true,mobileOverflow:false,errors}));
 
 } finally {await browser.close();}

@@ -82,7 +82,7 @@ export async function mountAtlas(root,base=''){
   if(node.focusSide===undefined)node.focusSide=inFrame?x>=w/2:false;
   if(inFrame){if(x<width+34)node.focusSide=false;else if(x>w-width-34)node.focusSide=true;}
   const leftSide=node.focusSide;
-  const left=leftSide?12:w-12-width,labelY=exposed?Math.max(canvasTop+28,Math.min(h-110,y)):canvasTop+32;
+  const left=leftSide?12:w-12-width,labelY=exposed?y:canvasTop+32;
   const reason=!inFrame?'视野外':!exposed?'背侧 · 旋转查看':'';
   node.button.classList.add('a-focus-callout');node.button.setAttribute('aria-pressed','true');
   node.button.innerHTML=`<span class="a-focus-name">${esc(p.name)}${p.side?'<em>'+esc(p.side)+'</em>':''}</span><small>${esc(p.code||'自定义')}${reason?' · '+reason:''}</small>`;
