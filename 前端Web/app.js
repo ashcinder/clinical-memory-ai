@@ -2110,9 +2110,9 @@ async function openTaxonomyManager(initialKind = "type") {
 async function renderAnatomy() {
  $("#main").innerHTML='<div id="anatomy-view"></div>';
  const node=$("#anatomy-view");
- const {mountAtlas}=await import(siteURL('/anatomy/viewer.js'));
+ const {mountWorkspace}=await import(siteURL('/anatomy/workspace.js'));
  if(!node.isConnected)return;
- const view=await mountAtlas(node,APP_BASE);
+ const view=await mountWorkspace(node,APP_BASE);
  if(node.isConnected)anatomyView=view;else view.dispose();
  node.addEventListener('anatomy-search',e=>{state.lastQuery=e.detail;navigate('search');});
 }
