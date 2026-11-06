@@ -250,7 +250,35 @@ func (a *App) retrieveInput(ctx context.Context, query string, ids []string, use
 	extra := []string{}
 	c := a.aiConfig(ctx)
 	if len(queries) > 0 && !c.CloudSearchDisabled && c.VisionKey != "" {
+		originalImages, originalMatches := images, matches
 		images, matches, extra = a.visualImageMatches(ctx, query, queries, userID, category, matches)
+		// Exact matches are independent of the bounded visual shortlist, including
+		// old files outside the recent-image window in a larger library.
+		exactImages := []Note{}
+		for _, n := range originalImages {
+			hasExact := false
+			for _, m := range originalMatches[n.ID] {
+				if m.Method != "exact" {
+					continue
+				}
+				hasExact = true
+				present := false
+				for _, existing := range matches[n.ID] {
+					if existing.AttachmentID == m.AttachmentID && existing.QueryAttachmentID == m.QueryAttachmentID {
+						present = true
+						break
+					}
+				}
+				if !present {
+					m.Reason = "文件内容完全一致（SHA-256 校验）"
+					matches[n.ID] = append(matches[n.ID], m)
+				}
+			}
+			if hasExact {
+				exactImages = append(exactImages, n)
+			}
+		}
+		images = append(exactImages, images...)
 		enhanced = true
 	} else {
 		text, enhanced, extra = a.retrieveRanked(ctx, query, userID, category, limit)
