@@ -51,6 +51,13 @@ CREATE TABLE IF NOT EXISTS image_fingerprints (
  FOREIGN KEY(attachment_id) REFERENCES attachments(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS image_profiles (
+ attachment_id CHAR(32) CHARACTER SET ascii PRIMARY KEY,
+ signature CHAR(64) CHARACTER SET ascii NOT NULL, source_sha CHAR(64) CHARACTER SET ascii NOT NULL,
+ profile JSON NOT NULL, created_at VARCHAR(35) NOT NULL,
+ FOREIGN KEY(attachment_id) REFERENCES attachments(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS user_taxonomy (
  user_id BIGINT PRIMARY KEY, config JSON NOT NULL,
  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE

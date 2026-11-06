@@ -214,10 +214,10 @@ func TestAIImageAndKeywordSearch(t *testing.T) {
 		}
 		content := `{"keywords":["合谷","LI4"]}`
 		if request.Model == "vision-test" {
-			if !strings.Contains(string(request.Messages[0].Content), "data:image/png;base64,") {
+			if !strings.Contains(string(request.Messages[0].Content), "data:image/jpeg;base64,") {
 				t.Error("image missing")
 			}
-			content = "手部标注合谷 LI4"
+			content = `{"kind":"穴位图","body_parts":["手部"],"laterality":"无法确认","visible_text":"合谷 LI4","identifiers":["LI4"],"features":["标记"],"uncertainties":[],"quality":"清晰"}`
 		}
 		_ = json.NewEncoder(w).Encode(map[string]any{"choices": []any{map[string]any{"message": map[string]any{"content": content}}}})
 	}))
@@ -244,10 +244,10 @@ func TestAIImageAndKeywordSearch(t *testing.T) {
 	if len(items[0].(map[string]any)["attachments"].([]any)) != 1 {
 		t.Fatal("missing original image")
 	}
-	// Broken keyword enhancement falls back to original indexed image text.
+	// Exact matches do not depend on text enhancement or another cloud call.
 	a.Config.DeepSeekURL = "http://127.0.0.1:1"
 	result = c.request("POST", "/api/search", map[string]any{"attachment_ids": []string{query.ID}}, 200)
-	if len(result["items"].([]any)) != 1 || len(result["warnings"].([]any)) == 0 {
+	if len(result["items"].([]any)) != 1 {
 		t.Fatal(result)
 	}
 }

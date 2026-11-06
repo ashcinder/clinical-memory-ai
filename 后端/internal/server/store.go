@@ -19,10 +19,12 @@ import (
 var schema string
 
 type App struct {
-	DB           *sql.DB
-	Config       Config
-	Client       HTTPDoer
-	aiSettingsMu sync.Mutex
+	DB               *sql.DB
+	Config           Config
+	Client           HTTPDoer
+	aiSettingsMu     sync.Mutex
+	imageVisionMu    sync.Mutex
+	imageVisionSlots chan struct{}
 }
 
 func New(c Config) (*App, error) {
@@ -345,7 +347,7 @@ func queryText(q queryer, query string, ids []string, userID int64) (string, []s
 			texts = append(texts, cut(a.Text, 4000))
 		} else {
 			if strings.HasPrefix(a.MIME, "image/") {
-				warnings = append(warnings, a.Filename+" 未识别到文字，本次使用图片指纹匹配")
+				warnings = append(warnings, a.Filename+" 未识别到文字，图片将按当前检索设置进行匹配")
 			} else {
 				warnings = append(warnings, a.Filename+" 尚无转写文字，可重新提取或手动补充")
 			}

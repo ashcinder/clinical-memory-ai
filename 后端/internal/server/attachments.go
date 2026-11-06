@@ -56,7 +56,7 @@ func (a *App) upload(w http.ResponseWriter, r *http.Request, u User) {
 	if size == 0 {
 		fail(400, "不能上传空文件")
 	}
-	text, status, extractionErr := a.extract(r.Context(), path, mimetype)
+	text, status, profile, sourceHash, extractionErr := a.extractDetailed(r.Context(), path, mimetype)
 	item := Attachment{ID: id, Filename: filename, StoredName: stored, MIME: mimetype, Size: size, Text: text, Status: status, CreatedAt: now()}
 	if extractionErr != nil {
 		if e, ok := extractionErr.(apiError); ok && e.Status == 400 {
@@ -72,6 +72,9 @@ func (a *App) upload(w http.ResponseWriter, r *http.Request, u User) {
 	_, err = a.DB.Exec("INSERT INTO attachments(id,user_id,note_id,filename,stored_name,mime,size,extracted_text,status,created_at) VALUES (?,?,NULL,?,?,?,?,?,?,?)", id, u.ID, filename, stored, mimetype, size, text, item.Status, item.CreatedAt)
 	check(err)
 	saved = true
+	if profile != nil {
+		check(a.saveImageProfile(r.Context(), id, sourceHash, *profile))
+	}
 	respond(w, 201, item)
 }
 func (a *App) listAttachments(w http.ResponseWriter, r *http.Request, u User) {
@@ -127,8 +130,11 @@ func (a *App) editExtraction(w http.ResponseWriter, r *http.Request, u User) {
 }
 func (a *App) retryExtraction(w http.ResponseWriter, r *http.Request, u User) {
 	item := ownedAttachment(a.DB, r.PathValue("id"), u.ID, false)
-	text, status, err := a.extract(r.Context(), filepath.Join(a.Config.DataDir, "uploads", item.StoredName), item.MIME)
+	text, status, profile, sourceHash, err := a.extractDetailed(r.Context(), filepath.Join(a.Config.DataDir, "uploads", item.StoredName), item.MIME)
 	check(err)
+	if profile != nil {
+		check(a.saveImageProfile(r.Context(), item.ID, sourceHash, *profile))
+	}
 	respond(w, 200, a.saveExtraction(item.ID, u.ID, text, status))
 }
 func (a *App) deleteAttachment(w http.ResponseWriter, r *http.Request, u User) {
