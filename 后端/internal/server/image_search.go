@@ -21,21 +21,25 @@ import (
 )
 
 type imageFingerprint struct {
-	SHA    string `json:"sha256"`
-	PHash  uint64 `json:"phash"`
-	DHash  uint64 `json:"dhash"`
-	Mean   [3]int `json:"mean"`
-	Detail bool   `json:"detail"`
+	Version int    `json:"version"`
+	SHA     string `json:"sha256"`
+	PHash   uint64 `json:"phash"`
+	DHash   uint64 `json:"dhash"`
+	Mean    [3]int `json:"mean"`
+	Detail  bool   `json:"detail"`
 }
 type ImageMatch struct {
-	AttachmentID      string `json:"attachment_id"`
-	QueryAttachmentID string `json:"query_attachment_id"`
-	Method            string `json:"method"`
-	Distance          int    `json:"distance"`
+	AttachmentID      string   `json:"attachment_id"`
+	QueryAttachmentID string   `json:"query_attachment_id"`
+	Method            string   `json:"method"`
+	Distance          int      `json:"distance"`
+	Reason            string   `json:"reason,omitempty"`
+	Differences       []string `json:"differences,omitempty"`
 }
 
 func fingerprint(path string) (imageFingerprint, error) {
 	var result imageFingerprint
+	result.Version = 2
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return result, err
@@ -61,6 +65,7 @@ func fingerprint(path string) (imageFingerprint, error) {
 	if err != nil {
 		return result, err
 	}
+	source = orientJPEG(source, raw)
 	small := image.NewRGBA(image.Rect(0, 0, 32, 32))
 	draw.Draw(small, small.Bounds(), image.NewUniform(color.White), image.Point{}, draw.Src)
 	xdraw.CatmullRom.Scale(small, small.Bounds(), source, source.Bounds(), draw.Over, nil)
@@ -133,7 +138,10 @@ func (a *App) ensureFingerprint(ctx context.Context, item Attachment) (imageFing
 	err := a.DB.QueryRowContext(ctx, "SELECT fingerprint FROM image_fingerprints WHERE attachment_id=?", item.ID).Scan(&raw)
 	if err == nil {
 		err = json.Unmarshal([]byte(raw), &f)
-		return f, err
+		if err == nil && f.Version == 2 {
+			return f, nil
+		}
+		err = sql.ErrNoRows
 	}
 	if err != sql.ErrNoRows {
 		return f, err
@@ -142,7 +150,7 @@ func (a *App) ensureFingerprint(ctx context.Context, item Attachment) (imageFing
 	if err != nil {
 		return f, err
 	}
-	_, err = a.DB.ExecContext(ctx, "INSERT IGNORE INTO image_fingerprints(attachment_id,fingerprint) VALUES (?,?)", item.ID, jsonText(f))
+	_, err = a.DB.ExecContext(ctx, "INSERT INTO image_fingerprints(attachment_id,fingerprint) VALUES (?,?) ON DUPLICATE KEY UPDATE fingerprint=VALUES(fingerprint)", item.ID, jsonText(f))
 	return f, err
 }
 func (a *App) imageMatches(ctx context.Context, queryIDs []string, userID int64, category string, limit int) ([]Note, map[string][]ImageMatch, []string) {
@@ -187,7 +195,7 @@ func (a *App) imageMatches(ctx context.Context, queryIDs []string, userID int64,
 		for id, q := range queries {
 			method, distance, ok := fingerprintMatch(q, f)
 			if ok {
-				found[*candidate.NoteID] = append(found[*candidate.NoteID], ImageMatch{candidate.ID, id, method, distance})
+				found[*candidate.NoteID] = append(found[*candidate.NoteID], ImageMatch{AttachmentID: candidate.ID, QueryAttachmentID: id, Method: method, Distance: distance})
 			}
 		}
 	}
@@ -230,7 +238,26 @@ func (a *App) retrieveInput(ctx context.Context, query string, ids []string, use
 		fail(422, "搜索和对话最多添加 5 份材料")
 	}
 	images, matches, warnings := a.imageMatches(ctx, ids, userID, category, limit)
-	text, enhanced, extra := a.retrieveRanked(ctx, query, userID, category, limit)
+	queries := []Attachment{}
+	for _, id := range unique(ids) {
+		item := ownedAttachment(a.DB, id, userID, false)
+		if strings.HasPrefix(item.MIME, "image/") {
+			queries = append(queries, item)
+		}
+	}
+	text := []Note{}
+	enhanced := false
+	extra := []string{}
+	c := a.aiConfig(ctx)
+	if len(queries) > 0 && !c.CloudSearchDisabled && c.VisionKey != "" {
+		images, matches, extra = a.visualImageMatches(ctx, query, queries, userID, category, matches)
+		enhanced = true
+	} else {
+		text, enhanced, extra = a.retrieveRanked(ctx, query, userID, category, limit)
+		if len(queries) > 0 {
+			warnings = append(warnings, "当前未启用云端图片理解，使用图片指纹和文字匹配；未进行原图视觉比对")
+		}
+	}
 	warnings = append(warnings, extra...)
 	notes := []Note{}
 	seen := map[string]bool{}

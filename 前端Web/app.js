@@ -69,6 +69,7 @@ const deletedConversations = new Set();
 let conversationDeleting = false;
 let profileSaving = false;
 let modelSettingsSaving = false;
+let imageIndexRunning = false;
 try {
   sidebarCollapsed = localStorage.getItem("linji.sidebar.collapsed") === "true";
   chatHistoryCollapsed = localStorage.getItem("linji.chat.historyCollapsed") === "true";
@@ -422,7 +423,7 @@ function hasSyncDraft() {
   );
 }
 async function checkSync(force = false) {
-  if (!state.user || document.hidden || syncBusy || state.busy || state.chatting || pageLoading || profileSaving || modelSettingsSaving)
+  if (!state.user || document.hidden || syncBusy || state.busy || state.chatting || pageLoading || profileSaving || modelSettingsSaving || imageIndexRunning)
     return;
   if (
     force &&
@@ -780,14 +781,16 @@ function searchCards(notes) {
     .map((n, index) => {
       const e = resultEvidence(n),
         type = typeOf(n),
-        files = n.attachments || [],
+        files = [...(n.attachments || [])].sort((a,b) => Number((e.attachment_ids || []).includes(b.id)) - Number((e.attachment_ids || []).includes(a.id))),
         images = files.filter((a) => a.mime.startsWith("image/")).slice(0, 2),
         others = files.filter((a) => !a.mime.startsWith("image/")).slice(0, 2);
       const matches = [...new Set(e.fields.map((f) => labels[f] || f))],
         image = e.image_matches?.length
           ? e.image_matches.some((m) => m.method === "exact")
             ? "相同图片"
-            : "近似图片，需核对"
+            : e.image_matches.some((m) => m.method === "visual")
+              ? "原图视觉比对"
+              : "近似指纹，未完成视觉验证"
           : "";
       return `<article class="result-card learning-result" aria-labelledby="result-title-${n.id}"><div class="result-meta"><span class="note-type-badges">${typeBadges(n)}</span><span class="meta-dot">·</span><time>${dateLabel(n.occurred_on)}</time></div>
  <h3 class="result-title" id="result-title-${n.id}"><button data-note="${n.id}">${marked(n.title, e.terms)}</button></h3>
@@ -817,7 +820,7 @@ function searchCards(notes) {
    .join(
      "",
    )}</div><button class="secondary small" data-note="${n.id}">查看笔记 ${icon("arrow")}</button></div>
- <details class="match-explanation"><summary>匹配依据${image ? " · " + esc(image) : ""}</summary><p>${matches.length ? "文字命中：" + matches.map(esc).join("、") : "基于相关内容召回，请核对原文。"}</p></details></article>`;
+ <details class="match-explanation"><summary>匹配依据${image ? " · " + esc(image) : ""}</summary>${(e.image_matches || []).map((m) => `<p>${esc(m.reason || (m.method === "exact" ? "文件内容完全一致" : "近似指纹匹配，请核对原图"))}</p>${m.differences?.length ? `<p>差异：${m.differences.map(esc).join("；")}</p>` : ""}`).join("")}<p>${matches.length ? "命中位置：" + matches.map(esc).join("、") : "基于相关内容召回，请核对原文。"}</p></details></article>`;
     })
     .join("");
 }
@@ -1962,6 +1965,18 @@ async function renderSettings() {
   <section id="settings-models-panel" class="settings-models-panel" role="tabpanel" aria-labelledby="settings-tab-models" hidden></section>
   <section id="settings-library-panel" role="tabpanel" aria-labelledby="settings-tab-library" hidden><section class="account-card library-settings-card"><div><h2>分类与标签</h2><p id="taxonomy-summary">${catalogTypes().length} 个资料类型 · ${(state.taxonomy?.tags||[]).length} 个标签</p></div><button type="button" class="primary small" id="manage-settings-taxonomy">管理分类与标签</button></section></section>`;
   modelForm.before(shell);$('#settings-models-panel').append(modelForm);
+  const imageIndex=document.createElement('section');imageIndex.className='setting-card';
+  imageIndex.innerHTML='<h3>图片检索索引</h3><p>为历史图片补充部位、可辨文字和客观特征，保留人工修订的识别文本。使用已保存的图片模型，识别可能产生费用。</p><button type="button" class="secondary">更新图片索引</button><p role="status" aria-live="polite"></p>';
+  $('#settings-models-panel').append(imageIndex);
+  imageIndex.querySelector('button').onclick=async(event)=>{
+    if(modelForm.dataset.dirty==='true'){toast('请先保存模型设置');return;}
+    const button=event.currentTarget,status=imageIndex.querySelector('[role=status]');button.disabled=true;imageIndexRunning=true;
+    let after='',indexed=0,failed=0;
+    try{let more=true;while(more&&imageIndex.isConnected){status.textContent=`正在建立索引 · 已处理 ${indexed} 张`;const result=await api('/image-index',{method:'POST',body:{after,limit:2}});indexed+=result.indexed;failed+=result.failed_ids.length;after=result.after;more=result.has_more;}
+      status.textContent=`索引更新结束 · ${indexed} 张可用${failed?' · '+failed+' 张失败，可重新运行重试':''}`;
+    }catch(error){status.textContent=error.message;}finally{button.disabled=false;imageIndexRunning=false;}
+  };
+
   $('[data-settings-tab="account"]').onclick=()=>setSettingsTab('account');$('[data-settings-tab="models"]').onclick=()=>setSettingsTab('models');$('[data-settings-tab="library"]').onclick=()=>setSettingsTab('library');
   $$('[data-settings-tab]').forEach((button)=>button.onkeydown=(event)=>{const keys=['ArrowLeft','ArrowRight','Home','End'];if(!keys.includes(event.key))return;event.preventDefault();const tabs=$$('[data-settings-tab]'),i=tabs.indexOf(button),next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(i+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;setSettingsTab(tabs[next].dataset.settingsTab);tabs[next].focus();});
   setSettingsTab(state.settingsTab);

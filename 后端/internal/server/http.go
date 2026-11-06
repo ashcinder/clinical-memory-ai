@@ -118,6 +118,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/attachments/{id}/extract", a.guard(a.retryExtraction))
 	mux.HandleFunc("DELETE /api/attachments/{id}", a.guard(a.deleteAttachment))
 	mux.HandleFunc("POST /api/search", a.guard(a.search))
+	mux.HandleFunc("POST /api/image-index", a.guard(a.rebuildImageIndex))
 	mux.HandleFunc("POST /api/chat", a.guard(a.chat))
 	mux.HandleFunc("GET /api/conversations", a.guard(a.conversations))
 	mux.HandleFunc("GET /api/conversations/{id}", a.guard(a.conversation))

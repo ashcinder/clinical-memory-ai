@@ -121,11 +121,18 @@ func (a *App) search(w http.ResponseWriter, r *http.Request, u User) {
 		return
 	}
 
-	notes, enhanced, extraWarnings := a.retrieveInput(r.Context(), query, in.AttachmentIDs, u.ID, in.Category, in.Limit)
+	imageCtx := context.WithValue(r.Context(), imageIntentKey{}, in.Query)
+	notes, enhanced, extraWarnings := a.retrieveInput(imageCtx, query, in.AttachmentIDs, u.ID, in.Category, in.Limit)
 	warnings = append(warnings, extraWarnings...)
 	engine := "本地图片指纹 + 图片/音频文字索引"
 	if enhanced {
-		engine += " + AI 关键词与相关性筛选"
+		engine += " + AI 相关性筛选"
+		for _, id := range in.AttachmentIDs {
+			if strings.HasPrefix(ownedAttachment(a.DB, id, u.ID, false).MIME, "image/") && a.aiConfig(r.Context()).VisionKey != "" {
+				engine = "图片指纹 + 结构化索引 + AI 原图视觉比对"
+				break
+			}
+		}
 	}
 	respond(w, 200, map[string]any{"query": query, "warnings": warnings, "items": notes, "engine": engine})
 }
@@ -202,7 +209,7 @@ func (a *App) chat(w http.ResponseWriter, r *http.Request, u User) {
 		notes = append(notes, ownedNote(a.DB, in.NoteID, u.ID, false))
 	} else if in.Mode == "knowledge" {
 		var extraWarnings []string
-		notes, _, extraWarnings = a.retrieveInput(r.Context(), query, in.AttachmentIDs, u.ID, "", 5)
+		notes, _, extraWarnings = a.retrieveInput(context.WithValue(r.Context(), imageIntentKey{}, in.Message), query, in.AttachmentIDs, u.ID, "", 5)
 		warnings = append(warnings, extraWarnings...)
 		if len(notes) == 0 && strings.Contains("|继续|继续回顾|然后呢|还有呢|详细说说|", "|"+in.Message+"|") {
 			for i := len(history) - 1; i >= 0; i-- {
