@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"image"
 	"image/color"
 	"image/png"
@@ -187,5 +188,50 @@ func TestVisualImagePipeline(t *testing.T) {
 	c.request("POST", "/api/image-index", map[string]any{"limit": 2}, 200)
 	if calls.Load() == before {
 		t.Fatal("stale model cache reused")
+	}
+}
+
+func TestExactImageOutsideRecentWindow(t *testing.T) {
+	a := integrationApp(t)
+	c := &testAPI{t: t, handler: a.Handler()}
+	c.token = getString(c.request("POST", "/api/auth/setup", map[string]any{"username": "exact_old", "password": "old-image-test-123"}, 201), "token")
+	var raw bytes.Buffer
+	png.Encode(&raw, fingerprintFixture())
+	old := c.upload("old.png", raw.Bytes())
+	target := c.request("POST", "/api/notes", map[string]any{"title": "Older original", "attachment_ids": []string{old.ID}}, 201)
+	other := c.request("POST", "/api/notes", map[string]any{"title": "Recent unrelated images"}, 201)
+	_, err := a.DB.Exec("UPDATE attachments SET created_at='2000-01-01T00:00:00Z' WHERE id=?", old.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Seed valid cached fingerprints, without making 2001 real cloud uploads.
+	tx, err := a.DB.Begin()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < 2001; i++ {
+		id := fmt.Sprintf("%032d", i)
+		_, err = tx.Exec("INSERT INTO attachments(id,user_id,note_id,filename,stored_name,mime,size,extracted_text,status,created_at) VALUES (?,1,?,'unrelated.png','missing.png','image/png',1,'','ready','2026-01-01T00:00:00Z')", id, other["id"])
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = tx.Exec("INSERT INTO image_fingerprints(attachment_id,fingerprint) VALUES (?,?)", id, jsonText(imageFingerprint{Version: 2, SHA: "unrelated"}))
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err = tx.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	query := c.upload("same.png", raw.Bytes())
+	a.Config.AIProvider = "deepseek"
+	a.Config.VisionProvider = "deepseek"
+	a.Config.VisionKey = "test"
+	a.Config.VisionURL = "http://127.0.0.1:1"
+	a.Config.VisionModel = "test"
+	result := c.request("POST", "/api/search", map[string]any{"attachment_ids": []string{query.ID}}, 200)
+	items := result["items"].([]any)
+	if len(items) != 1 || items[0].(map[string]any)["id"] != target["id"] {
+		t.Fatal("exact match lost outside visual window")
 	}
 }
