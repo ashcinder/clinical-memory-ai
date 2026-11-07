@@ -55,13 +55,19 @@ def rank(plan, model, cache):
                     os.replace(temporary, path)
                 finally:
                     temporary.unlink(missing_ok=True)
-        score = float(np.max(query_vectors @ vector))
+        scores = query_vectors @ vector
+        best = int(np.argmax(scores))
+        score = float(scores[best])
         if np.isfinite(score):
-            ranked.append((item["id"], score))
+            ranked.append((item["id"], score, plan["queries"][best]["id"]))
         else:
             skipped += 1
     ranked.sort(key=lambda row: -row[1])
-    return {"ids": [identifier for identifier, _ in ranked], "skipped": skipped}
+    return {
+        "ids": [identifier for identifier, _, _ in ranked],
+        "query_ids": {identifier: query_id for identifier, _, query_id in ranked},
+        "skipped": skipped,
+    }
 
 
 if __name__ == "__main__":

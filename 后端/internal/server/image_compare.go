@@ -93,6 +93,37 @@ func (a *App) compareImageBatch(ctx context.Context, query string, queries, cand
 	return validateVisualDecisions(raw, candidateSet, querySet)
 }
 
+// Use the same SQL filters and gallery window for online and offline recall.
+func (a *App) imageCandidateGallery(ctx context.Context, userID int64, category string) ([]Attachment, []string) {
+	filter := filterFromContext(ctx)
+	if filter.Types == nil {
+		filter.Types = loadTaxonomy(a.DB, userID).Types
+	}
+	constraint, args := filterSQL(filter, "n.")
+	statement := "SELECT a." + strings.ReplaceAll(attachmentColumns, ",", ",a.") + " FROM attachments a JOIN notes n ON n.id=a.note_id WHERE a.mime LIKE 'image/%'" + constraint
+	if category != "" {
+		statement += " AND n.category=?"
+		args = append(args, category)
+	}
+	statement += " ORDER BY a.created_at DESC,a.id LIMIT 2001"
+	rows, err := a.DB.QueryContext(ctx, statement, args...)
+	check(err)
+	items := []Attachment{}
+	for rows.Next() {
+		item, e := scanAttachment(rows)
+		check(e)
+		items = append(items, item)
+	}
+	check(rows.Err())
+	rows.Close()
+	warnings := []string{}
+	if len(items) > 2000 {
+		items = items[:2000]
+		warnings = append(warnings, "图库较大，本次从最近 2000 张图片中召回；请按资料类型、标签或关键词缩小范围")
+	}
+	return items, warnings
+}
+
 // All eligible images are compared in a small library. Larger libraries use a
 // bounded shortlist from exact/perceptual matches, text retrieval, cached image
 // observations and broad fingerprint distance. Coverage is always disclosed.
@@ -111,32 +142,8 @@ func (a *App) visualImageMatches(ctx context.Context, query string, queries []At
 	for i, n := range textNotes {
 		noteRanks[n.ID] = 1000 - i*10
 	}
-	filter := filterFromContext(ctx)
-	if filter.Types == nil {
-		filter.Types = loadTaxonomy(a.DB, userID).Types
-	}
-	constraint, args := filterSQL(filter, "n.")
-	statement := "SELECT a." + strings.ReplaceAll(attachmentColumns, ",", ",a.") + " FROM attachments a JOIN notes n ON n.id=a.note_id WHERE a.mime LIKE 'image/%'" + constraint
-	if category != "" {
-		statement += " AND n.category=?"
-		args = append(args, category)
-	}
-	statement += " ORDER BY a.created_at DESC,a.id LIMIT 2001"
-	rows, err := a.DB.QueryContext(timed, statement, args...)
-	check(err)
-	items := []Attachment{}
-	for rows.Next() {
-		item, e := scanAttachment(rows)
-		check(e)
-		items = append(items, item)
-	}
-	check(rows.Err())
-	rows.Close()
-	warnings := []string{}
-	if len(items) > 2000 {
-		items = items[:2000]
-		warnings = append(warnings, "图库较大，本次从最近 2000 张图片中召回；请按资料类型、标签或关键词缩小范围")
-	}
+	items, warnings := a.imageCandidateGallery(timed, userID, category)
+
 	scores := map[string]int{}
 	candidateLimit := a.Config.ImageVisualCandidates
 	if candidateLimit == 0 {
@@ -155,7 +162,7 @@ func (a *App) visualImageMatches(ctx context.Context, query string, queries []At
 		if e == nil {
 			queryFingerprints = append(queryFingerprints, f)
 			if useDINO {
-				dinoQueries = append(dinoQueries, dinoImage{Path: uploadPath(item)})
+				dinoQueries = append(dinoQueries, dinoImage{ID: item.ID, Path: uploadPath(item)})
 			}
 		}
 	}
@@ -193,11 +200,11 @@ func (a *App) visualImageMatches(ctx context.Context, query string, queries []At
 		total := len(items)
 		if useDINO {
 			if len(dinoQueries) > 0 && len(gallery) > 0 {
-				ranks, skipped, err := a.dinoRanks(timed, dinoQueries, gallery)
+				ranking, err := a.dinoRanks(timed, dinoQueries, gallery)
 				if err == nil {
-					items = fuseImageCandidates(items, ranks, strong, candidateLimit)
+					items = fuseImageCandidates(items, ranking.IDs, strong, candidateLimit)
 					dinoUsed = true
-					if unavailable := total - len(gallery) + skipped; unavailable > 0 {
+					if unavailable := total - len(gallery) + ranking.Skipped; unavailable > 0 {
 						warnings = append(warnings, fmt.Sprintf("%d 张图片未能生成 DINOv2 特征，仍可通过原检索规则召回", unavailable))
 					}
 				}

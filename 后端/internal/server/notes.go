@@ -135,7 +135,11 @@ func (a *App) search(w http.ResponseWriter, r *http.Request, u User) {
 		}
 	}
 	if dinoUsed {
-		engine = "DINOv2 候选召回 + 图片指纹与文字索引 + AI 原图视觉比对"
+		engine = "本地 DINOv2 相似检索 + 图片指纹与文字索引"
+		cfg := a.aiConfig(r.Context())
+		if !cfg.CloudSearchDisabled && cfg.VisionKey != "" {
+			engine += " + AI 原图视觉比对"
+		}
 	}
 	respond(w, 200, map[string]any{"query": query, "warnings": warnings, "items": notes, "engine": engine})
 }
