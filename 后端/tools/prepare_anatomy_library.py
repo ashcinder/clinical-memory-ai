@@ -18,6 +18,13 @@ SOURCE = "https://dbarchive.biosciencedbc.jp/en/bodyparts3d/"
 CREDIT = "BodyParts3D, © The Database Center for Life Science licensed under CC Attribution 4.0 International"
 # FMA concept, Chinese name, display color, and optional source hierarchy.
 MODELS = [
+    ("skeleton", "全身骨骼总览", "Skeleton overview", "骨骼系统", "成年男性参考骨骼。按颅骨、躯干与四肢分区观察，可分别显示或隐藏。",
+     ["全身", "骨架", "骨骼", "人体"],
+     [(46565, "颅骨", "#ded4bf"), (7480, "胸廓", "#ded3bb"),
+      (72062, "骨盆", "#d9cbb1"), (13478, "脊柱（骶骨归入骨盆）", "#d9cdb6"),
+      (24163, "右肩带骨", "#ddd2bb"), (24164, "左肩带骨", "#ddd2bb"),
+      (24880, "右上肢骨", "#e1d6bf"), (24881, "左上肢骨", "#e1d6bf"),
+      (24882, "右下肢骨", "#ddd1bb"), (24883, "左下肢骨", "#ddd1bb")]),
     ("heart", "心脏与大血管", "Heart & great vessels", "循环系统", "心房壁、合并心室壁及相连大血管。心室腔以空间表面表示，可单独查看。",
      ["心脏", "心血管", "冠状动脉", "心房", "心室"],
      [
@@ -143,12 +150,18 @@ def main():
         archives[hierarchy] = zip_file, {Path(name).stem: name for name in zip_file.namelist() if name.endswith(".obj")}
 
     catalog = []
+    bone_meshes = {mesh for _, mesh in tables["isa"]["FMA5018"]}
     for model_id, name, english, category, summary, keywords, specs in MODELS:
         parts, used = [], set()
         for fma, label, color, *preferred in specs:
             hierarchy = preferred[0] if preferred else "partof"
             concept = f"FMA{fma}"
             group = tables[hierarchy][concept]
+            if model_id == "skeleton" and fma in (24880, 24881, 24882, 24883):
+                group = [(f"bones of {name}", mesh) for name, mesh in group if mesh in bone_meshes]
+            if model_id == "skeleton" and fma == 13478:
+                group = [(f"{name} (sacrum grouped with pelvis)", mesh)
+                         for name, mesh in group if mesh not in used]
             if not group:
                 raise ValueError(f"Missing source mapping: {concept}")
             zip_file, entries = archives[hierarchy]

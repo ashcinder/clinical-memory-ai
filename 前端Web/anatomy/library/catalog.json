@@ -11,6 +11,1148 @@
   },
   "items": [
     {
+      "id": "skeleton",
+      "name": "全身骨骼总览",
+      "english": "Skeleton overview",
+      "category": "骨骼系统",
+      "summary": "成年男性参考骨骼。按颅骨、躯干与四肢分区观察，可分别显示或隐藏。",
+      "keywords": [
+        "全身",
+        "骨架",
+        "骨骼",
+        "人体"
+      ],
+      "author": "Database Center for Life Science",
+      "url": "https://dbarchive.biosciencedbc.jp/en/bodyparts3d/desc.html",
+      "license": "CC BY 4.0",
+      "asset": "skeleton.glb",
+      "sha256": "42f814ba1098ee8f459065c8648b67ba62be8bed95ff69415ad4d99c1d8f0cf2",
+      "parts": [
+        {
+          "id": "FMA46565",
+          "name": "颅骨",
+          "english": "Skull",
+          "color": "#ded4bf",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ1282",
+              "sha256": "c66ed172ed90448e3e9508f21b116f319cfd1036cb7281e2f3541ede5f2adb1f"
+            },
+            {
+              "id": "FJ1285",
+              "sha256": "dd7677f804c1c370a2c6d11966877934efa9ca09c6b100e18f06fd4508ccbbb6"
+            },
+            {
+              "id": "FJ1286",
+              "sha256": "ba4e6f7156124700b63d526a882933b35b89fa0e9fd53495964d57aa5de1c989"
+            },
+            {
+              "id": "FJ1289",
+              "sha256": "6edadfa812d834f5b90d17d427baa0c6688a4cc32856c2b8c6320907bbc05150"
+            },
+            {
+              "id": "FJ1297",
+              "sha256": "e9359237794eef61117f1c12a6822dafdd0cfc70ada8d2447e3d26d4fcda9bd7"
+            },
+            {
+              "id": "FJ1299",
+              "sha256": "f8bae78d7a0a522faa67cf0e7e1222c20ea4ffac8a3c547dd2078b45d1f162f3"
+            },
+            {
+              "id": "FJ1305",
+              "sha256": "a2b7f9b53dd2d14a352dfa0d3e01452031a2957aae62aa7c904d7c1d1922954c"
+            },
+            {
+              "id": "FJ1317",
+              "sha256": "81a184bd0d3d8602af3c2186405a16565bcabd0d305fcbad7e02b979335d9582"
+            },
+            {
+              "id": "FJ1320",
+              "sha256": "a73a8e48e83cd65e15eda97533b59cac7f3f687a7b117e587bc561bf4f7b50a1"
+            },
+            {
+              "id": "FJ1331",
+              "sha256": "417bc91c6719b2982cb60640058ddcce9f50ecfb5a20db02393f2cf7bad82a0b"
+            },
+            {
+              "id": "FJ1336",
+              "sha256": "518f78b01de0273ea1cdd6152f2215f9432f2ce00ac2164cea8aa3a420cd897c"
+            },
+            {
+              "id": "FJ1337",
+              "sha256": "db3077437828f311b6afa07dc9dc7a27ab0e005ddce62570420c61af31643f22"
+            },
+            {
+              "id": "FJ1340",
+              "sha256": "20cc1b1156cd9fdebd96d8a7710ff3d6d6fc9fef79b7173ef41491e2b6e650a3"
+            },
+            {
+              "id": "FJ1348",
+              "sha256": "1120c896903582ef7349b5be68a03bfb215def235851a82b1f1f44cfe212ad9e"
+            },
+            {
+              "id": "FJ1350",
+              "sha256": "889e12d2bf455e52c742f027b0b6145c23a9eaf8bdc3a6d7ec4c6f96cf5f6b04"
+            },
+            {
+              "id": "FJ1356",
+              "sha256": "767e9107cf299b87729c9eb921a2ede22d3bfd03ae7027b6fb88631c1a0ec150"
+            },
+            {
+              "id": "FJ1368",
+              "sha256": "6fce2e1842730573a8d1360a88a9512b2ee5fe0ebe55e669cd265601da663b49"
+            },
+            {
+              "id": "FJ1371",
+              "sha256": "8dc5ab248fc952170f9057aaf4bbd2339d9ee4c30b40b32ce793e54b22706738"
+            },
+            {
+              "id": "FJ1382",
+              "sha256": "de22335a9c3ad8036e0651eb09aa975e15151bb5ac6e3d142cf8260204fa633f"
+            },
+            {
+              "id": "FJ2772",
+              "sha256": "429d56a742a23c27c3423519191c89ae29c34faa027ee0037ad86fbcf5eda11f"
+            },
+            {
+              "id": "FJ3199",
+              "sha256": "6c0fceb9f44fe469d4db0e41594e8c5ed28a576950de7c43df488628d81105ea"
+            },
+            {
+              "id": "FJ3200",
+              "sha256": "9a01d88bd564b462ecadd6ad5bb3bb2274105baa3d211e0f444210d3f499ed64"
+            },
+            {
+              "id": "FJ3201",
+              "sha256": "27e9e3f1146ff10c489c683b89f78c60c187eed578f52ec1bfdd1694d0684b44"
+            },
+            {
+              "id": "FJ3263",
+              "sha256": "c6477a98607e712a2bdefd4c2732ce22a990b8cd8783b7b7a6453192443961cd"
+            },
+            {
+              "id": "FJ3265",
+              "sha256": "8ad400f81a74d51e3193ab1dc92ec39df5dc1c104a6ced970d430bca3d0f9c9c"
+            },
+            {
+              "id": "FJ3269",
+              "sha256": "a56eeb3723f4b3cd1d96b113eaba8f253ed49ff76220ba48ac0d1d086b80ff60"
+            },
+            {
+              "id": "FJ3272",
+              "sha256": "cc03a0b61102415dfa66cc55210f65c71ca9466e6e043d350449eac71b414a24"
+            },
+            {
+              "id": "FJ3273",
+              "sha256": "dacf96918a971758cbf25e3884b15e6c2b0a112a863b773332fb916431676368"
+            },
+            {
+              "id": "FJ3274",
+              "sha256": "df63a28fa604ff67828d8f382c66cfa46f40306b1b4c17a8062029764047d0e3"
+            },
+            {
+              "id": "FJ3281",
+              "sha256": "47cc46f1480c54fe14a2d22361c3b93fcb964538f23d5b425ac718854cff2673"
+            },
+            {
+              "id": "FJ3287",
+              "sha256": "9cfd8fd359816b5fa5ed9758f26d942c7ada0900aa7f614aff39949fdad3ddee"
+            },
+            {
+              "id": "FJ3289",
+              "sha256": "6ae0d7fde4221302f1c74d9e9933e2e05c36efef273bb27a78326d108d140ce8"
+            },
+            {
+              "id": "FJ3309",
+              "sha256": "37172b4706d23d51ebb3ce3839cc59c6e4cb4931039901f395703bc7dff52761"
+            },
+            {
+              "id": "FJ3369",
+              "sha256": "681194f0df836eb03818110633c22976f9e4cb9e4e77bb194cec3f61cdf2a80b"
+            },
+            {
+              "id": "FJ3371",
+              "sha256": "d8160ed34abb66d2539e6f05eadc431bd18774e5d1def1a4cb9bc40e3e4a32c5"
+            },
+            {
+              "id": "FJ3375",
+              "sha256": "a1be9480b632355859507e590be68146a591d343ad671ca85c43d7be50d8b43c"
+            },
+            {
+              "id": "FJ3378",
+              "sha256": "1acb8f803fb2cd9679eccd1634768b1bbee0714ebef7cf2de041d9332da88acf"
+            },
+            {
+              "id": "FJ3379",
+              "sha256": "629876377eca1ae98eefc496121e950367c49bf215febf17cf58a7f9687845dd"
+            },
+            {
+              "id": "FJ3380",
+              "sha256": "fb69a19eaa0585509f45ce1ebb5e8d91af0442629e52cfe1cfd190ca8f2f72b0"
+            },
+            {
+              "id": "FJ3386",
+              "sha256": "cae2e4dc5211d50b06e70893eef3bdaf19564ab8ae7923260e800c3498f65f88"
+            },
+            {
+              "id": "FJ3392",
+              "sha256": "e2c25d922162e3a76131e40ddf0356709947fa554b46640fa1880c381bb749c7"
+            },
+            {
+              "id": "FJ3394",
+              "sha256": "9255a2f02b16d0cf87c68fbfdc7afc4709d1afef94c2e2bb1e035b7f7852aca0"
+            },
+            {
+              "id": "FJ3395",
+              "sha256": "fcbfac8ca1992059a3026b445fbf55c5b5fa5a54786ed468a6ee8259230101d4"
+            }
+          ]
+        },
+        {
+          "id": "FMA7480",
+          "name": "胸廓",
+          "english": "Rib cage",
+          "color": "#ded3bb",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3153",
+              "sha256": "d17057ed1dad252a6fa6a3e8d92bc13310cebe0b584df147af0cc4a646f98f3e"
+            },
+            {
+              "id": "FJ3178",
+              "sha256": "32a06946d8eadbe1a847a373abe7499381c0182c72b7c94e3e2a0c3ba7c867e3"
+            },
+            {
+              "id": "FJ3225",
+              "sha256": "daa25aba7fba3ff691d61cd239f8d49debc84ff871a351051c1d57a192b91dfd"
+            },
+            {
+              "id": "FJ3226",
+              "sha256": "4bb9d52fdb2c15cb459c2bd08fd58082cdb39d15903cde675313762ea2287fc8"
+            },
+            {
+              "id": "FJ3227",
+              "sha256": "83e04b8b6f91e4de57e7b380a2f2c7d6f0bbf284ce76710ca89aa82fb376bd4e"
+            },
+            {
+              "id": "FJ3228",
+              "sha256": "eb534d19462226e26b91234544f99abe118878a25c125f2a8839341e6769252b"
+            },
+            {
+              "id": "FJ3229",
+              "sha256": "b752f038ceba8430f3872897ce69495d7dd74ed8e19c21d3f75d0bc0b156d84f"
+            },
+            {
+              "id": "FJ3230",
+              "sha256": "8b42d241c711fe9765b1239be33fcab6b865ab4619b5d05fa98ea245b6075d5c"
+            },
+            {
+              "id": "FJ3231",
+              "sha256": "28b852d4813703c5654d0405168e22bf0032632d47b9667b4b16e60ed89a425b"
+            },
+            {
+              "id": "FJ3232",
+              "sha256": "6fa730aea273685148d3e9d3f52fe450acec4c13d6e3b1b6865e0e9532283abb"
+            },
+            {
+              "id": "FJ3233",
+              "sha256": "2a0f1e32b8410b6396bea7ae342a16ae1ac1b77042e70d7e98cabeb7dcf3dfb9"
+            },
+            {
+              "id": "FJ3234",
+              "sha256": "638a766f20b64d02095efa845b5ea316624a376acb44c7e4a6d533d4da6ef4db"
+            },
+            {
+              "id": "FJ3235",
+              "sha256": "81a7215ef6ed923bbad6f07208bbc0ee26ddbaae3b1423f624cae465012d9144"
+            },
+            {
+              "id": "FJ3236",
+              "sha256": "3dc292292b9f2bd5e226ac100d3a8db76cba8eb1d9d09533a6e5e871f023e2a8"
+            },
+            {
+              "id": "FJ3239",
+              "sha256": "9ca5fdb0582ad2795c9316ab9bb2f89f952b5a8c8fcf92a37efa042fc5c7739c"
+            },
+            {
+              "id": "FJ3242",
+              "sha256": "c83bb88d995837a455e72707e9d5ecb0035ad60d8fd2f6f28d3710b4ef4c9d8e"
+            },
+            {
+              "id": "FJ3245",
+              "sha256": "ac65f51684b5dbcc3ea82381edae8723cbd9c7b8680bf6149a31dbf0acd26065"
+            },
+            {
+              "id": "FJ3248",
+              "sha256": "3633cb39f1540513872b9477c829d562114dce8d19cba5c99073fe4e3abeb1be"
+            },
+            {
+              "id": "FJ3251",
+              "sha256": "86be490af572a3d8c7f41fd1ed3f4bfac19a9966737bc1275f135f160d8298be"
+            },
+            {
+              "id": "FJ3254",
+              "sha256": "bc9ca44f2ea1fa9800d7f0a35c4596f41df1750ba9c89910d4f64041131db2bf"
+            },
+            {
+              "id": "FJ3255",
+              "sha256": "97e69ede580a6e81cc42bb54fb22d4752719b61c5fced8ccccfb18ce64996676"
+            },
+            {
+              "id": "FJ3290",
+              "sha256": "b847e67db475197cc4510744fef76bafd8e75c50797ca85eb8cd56dd853d61d6"
+            },
+            {
+              "id": "FJ3330",
+              "sha256": "0f688dd4e0d20a8328b4763c0acc7582a9beac8fe5c7ce58586db99c6e366945"
+            },
+            {
+              "id": "FJ3331",
+              "sha256": "761d6d8713c31d4b9f795c4875da9fc750c913907386489568fdebea15af49c3"
+            },
+            {
+              "id": "FJ3332",
+              "sha256": "ece92488a9293cde2d8a8275cee8232326b377811afba888f6147d7217e04e07"
+            },
+            {
+              "id": "FJ3333",
+              "sha256": "616b5add6471a3fd2a7297cbebfee18a13866eb165ca0be05c5942ae16bacc10"
+            },
+            {
+              "id": "FJ3334",
+              "sha256": "ecef0080744a8422b72b4f52229bd68945692cdef7d6fe2a57043b2155c49d17"
+            },
+            {
+              "id": "FJ3335",
+              "sha256": "065a4969ea4210ce6d3f5838dc2da20f1153de478e02c7a86ced152eab82bf6a"
+            },
+            {
+              "id": "FJ3336",
+              "sha256": "e9f527453bb2a48764ac7243d0b9b23e37fb2a85e92cee445972a1a770a5eaa4"
+            },
+            {
+              "id": "FJ3337",
+              "sha256": "469513e43364a7212843011c944a9fff22b5b50496a11e739bcdafc70005d3dd"
+            },
+            {
+              "id": "FJ3338",
+              "sha256": "69dbbcfc72d592aa862621612e7ad1151ada3fa06c5ce51e24731015561ad7ac"
+            },
+            {
+              "id": "FJ3339",
+              "sha256": "fc442f6596ca1a7ce18fc2d65cb92dcc1de1951381ebd631223469b6e84923b1"
+            },
+            {
+              "id": "FJ3340",
+              "sha256": "b9bc6bbb160fd579ed246c3eb145b39f82866dc2dfeebe798f0dba5a2e352597"
+            },
+            {
+              "id": "FJ3341",
+              "sha256": "921b821e925624302d8ab138dfa80a24bf3d9150e006b7ac27a2b5f73d15ab33"
+            },
+            {
+              "id": "FJ3342",
+              "sha256": "11d403618e4114a5edcd8f2fa4e90ef4e6427b04f4cd3962c59462694b55c443"
+            },
+            {
+              "id": "FJ3343",
+              "sha256": "3b633ffd599c51c1f00d66442855a047b013bda569fa092ea31ece5fdc289111"
+            },
+            {
+              "id": "FJ3344",
+              "sha256": "67f1f42fea1c289adaf4929716534bad7dfdd136ca0057f05de83d6e20c8f0a8"
+            },
+            {
+              "id": "FJ3345",
+              "sha256": "a4d22796f4ffc6f9ad1b7d620c917be1638244864eca62aec60bd11033ed3041"
+            },
+            {
+              "id": "FJ3346",
+              "sha256": "91aa56e034fbe6f413c0f15b76d725a1f8efd115aa2900beda6edf43a3ab0c43"
+            },
+            {
+              "id": "FJ3347",
+              "sha256": "43a1591cf1e123ca01f64297a7ce008d679a5f5f26421cc5b69e2232da89d743"
+            },
+            {
+              "id": "FJ3348",
+              "sha256": "7d3a969b778da18eb38b1a64d92e2b90e1730fcb0d7b2bfacd125ff4826876d0"
+            }
+          ]
+        },
+        {
+          "id": "FMA72062",
+          "name": "骨盆",
+          "english": "Pelvic skeleton",
+          "color": "#d9cbb1",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3152",
+              "sha256": "708e42cba3d1817230c98410c80742875d56bb5b3e688a566f62509c7a63e424"
+            },
+            {
+              "id": "FJ3288",
+              "sha256": "981411a910d502c80e454cc95128a9812a1284202295d1ebc7ab5020a08d83aa"
+            },
+            {
+              "id": "FJ3393",
+              "sha256": "fd95a0b26f450e4939858c9effb7b14e589874c9210edfdb92e8f4552dd484de"
+            }
+          ]
+        },
+        {
+          "id": "FMA13478",
+          "name": "脊柱（骶骨归入骨盆）",
+          "english": "Vertebral column (sacrum grouped with pelvis)",
+          "color": "#d9cdb6",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3154",
+              "sha256": "55fd0b1ec25bc207c5a58cb2aa3d5f2880df6593719ec803c83ac898d3bda358"
+            },
+            {
+              "id": "FJ3155",
+              "sha256": "7ce892808f37a9c96c74f298334be195cb50bfdbe64bcfa62072141ed38df0a2"
+            },
+            {
+              "id": "FJ3156",
+              "sha256": "d78f0563a0c0b5be89284a6d73434998a05dc9dbddb471b49e398c9ef96f07ae"
+            },
+            {
+              "id": "FJ3157",
+              "sha256": "2e252a2558f0f64430efa35d79a4fe8677b6cbb0ab6e93afda94b8d4239479fd"
+            },
+            {
+              "id": "FJ3158",
+              "sha256": "57a9cd9f62fc902f2d10f32c83237bba5bee4a24ae323a2b2405d9df68fd585b"
+            },
+            {
+              "id": "FJ3159",
+              "sha256": "1e63e0abb22ccf6255f1fb910699b2bade07cace17ffc12b43bb185228dd3696"
+            },
+            {
+              "id": "FJ3160",
+              "sha256": "f04ca280dc74fdc79afb14e5da1515a1e77762960bb38fab869be0e617348eac"
+            },
+            {
+              "id": "FJ3161",
+              "sha256": "7717781b7cb53eaa24eff097e6da5f8dfd1e58a3f23aa169ec05c58eb93de2dc"
+            },
+            {
+              "id": "FJ3162",
+              "sha256": "07fdac1c69d14c68241176f055da667eec8c2976c3a579df235d90e66fca91b0"
+            },
+            {
+              "id": "FJ3163",
+              "sha256": "968ed4928160fd54c444aa8c4a2c318fa56368c55c715afcdeaa48445382d3f6"
+            },
+            {
+              "id": "FJ3164",
+              "sha256": "ac0dc9fe871acf68fc8fffa41666f4d7fae35626055e18c104135db80bbd8a65"
+            },
+            {
+              "id": "FJ3165",
+              "sha256": "e30bc2a914a50d097dc5824cacbe54be10fc68c9f43cd9ef023519bc146cab61"
+            },
+            {
+              "id": "FJ3166",
+              "sha256": "cd744d75a90dc4d2b38f3b25928656ae2f9b873ea3113d01f91a102290eda5bd"
+            },
+            {
+              "id": "FJ3167",
+              "sha256": "15c66e24dcef4af7b1e4c7e948d3048c87b2d772a2f182f814ae7df8059af3f5"
+            },
+            {
+              "id": "FJ3168",
+              "sha256": "884ef6993f9578f86a6441ca7016f647f22778a9ab850189e1863d5f4112001d"
+            },
+            {
+              "id": "FJ3169",
+              "sha256": "7eb98fe2886168196d8a7ee37d1c7a6e7decbc1c09cdf2d4295c13ed7ba3df0c"
+            },
+            {
+              "id": "FJ3170",
+              "sha256": "e9cda58b8a69602513d067ee47468c3984c223cdc501975468379b65149c7d19"
+            },
+            {
+              "id": "FJ3171",
+              "sha256": "7c9c326269edd09bdf02aca90333c61debe4f39c777fbef887751826a54adb9e"
+            },
+            {
+              "id": "FJ3172",
+              "sha256": "7454480761dbf6c98c04f1a59788aeba1dcdecde7a673553ec19b2da172c2916"
+            },
+            {
+              "id": "FJ3173",
+              "sha256": "1bcf85e649234f976236f81077019ae66971c69c0943992a7ec0072939d42245"
+            },
+            {
+              "id": "FJ3174",
+              "sha256": "f5928470229deb2c7579804b883ffeaae611127dac1454caed3b3df93fe8dad6"
+            },
+            {
+              "id": "FJ3175",
+              "sha256": "f1ce32fedb9f84ac37b800b2a182f6701f972fbd8cc01be7732ab3ca3864603e"
+            },
+            {
+              "id": "FJ3176",
+              "sha256": "594ac8b2b09280022e2b73142f873fd4d622ba7a1bca590c3fdcb0231e4fb461"
+            },
+            {
+              "id": "FJ3177",
+              "sha256": "d76f052f56dda3dc6f4d453c33f062ff56207ff3aea90f9678b5d295f0c916f1"
+            },
+            {
+              "id": "FJ3202",
+              "sha256": "54353b0c78da72312837053808c9b7fbece5ea843132b974642447400c05eb17"
+            },
+            {
+              "id": "FJ3203",
+              "sha256": "e4d18b10b53cf1dce6254ed32e0cf2bde492f3fba523001f9d0099b6836c4955"
+            },
+            {
+              "id": "FJ3204",
+              "sha256": "aea5417173600504e344b7ff1987e73255fb8cc10a0309fad43c9749ceb53363"
+            },
+            {
+              "id": "FJ3205",
+              "sha256": "1419ec408f4c3084e1ee41c6272d5a93ec07e6fba49c3f99b813cc559cae2961"
+            },
+            {
+              "id": "FJ3206",
+              "sha256": "b3ea7878a0c4dc7acda522e4de58ee9048d7197167279c9d57c816e22752ef05"
+            },
+            {
+              "id": "FJ3207",
+              "sha256": "6ba7cf1f72bcb78289c2043a89c0269821b7e17933b95cde1785de36f164dd88"
+            },
+            {
+              "id": "FJ3208",
+              "sha256": "9a674b66719c1b358420e1f4b36884d0fd4cb48c9aec4c7512edb6a6257b3943"
+            },
+            {
+              "id": "FJ3209",
+              "sha256": "9f0ce1156106b47bf9b1cd4e42ab0d2f6cd726774f2642e491c00b3e8f1903db"
+            },
+            {
+              "id": "FJ3210",
+              "sha256": "0612b7a8bd73b5250b8cda72b0c30d7c9ceb21010dabfc683826f581b4fe6b5e"
+            },
+            {
+              "id": "FJ3211",
+              "sha256": "312819388c2857a2908b6529b463f43406f090748a464d3aa4bd00f0f3920ccd"
+            },
+            {
+              "id": "FJ3212",
+              "sha256": "7713e48391f7bddcf0b38736831f3bf570d2aff4aa761ba555c4c2cc3f5e1e1f"
+            },
+            {
+              "id": "FJ3213",
+              "sha256": "588c57901bbacd9acd909e6be32cc98d5c3ded0e0aa9d6d429524e3105e0e359"
+            },
+            {
+              "id": "FJ3214",
+              "sha256": "6f798a68e6456c961a7b82f814cb9dd867dc005b49d9b5711b65a93cd25dde5d"
+            },
+            {
+              "id": "FJ3215",
+              "sha256": "671fbfa846c09e3ef118964eadd7433ba7a181065dc67f303d63efef4e29569e"
+            },
+            {
+              "id": "FJ3216",
+              "sha256": "a83d0843c597451b0bf8be3bd0f59511e123d65555b66377b2fa4b8b4aafa837"
+            },
+            {
+              "id": "FJ3217",
+              "sha256": "5f534a8cc9f026b6cc46a4153804eb3b3b53023ba4d27ad36373fbdc0c623b38"
+            },
+            {
+              "id": "FJ3218",
+              "sha256": "19d1fce7507311905dc3967587577b918c44ca47db1dec7a8370f6396d481592"
+            },
+            {
+              "id": "FJ3219",
+              "sha256": "0afd538cf25eb2668e3b3755654d4ad98f49e865a572f1c2ccf7f24db8353b77"
+            },
+            {
+              "id": "FJ3220",
+              "sha256": "368196ece25f700fe3bd3922c7bd706631673fb64f1199134e66f7d8063d5c75"
+            },
+            {
+              "id": "FJ3221",
+              "sha256": "0a1690fb85f87722081914d4cc5ec898b6fb199c273778607059d093d9bc9e4d"
+            },
+            {
+              "id": "FJ3222",
+              "sha256": "c83ba588bcfaf229b5bbea5ea521d6751f6fa586997c147dd1ec5215ee9d0639"
+            },
+            {
+              "id": "FJ3223",
+              "sha256": "465db0485b4ad437a2b39f3fbe60170eed5e144c9597e294414cacaa4e0e9a16"
+            },
+            {
+              "id": "FJ3224",
+              "sha256": "20a49a6ae3e5709cc272cff12b461806ff0e93626e34ec007e0a381a7b7b97c7"
+            }
+          ]
+        },
+        {
+          "id": "FMA24163",
+          "name": "右肩带骨",
+          "english": "Skeleton of right pectoral girdle",
+          "color": "#ddd2bb",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3362",
+              "sha256": "1435b8f365652b215180e398b894a5bdfbf9cb13d00ccf06d07038b962e957b9"
+            },
+            {
+              "id": "FJ3384",
+              "sha256": "cb68b2e01a22989f20e602d5036a3f1fb28448fe647f599b9bbd61edfbff2320"
+            }
+          ]
+        },
+        {
+          "id": "FMA24164",
+          "name": "左肩带骨",
+          "english": "Skeleton of left pectoral girdle",
+          "color": "#ddd2bb",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3237",
+              "sha256": "ae2dc115516cd51b56047c8c0188a0b62c3fe627deed4d1b83e79e09b4b5c0d8"
+            },
+            {
+              "id": "FJ3279",
+              "sha256": "a52cf573f15b7c7c5cf096ae3ee81d8062a955edffdf82447e745afeccd0e554"
+            }
+          ]
+        },
+        {
+          "id": "FMA24880",
+          "name": "右上肢骨",
+          "english": "Bones of right free upper limb",
+          "color": "#e1d6bf",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3193",
+              "sha256": "22fb13bf483f413a93306da7e3805569ec78cf91222920a23e31d1f8f8be8ca7"
+            },
+            {
+              "id": "FJ3194",
+              "sha256": "1a77bb45ca5da49a3f46f0773d8f544f8171fa7650da31040fc15524d541eac0"
+            },
+            {
+              "id": "FJ3196",
+              "sha256": "9aa0ed0579e703009b4f5e16c7a650d5127a9fcf6f91b6e20e5b8317b7e7651e"
+            },
+            {
+              "id": "FJ3197",
+              "sha256": "a8e025b484c28f564f12d7e98b32dad1196050a957f879b639aac2cadc5a300d"
+            },
+            {
+              "id": "FJ3198",
+              "sha256": "b95a645681d4548ad0d6bf4d79645f5c2e3b7c044c834ed8d52315c9e3a14f4e"
+            },
+            {
+              "id": "FJ3292",
+              "sha256": "48586a1489d539eecb8f37520e9683c014fc32bc6666bba42ca264b35af5c7a7"
+            },
+            {
+              "id": "FJ3303",
+              "sha256": "0dce3e3ab43a1c3c8030e5bd97c40035f84e1ca272ea08e57c6523fecca7337c"
+            },
+            {
+              "id": "FJ3304",
+              "sha256": "3289a2bb712569479a65872d56778a962cca787409326252fd05734cc5f9dd36"
+            },
+            {
+              "id": "FJ3306",
+              "sha256": "8795bec6ecf458cbb1a4e361113da509a49dfafdaf8ca4610cb0a90e3bdd6233"
+            },
+            {
+              "id": "FJ3322",
+              "sha256": "7f260208904ef78c88790201e64b02cb9bb3e2b3e0feafa4108630d9a2d8c7a9"
+            },
+            {
+              "id": "FJ3323",
+              "sha256": "dede96cf0c9d5ccb093673a9ec2dc2ef2970578cde1438276120fdf9aff096d2"
+            },
+            {
+              "id": "FJ3325",
+              "sha256": "0ed85cade9e2a4c6d0c3353cbfcd996ab65f9c908ac6a2d41b0cffada814bd0d"
+            },
+            {
+              "id": "FJ3326",
+              "sha256": "8464ab995a48d5642198901885fafc5b101fd8982530f533f04e2be8aef26b59"
+            },
+            {
+              "id": "FJ3327",
+              "sha256": "14f0aa99ab3dbcc34f8c9460fb240bb7ba0b43c2188feaa79aa58ae8a476cae8"
+            },
+            {
+              "id": "FJ3349",
+              "sha256": "be1ebc9c5285cc934c625763b3363fc3133efab9eafdf1edf0b36de3b7ee06a9"
+            },
+            {
+              "id": "FJ3350",
+              "sha256": "73267d7a1a33294ed2856e147f3d7658c14878cd01906ec8ffb64a4b9b68318b"
+            },
+            {
+              "id": "FJ3352",
+              "sha256": "3c67c77a4312c40f3ca98e1600eb930c6210ac83773efe4f594bf6ca3ca02fce"
+            },
+            {
+              "id": "FJ3354",
+              "sha256": "ce10ec6c9f5c3428593ae8ba0a8be016df7905f39e7d3d7ca930d60da76d0d90"
+            },
+            {
+              "id": "FJ3356",
+              "sha256": "beb659c0409fc079dbb9bb950c5a409cb31f0177273d231fda65af930e991f72"
+            },
+            {
+              "id": "FJ3358",
+              "sha256": "dca9d2526d8970358c4c2802e840687561cf24d4fb382b3a16f0f423b717283f"
+            },
+            {
+              "id": "FJ3361",
+              "sha256": "25066d1353fd200871374beffaaed8c6c5ef694148385f3fd33fd5b63bd017ce"
+            },
+            {
+              "id": "FJ3367",
+              "sha256": "0591d076d4c7a0fc5fe653f80f03801b543075b72544f46e562b21412c743d12"
+            },
+            {
+              "id": "FJ3368",
+              "sha256": "159fbdeb854044e7b0ebd0d48cfe332afb44a691d09b89ff644a851826d08268"
+            },
+            {
+              "id": "FJ3374",
+              "sha256": "7b607f05b221c86aa6b3f93fc9d37d860281941ed293c4afc1affdb1ef379fc4"
+            },
+            {
+              "id": "FJ3382",
+              "sha256": "c02fffdeada2334cb5cc8281cf3068043c194930f42d6253292416fbb8af50a2"
+            },
+            {
+              "id": "FJ3383",
+              "sha256": "1d657f0402994d7854cf5a2038ccf085cffb69ff349fcbe88b04b7d26c1491f1"
+            },
+            {
+              "id": "FJ3388",
+              "sha256": "def87e2a86ad17a4b537abfeb0a5b83fac8117fd658cff7ee29a1f79afa59c1a"
+            },
+            {
+              "id": "FJ3389",
+              "sha256": "6361a214c7008b247b5ac0dd7bd80be5593bf8882a45add63c9036485d4bcee6"
+            },
+            {
+              "id": "FJ3390",
+              "sha256": "701c3417f0a8d3df769781449e7f5a5797ed30808849aebca261a6fea3dd4ce9"
+            },
+            {
+              "id": "FJ3391",
+              "sha256": "c84d953caa7613d6640593003ead91449eb1aaedc74cb2b27ae103e2177d3871"
+            }
+          ]
+        },
+        {
+          "id": "FMA24881",
+          "name": "左上肢骨",
+          "english": "Bones of left free upper limb",
+          "color": "#e1d6bf",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3183",
+              "sha256": "4b21956aa21986a4e709fe73291d0a21a74b202375ce6623dfc7ef6b26ebf9b8"
+            },
+            {
+              "id": "FJ3184",
+              "sha256": "11479ce0bbe0c20515066d4b98dd11c35f7f23580f10e2a388ccb816a8dad20e"
+            },
+            {
+              "id": "FJ3186",
+              "sha256": "c5dcbe81e721420508a2cb40228e45471925d4b507f0c738a7446a2ee835cd7c"
+            },
+            {
+              "id": "FJ3187",
+              "sha256": "49dd966dbef49394d802a781a5ee80b98eec168352d190e6a57ba35ff4ca3bd6"
+            },
+            {
+              "id": "FJ3188",
+              "sha256": "6a0cae057769e3f67a86304be10f7f4b6cafc631092c764a82aef7e7ee9d2119"
+            },
+            {
+              "id": "FJ3240",
+              "sha256": "0c8bf4436d320036d10a7fa3747ef34f0ce4ecd01bbee373225d1588efa38c70"
+            },
+            {
+              "id": "FJ3243",
+              "sha256": "8fda448450b00ade9b520798111fce1c90a3f27832d0c5112daafb2dabf8c2e9"
+            },
+            {
+              "id": "FJ3246",
+              "sha256": "c0c426e3140f3dc2457ddeb2e83d1db6efdadb3e77ccd939a2f15cbd7e186ecd"
+            },
+            {
+              "id": "FJ3249",
+              "sha256": "f6b5c38ee246def1b4c59bbb878ad52b9d06b37af4e55f634c84beb757afff5d"
+            },
+            {
+              "id": "FJ3252",
+              "sha256": "ffe5b98ae80aabd879732ae03f8c56e3f4f84ed6442bf5a00565d274f2816b50"
+            },
+            {
+              "id": "FJ3257",
+              "sha256": "43e59c2c85a9d76c49d338c1b42b6ddff82173b8ebd76fbb2d54d86930d23508"
+            },
+            {
+              "id": "FJ3261",
+              "sha256": "bc8ce15358c4b60be971675493d38a4bc11046bbb2e93281fdb39d3a3049b375"
+            },
+            {
+              "id": "FJ3262",
+              "sha256": "58b4f0f36723f27726009cdf4b77172dc694303f4e03f51b29c1663507480194"
+            },
+            {
+              "id": "FJ3268",
+              "sha256": "8be07938751172946412e4e5eedf72831d7ec7b42110884d423982e5b8406333"
+            },
+            {
+              "id": "FJ3276",
+              "sha256": "fde947e4adb1373a5fe74820141804efb7875a6a507ff53938c2727392d6828b"
+            },
+            {
+              "id": "FJ3277",
+              "sha256": "cce317e77ca297f93c0676815e22e8a2b6cc09029b74f1678193b17a9c0d5583"
+            },
+            {
+              "id": "FJ3278",
+              "sha256": "4311e5b791fb93c11376a4643d6bee38b134614dba22e94004d9fb3de1fe2a3f"
+            },
+            {
+              "id": "FJ3283",
+              "sha256": "b3126c2751ac29968622e802011d4461c528057f9fd2db950f0704acaa8763cb"
+            },
+            {
+              "id": "FJ3284",
+              "sha256": "cea6f3c52bdeb7d261f52a296e00686acf042d87ed004bf453fd39cdfb8f1379"
+            },
+            {
+              "id": "FJ3285",
+              "sha256": "fe25c63027de612508d7d92ac6ea08beafe48b0f9d0c8a2a7471b5ce85882576"
+            },
+            {
+              "id": "FJ3286",
+              "sha256": "32838a464599fa017717090afe9d355c03c0afb48cd8c5aa7e6f825156b594a5"
+            },
+            {
+              "id": "FJ3291",
+              "sha256": "8c31a1d782b726629680cd5e0514b4988e8c0b9d388d600b5c76f0a89dcd9275"
+            },
+            {
+              "id": "FJ3296",
+              "sha256": "3784ab9d38876602abdda3ef45b45a11f907f5412abf458915a5ffe92cdd82ac"
+            },
+            {
+              "id": "FJ3297",
+              "sha256": "876fc444322b51eebcc12622aefff29266c16b8dadbe9c7b97588013b2e6a120"
+            },
+            {
+              "id": "FJ3299",
+              "sha256": "7d67270dabfb72710d6adf29b6ccc901a459fa49d2315517a392ca62cf2e0878"
+            },
+            {
+              "id": "FJ3313",
+              "sha256": "8ff94391d57f8758f86e7a8ac9a82f62c9175067ffbbadab5693221ba204ecbe"
+            },
+            {
+              "id": "FJ3314",
+              "sha256": "a970bf6fea2d1ad51cad704a488417aaaaacca40be6f10c9ec713f358760efb8"
+            },
+            {
+              "id": "FJ3316",
+              "sha256": "411ec81747038f797c4a2a7c33ac87cdbf49047aedc43a6487d45cc373f697a8"
+            },
+            {
+              "id": "FJ3317",
+              "sha256": "851e0b459c672fef4cd2a32583991b22c30576f467eb50c5ffcb22fd13ea7de8"
+            },
+            {
+              "id": "FJ3318",
+              "sha256": "0f62e4d042979264f6f3d4dd0a90044b89a3ad4b66c141cebc2aa515bd3255c8"
+            }
+          ]
+        },
+        {
+          "id": "FMA24882",
+          "name": "右下肢骨",
+          "english": "Bones of right free lower limb",
+          "color": "#ddd1bb",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3189",
+              "sha256": "e9375bc30ba9c2aa2c69cbe3f7e1b1f581d0d1a674c41d31f6b9c27a8f174715"
+            },
+            {
+              "id": "FJ3190",
+              "sha256": "153722e3a39bc9f4cf3444cefd9336e5adb6b2236c6d6b8c2d1ba4a54c8754af"
+            },
+            {
+              "id": "FJ3191",
+              "sha256": "35ca50bcad4f559dcc6a0885abb9fe3c06965925791ff5567a38301623d46beb"
+            },
+            {
+              "id": "FJ3192",
+              "sha256": "ecb7a162be315a96591180a3b997efffa827d06849e8c85cfea72fe0d57e9ab8"
+            },
+            {
+              "id": "FJ3195",
+              "sha256": "5402b29f019e8c13be850809be79cd262eab0276094322203e46a103145276ff"
+            },
+            {
+              "id": "FJ3300",
+              "sha256": "d23b2c500c208c3c3c3f482f8429b75a08d8d852f2d5529bb18aad4716bd17e9"
+            },
+            {
+              "id": "FJ3301",
+              "sha256": "41a7cc5bda4605754c7db7bbc561e78fea9e59824a311d16efee7c00d9e931ae"
+            },
+            {
+              "id": "FJ3302",
+              "sha256": "6454fbcd2ba8d7fc45c9d9d9d4b56cd9e7831143038ee4510a7bbd407984bad1"
+            },
+            {
+              "id": "FJ3305",
+              "sha256": "e6a389b572fb34e9a2e483dcbec2446d1b6a94a02e4ae25079513e571e452b49"
+            },
+            {
+              "id": "FJ3308",
+              "sha256": "8156683b53dbe285d9c5bd939969b0ae85bc4f989f0d2bca5d7a72a28ed22518"
+            },
+            {
+              "id": "FJ3310",
+              "sha256": "c325627d966076f87101492f298d0e71ba877ce796463fd10e4fa6697b5e42fd"
+            },
+            {
+              "id": "FJ3319",
+              "sha256": "1d2f11bb623181a344f0b9d68b16ffb3e31946d3f5f571e92cd35f0e66c1101c"
+            },
+            {
+              "id": "FJ3320",
+              "sha256": "54e8381fbba8e81960afa51c153d5e06143c85f1808e083f2bd591115fce3c02"
+            },
+            {
+              "id": "FJ3321",
+              "sha256": "37b1195ac0a13fc425bab0d0151ada733b4d1c107a61a70ae42eeb3ee3c33dfa"
+            },
+            {
+              "id": "FJ3324",
+              "sha256": "0f783ee739f14fd2ca5c9db076d989795880ac9e436ce15062e397e7c6586225"
+            },
+            {
+              "id": "FJ3351",
+              "sha256": "36f03bdaf6be4385c83cc297b13bf6089504e5ddd12a6d6894a4e655b01cfb02"
+            },
+            {
+              "id": "FJ3353",
+              "sha256": "3f813ff69332df5a67dbce693af5558f4b5db2d48bf12ba39fff3e48e44e99d6"
+            },
+            {
+              "id": "FJ3355",
+              "sha256": "27fc6985c6e4b902188075caae096aaf7c8c13360d41446f6a85a5bf34003750"
+            },
+            {
+              "id": "FJ3357",
+              "sha256": "ca70d269f39c11fed91263c4b4bce78cf682acff928ec656130e997e1b07a20b"
+            },
+            {
+              "id": "FJ3359",
+              "sha256": "56164dbe40a84f339817445368bebc440d1cb9cfa8246b2d91f8084a538ea745"
+            },
+            {
+              "id": "FJ3360",
+              "sha256": "c278cca7a72dc6fc4eee55a348b0020522d99f72209eafe60f35ba4f7258682b"
+            },
+            {
+              "id": "FJ3364",
+              "sha256": "92673fcdd37a297b135725f05848155705c04a4bdada1c5088cb3d5d8deef010"
+            },
+            {
+              "id": "FJ3365",
+              "sha256": "02fffe2e1b0f8e038d8b7b48e47cbc4925a749446240e676e910bff34d5348de"
+            },
+            {
+              "id": "FJ3366",
+              "sha256": "05bf4de7604e2fd5099b3a5337d243d2d40f2b8f80daf1694b3aba394aa93942"
+            },
+            {
+              "id": "FJ3370",
+              "sha256": "0f849f1f865d7f206cdef48047ccd111cb8f434f0f97b0ed28246a9ba7707679"
+            },
+            {
+              "id": "FJ3373",
+              "sha256": "fd23e4ff9032ac103773b75b0dfba0b5502979db882c92dd7d724766672da23a"
+            },
+            {
+              "id": "FJ3377",
+              "sha256": "cf2bcfee0c5f1bb6f27589044043eb5964b1f35b9fe38624fe31b17cdd8a52aa"
+            },
+            {
+              "id": "FJ3381",
+              "sha256": "3f53300560b903d8fbc4165af3cdafab8d4f1d0a941ca59c7ef5169d0b838b8a"
+            },
+            {
+              "id": "FJ3385",
+              "sha256": "2332712fbc270403f10f8a99259493758831a6c68c9f54e59ee8d7c3d7281811"
+            },
+            {
+              "id": "FJ3387",
+              "sha256": "a658d28799577c26cdf8318aef799dbe90564355a28b5098d8707eee907f9c7d"
+            }
+          ]
+        },
+        {
+          "id": "FMA24883",
+          "name": "左下肢骨",
+          "english": "Bones of left free lower limb",
+          "color": "#ddd1bb",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3179",
+              "sha256": "aa2903a8f53a7fe7383a9f27dc4920f411a4d8f181afaf7412799dd87e589aac"
+            },
+            {
+              "id": "FJ3180",
+              "sha256": "f0887b9a26088762fbd89b1dc34a033ce8d59c2f41a8bf239e822e99c042a8c2"
+            },
+            {
+              "id": "FJ3181",
+              "sha256": "eea79d87f0a3b799e705dc7e6cfcba699aa46f1ba4ebc78f27392b069e6849dc"
+            },
+            {
+              "id": "FJ3182",
+              "sha256": "dad7cb9b6e4eb0619d725a2e2697997a2e8b869ed5d67965c91746b2e6faaa88"
+            },
+            {
+              "id": "FJ3185",
+              "sha256": "4e4c610814cfdf5cb49d890f5ba5b6c0049bda34d031a439c9b3812d161936fa"
+            },
+            {
+              "id": "FJ3241",
+              "sha256": "81a87d611584dc38c5da832051623450d5e798e0461f5595c53b926bce8e1205"
+            },
+            {
+              "id": "FJ3244",
+              "sha256": "dfccfdd4e15f9c5fc2d3ff5aec2c192e655b33796b7936a091f4fbbf0e846a47"
+            },
+            {
+              "id": "FJ3247",
+              "sha256": "ba30e72831383f90a10502c5d511ebaa1edb77ba2a345b3030d95e3483769535"
+            },
+            {
+              "id": "FJ3250",
+              "sha256": "60e27563f64f948d6de395fb136af962c07d01d83bfa6ac057a263a6f5afcec0"
+            },
+            {
+              "id": "FJ3253",
+              "sha256": "bb7bfc77f5c770e1ad0042802b74ab028bd131c631bbdbf3636bcabe522e680b"
+            },
+            {
+              "id": "FJ3256",
+              "sha256": "f39b699100eea69a951440f617a7d2ab692a7dc1c80e5bbb064603d7ba2dd4a4"
+            },
+            {
+              "id": "FJ3258",
+              "sha256": "f1ed3539cbb89954b3aadd8a435a174dd26d31e8de39e9480f1c9bd38b4ee3c6"
+            },
+            {
+              "id": "FJ3259",
+              "sha256": "4b919097be4820784d199838c69b1fe10afba703f0d6680a3ecab58460fb6549"
+            },
+            {
+              "id": "FJ3260",
+              "sha256": "34d29e9d6b2bf032147bcbe8da1e9fb65739ca2115baf577987ff1b780fabb73"
+            },
+            {
+              "id": "FJ3264",
+              "sha256": "6d6675dfb04a553a305369368392e91c1a2fd49783a81f7ac35773a5407e13f1"
+            },
+            {
+              "id": "FJ3267",
+              "sha256": "1e59930bb6ff4556d250b38ae71fc1e46148b6a87c7355148bac05ea52da0b27"
+            },
+            {
+              "id": "FJ3271",
+              "sha256": "6bd6c95a27d545d8984a2582f36f3881e04e1550ae2fb3f068d3bee80bf833b2"
+            },
+            {
+              "id": "FJ3275",
+              "sha256": "8a0776c1efe4ed2e3fff3c14b6fdb814dab4c077f8f3cf866866e8d9312a33e3"
+            },
+            {
+              "id": "FJ3280",
+              "sha256": "0f9b04d6f7e7f82572e9bca7fe3e08e92e4a7917d9cc60f9a8038e4c3a7c7bb7"
+            },
+            {
+              "id": "FJ3282",
+              "sha256": "80add76b87c7b9e1396406de48f691e5fd3dde9e5cec49a0b15c6963d78542c6"
+            },
+            {
+              "id": "FJ3293",
+              "sha256": "706e5f280c437ae9c01d08e021d82640ec3dfa50d1d2e0a2ee48eafc821ed104"
+            },
+            {
+              "id": "FJ3294",
+              "sha256": "c7b9a13197ef69b530146cfdcfca046bcba053bcc6bc6895c63cf2fc9fd3781f"
+            },
+            {
+              "id": "FJ3295",
+              "sha256": "d854f4059f59201871761d7a891f626c7ad8d74a77e7aea64f7b99c8c2b55f9b"
+            },
+            {
+              "id": "FJ3298",
+              "sha256": "68eb411cca65a47677026461b807534ee0640dcb7355031d6ab1fef901050e81"
+            },
+            {
+              "id": "FJ3307",
+              "sha256": "f3acad5a0995ac64585b22079fed851a20af96fc09e1e781fbb8853145a5df2d"
+            },
+            {
+              "id": "FJ3311",
+              "sha256": "deac4abe55e492efe84c7dd5bef101690ea3c6c5f4a9df552c370b8a2a324aa6"
+            },
+            {
+              "id": "FJ3312",
+              "sha256": "663bd9469b96679753e7f64c5f072c8cfe245dbb4b37b685079b4e7b890c4937"
+            },
+            {
+              "id": "FJ3315",
+              "sha256": "0bdbbd0619f4765da9fa25918a1e79db22b156eb4de1ba8574bec67369bfdd6d"
+            },
+            {
+              "id": "FJ3328",
+              "sha256": "33964822dfcd4833af09cef2c3909d210ba13a6c96fc9f3c2d457f4f2d1805f8"
+            },
+            {
+              "id": "FJ3329",
+              "sha256": "7b351faa1a13618f21c5072c00e97248334306b623c78a8eb102c62b298245c5"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "heart",
       "name": "心脏与大血管",
       "english": "Heart & great vessels",
