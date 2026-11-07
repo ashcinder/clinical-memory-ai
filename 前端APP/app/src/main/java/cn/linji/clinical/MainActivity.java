@@ -703,6 +703,12 @@ public final class MainActivity extends Activity {
     private void cancelRecording(){handler.removeCallbacks(recordingTimeout);if(recorder!=null){try{recorder.stop();}catch(Exception ignored){}recorder.release();recorder=null;}if(recordingFile!=null)recordingFile.delete();if(recordingDialog!=null)recordingDialog.dismiss();recordingDialog=null;}
     private void clearExports(){File dir=new File(getCacheDir(),"exports");File[] files=dir.listFiles();if(files!=null)for(File f:files)f.delete();dir.delete();}
     @Override protected void onStop(){handler.removeCallbacks(syncLoop);super.onStop();if(recorder!=null){cancelRecording();toast("录音已取消，可返回后重新录制");}}
-    @Override public void onBackPressed(){if(anatomyWeb!=null){navigateScreen("检索");return;}super.onBackPressed();}
+    @Override public void onBackPressed(){
+        android.webkit.WebView web=anatomyWeb;
+        if(web==null){super.onBackPressed();return;}
+        web.evaluateJavascript("(()=>{const d=document.querySelector('.ml-capture[open]')||document.querySelector('.ml-fullscreen[open]');if(!d)return false;d.close();return true;})()",closed->{
+            if(anatomyWeb==web&&!"true".equals(closed))navigateScreen("检索");
+        });
+    }
     @Override protected void onDestroy(){if(anatomyWeb!=null){anatomyWeb.destroy();anatomyWeb=null;}cancelRecording();executor.shutdownNow();super.onDestroy();}
 }
