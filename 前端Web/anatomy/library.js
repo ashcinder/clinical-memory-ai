@@ -36,7 +36,7 @@ export function mountLibrary(root, base = '') {
  root.innerHTML = `<section class="medical-library" aria-label="医学三维工作台">
   <header class="ml-bar">
    <button class="ml-back" type="button" aria-label="返回穴位图谱"></button>
-   <div class="ml-heading"><span class="ml-label">医学三维</span><h3 class="ml-title">人体解剖</h3></div>
+   <div class="ml-heading"><h3 class="ml-title">人体解剖</h3></div>
    <span class="ml-category"></span><span class="ml-live" role="status">载入目录</span>
    <button class="ml-expand" type="button" aria-label="进入全屏" title="全屏"></button>
    <button class="ml-exit" type="button" aria-label="退出全屏" hidden></button>
@@ -75,24 +75,27 @@ export function mountLibrary(root, base = '') {
     </div>
     <div class="ml-message" role="status"><p>正在读取解剖目录…</p><button type="button" data-action="reload" hidden>重新载入</button></div>
     <div class="ml-camera" role="group" aria-label="视角与缩放">
-     <div class="ml-compass">
+     <div class="ml-compass" role="group" aria-label="固定视角">
       <button type="button" data-view="front" aria-label="正面" disabled>前</button>
-      <button type="button" data-view="left" aria-label="左侧" disabled>左</button>
-      <button type="button" data-action="projection" aria-label="切换正交与透视" aria-pressed="true" disabled>正交</button>
-      <button type="button" data-view="right" aria-label="右侧" disabled>右</button>
       <button type="button" data-view="back" aria-label="背面" disabled>后</button>
+      <button type="button" data-view="left" aria-label="左侧" disabled>左</button>
+      <button type="button" data-view="right" aria-label="右侧" disabled>右</button>
+      <button type="button" data-action="projection" aria-label="切换正交与透视" aria-pressed="true" disabled>正交</button>
      </div>
      <div class="ml-zoom" role="group" aria-label="缩放与复位">
-      <button type="button" data-action="zoom-in" aria-label="放大" disabled>＋</button>
-      <button type="button" data-view="reset" aria-label="复位视角" disabled></button>
       <button type="button" data-action="zoom-out" aria-label="缩小" disabled>−</button>
-     </div>
-     <div class="ml-orbit" role="group" aria-label="微调旋转">
-      <button type="button" data-orbit="up" aria-label="向上旋转" disabled></button>
-      <button type="button" data-orbit="left" aria-label="向左旋转" disabled></button>
-      <span aria-hidden="true"></span>
-      <button type="button" data-orbit="right" aria-label="向右旋转" disabled></button>
-      <button type="button" data-orbit="down" aria-label="向下旋转" disabled></button>
+      <button type="button" data-view="reset" aria-label="复位视角" disabled></button>
+      <button type="button" data-action="zoom-in" aria-label="放大" disabled>＋</button>
+      <details class="ml-adjust">
+       <summary>微调</summary>
+       <div class="ml-orbit" role="group" aria-label="微调旋转">
+        <button type="button" data-orbit="up" aria-label="向上旋转" disabled></button>
+        <button type="button" data-orbit="left" aria-label="向左旋转" disabled></button>
+        <span aria-hidden="true"></span>
+        <button type="button" data-orbit="right" aria-label="向右旋转" disabled></button>
+        <button type="button" data-orbit="down" aria-label="向下旋转" disabled></button>
+       </div>
+      </details>
      </div>
     </div>
     <p class="ml-hint">拖动旋转 · 滚轮或双指缩放 · 点选结构</p>
@@ -122,7 +125,7 @@ export function mountLibrary(root, base = '') {
  const notice = $('.ml-message');
  const reload = $('[data-action=reload]');
  const standalone = document.body.classList.contains('atlas-standalone');
- const compact = matchMedia('(max-width: 760px)');
+ const compact = matchMedia('(max-width: 900px)');
  const events = new AbortController();
  if (!standalone) root.querySelectorAll('.ml-info a').forEach(link => link.target = '_blank');
  capture.querySelector('a').hidden = standalone;
@@ -242,9 +245,9 @@ export function mountLibrary(root, base = '') {
 
  function initViewer() {
   if (renderer) return;
-  renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'low-power'});
+  renderer = new THREE.WebGLRenderer({antialias:true, alpha:true, powerPreference:'low-power'});
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
-  renderer.setClearColor(0x222222);
+  renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.12;
@@ -366,7 +369,7 @@ export function mountLibrary(root, base = '') {
    const label = document.createElement('span');
    label.textContent = part.name;
    item.append(swatch, label);
-   item.title = part.id;
+   item.title = part.name + ' · ' + part.id;
    const eye = button('', () => setPartVisibility(part.id));
    eye.className = 'ml-eye';
    row.append(item, eye);
@@ -522,9 +525,9 @@ export function mountLibrary(root, base = '') {
   copy.width = source.width;
   copy.height = source.height + 26;
   const ctx = copy.getContext('2d');
+  ctx.fillStyle = getComputedStyle($('.ml-stage')).backgroundColor;
+  ctx.fillRect(0, 0, copy.width, copy.height);
   ctx.drawImage(source, 0, 0);
-  ctx.fillStyle = '#222222';
-  ctx.fillRect(0, source.height, copy.width, 26);
   ctx.fillStyle = '#f4f1eb';
   ctx.font = '12px system-ui';
   ctx.fillText(catalog.credit, 10, source.height + 17, copy.width - 20);
