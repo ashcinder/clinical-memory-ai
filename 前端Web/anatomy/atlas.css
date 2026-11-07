@@ -180,6 +180,10 @@
 .atlas-standalone .atlas{height:clamp(440px,calc(100dvh - 111px),1080px)}
 .atlas-standalone .a-fullscreen .atlas{height:100dvh}
 main[data-view=anatomy]{max-width:1400px;padding-top:20px}
+main[data-view=anatomy]:has(.model-online:not([hidden])){
+ max-width:none;padding:12px clamp(12px,1.5vw,28px) 20px;
+}
+#atlas-root:has(.model-online:not([hidden])){max-width:none}
 
 @media(max-width:1000px){
  .atlas-layout{grid-template-columns:115px minmax(0,1fr)}
@@ -223,8 +227,9 @@ main[data-view=anatomy]{max-width:1400px;padding-top:20px}
 
 .medical-library{
  display:grid;grid-template-rows:54px minmax(0,1fr);
- height:clamp(485px,calc(100dvh - 191px),1100px);overflow:hidden;
+ height:max(445px,calc(100dvh - 155px));overflow:hidden;
 }
+.atlas-standalone .medical-library{height:max(430px,calc(100dvh - 88px))}
 .medical-library *, .ml-capture *{box-sizing:border-box}
 .medical-library [hidden],.ml-capture [hidden]{display:none!important}
 .medical-library :is(button,summary),.ml-capture button{font:inherit;cursor:pointer}
@@ -286,13 +291,13 @@ main[data-view=anatomy]{max-width:1400px;padding-top:20px}
 .ml-info p{margin:8px 0;color:var(--viewer-muted);font-size:11px;line-height:1.65;overflow-wrap:anywhere}
 .ml-info a{display:block;color:var(--viewer-accent);font-size:11px;padding:5px 0}
 
-.ml-stage{container-type:inline-size}
-.ml-viewport{position:absolute;inset:49px 0 54px}
+.ml-stage{container-type:inline-size;display:grid;grid-template:minmax(0,auto) minmax(0,1fr) auto / minmax(0,1fr)}
+.ml-viewport{position:relative;min-height:0}
 .ml-viewport canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 .ml-viewport canvas:active{cursor:grabbing}
 .ml-quick{
- position:absolute;top:12px;left:12px;right:12px;display:flex;gap:4px;
- width:max-content;max-width:calc(100% - 24px);margin-inline:auto;padding:4px;
+ position:relative;display:flex;gap:4px;
+ width:max-content;max-width:calc(100% - 20px);margin:8px auto 0;padding:3px;
  border:1px solid var(--viewer-rule);border-radius:10px;background:var(--viewer-rail);overflow:auto;scrollbar-width:thin;
 }
 .ml-quick button{
@@ -301,22 +306,22 @@ main[data-view=anatomy]{max-width:1400px;padding-top:20px}
 }
 .ml-quick button:hover{background:#2d413a;color:var(--viewer-text)}
 .ml-quick button[aria-pressed=true]{background:#30473f;color:var(--viewer-accent);font-weight:650}
-.ml-stage-readout{
- position:absolute;bottom:32px;left:14px;display:grid;gap:2px;max-width:38%;
- padding:2px 0 2px 10px;border-left:2px solid #608d7d;pointer-events:none;
-}
+.ml-stage-footer{position:relative;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 10px 8px}
+.ml-stage-copy{min-width:0;padding-left:8px;border-left:2px solid #608d7d}
+.ml-stage-readout{display:grid;gap:1px;min-width:0}
+.ml-stage-readout :is(strong,small){min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .ml-stage-readout strong{font-size:13px;font-weight:620}
-.ml-stage-readout small{color:var(--viewer-muted);font:10px/1.5 ui-monospace,monospace;overflow-wrap:anywhere}
-.ml-hint{position:absolute;bottom:11px;left:14px;max-width:40%;margin:0;color:var(--viewer-muted);font-size:10px;pointer-events:none}
+.ml-stage-readout small{color:var(--viewer-muted);font:10px/1.5 ui-monospace,monospace}
+.ml-hint{margin:2px 0 0;color:var(--viewer-muted);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ml-message{
- position:absolute;inset:35% 18% auto;display:grid;justify-items:center;gap:7px;padding:14px;
+ position:absolute;z-index:2;inset:35% 18% auto;display:grid;justify-items:center;gap:7px;padding:14px;
  border:1px solid var(--viewer-rule);border-radius:10px;background:var(--viewer-rail);color:var(--viewer-text);text-align:center;
 }
 .ml-message p{margin:0}
 .ml-message button{padding:6px 12px;border:1px solid var(--viewer-rule);border-radius:6px;background:#30473f;color:var(--viewer-accent)}
 
 .ml-camera{
- position:absolute;right:12px;bottom:12px;display:flex;align-items:center;gap:5px;padding:4px;
+ display:flex;align-items:center;flex:none;gap:5px;padding:4px;
  border:1px solid var(--viewer-rule);border-radius:10px;background:var(--viewer-rail);
 }
 .ml-camera :is(button,summary){
@@ -355,7 +360,7 @@ main[data-view=anatomy]{max-width:1400px;padding-top:20px}
 .ml-tools button svg{width:19px;height:19px}
 
 .ml-fullscreen{inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:0;border:0;background:var(--viewer-stage);color-scheme:dark}
-.ml-fullscreen .medical-library{height:100dvh;border:0;border-radius:0}
+.ml-fullscreen .medical-library,.atlas-standalone .ml-fullscreen .medical-library{height:100dvh;border:0;border-radius:0}
 .ml-capture{width:min(94vw,950px);max-height:94dvh;padding:12px;border:1px solid var(--viewer-rule);border-radius:12px;background:var(--viewer-rail);color:var(--viewer-text);color-scheme:dark}
 .ml-capture::backdrop{background:#071310c7}
 .ml-capture header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
@@ -368,23 +373,18 @@ main[data-view=anatomy]{max-width:1400px;padding-top:20px}
  .medical-library[data-panel=""] .ml-workbench{grid-template-columns:minmax(0,1fr) 57px}
 }
 @container (max-width:540px){
- .ml-viewport{inset-block-end:105px}
- .ml-stage-readout{bottom:64px;max-width:calc(100% - 28px)}
  .ml-hint{display:none}
- .ml-camera{left:7px;right:7px;justify-content:center;flex-wrap:wrap}
-}
-@container (max-width:330px){
- .ml-viewport{inset-block-end:125px}
- .ml-stage-readout{bottom:88px}
+ .ml-stage-footer{flex-wrap:wrap;gap:4px;padding:4px 7px 7px}
+ .ml-stage-copy{max-width:100%}
+ .ml-camera{flex:1 0 100%;min-width:0;justify-content:center;flex-wrap:wrap;gap:2px;padding:3px}
 }
 @media(max-width:900px){
  .ml-workbench,.medical-library[data-panel=""] .ml-workbench{grid-template-columns:minmax(0,1fr) 57px}
  .ml-side{position:absolute;z-index:5;top:0;bottom:0;left:0;width:min(235px,74%);box-shadow:8px 0 30px #07131088}
 }
 @media(max-width:760px){
- .medical-library{height:clamp(380px,calc(100dvh - 250px),840px);grid-template-rows:45px minmax(0,1fr)}
- .atlas-standalone .medical-library{height:clamp(430px,calc(100dvh - 111px),840px)}
- .atlas-standalone .ml-fullscreen .medical-library{height:100dvh}
+ .medical-library{height:max(380px,calc(100dvh - 244px));grid-template-rows:45px minmax(0,1fr)}
+ .atlas-standalone .medical-library{height:max(410px,calc(100dvh - 103px))}
  .ml-workbench,.medical-library[data-panel=""] .ml-workbench{grid-template-columns:minmax(0,1fr) 49px}
  .ml-bar{padding:0 6px;gap:6px}
  .ml-bar button{width:30px;height:32px;flex-basis:30px}
@@ -393,13 +393,10 @@ main[data-view=anatomy]{max-width:1400px;padding-top:20px}
  .ml-live{font-size:9px}
  .ml-tools{padding:5px 3px}
  .ml-tools button{min-height:44px}
- .ml-quick{top:8px;left:8px;right:8px;max-width:calc(100% - 16px);padding:3px;gap:1px}
+ .ml-quick{max-width:calc(100% - 14px);margin-top:6px;gap:1px}
  .ml-quick button{padding:2px 7px;font-size:11px}
- .ml-viewport{inset:46px 0 111px}
- .ml-stage-readout{left:9px;bottom:76px;max-width:calc(100% - 18px)}
  .ml-stage-readout strong{font-size:12px}
  .ml-stage-readout small{font-size:9px}
- .ml-camera{left:7px;right:7px;bottom:7px;flex-wrap:wrap;justify-content:center;gap:2px;padding:3px}
  .ml-camera :is(button,summary){min-width:26px;height:27px;padding:0 4px}
  .ml-zoom{border:0;padding-left:0}
  .ml-camera button svg{width:16px;height:16px}
@@ -414,6 +411,8 @@ main[data-view=anatomy]{max-width:1400px;padding-top:20px}
  font:650 26px/1.25 'Songti SC','Noto Serif CJK SC','PingFang SC',serif;letter-spacing:.025em;
 }
 .model-workspace-description{margin:5px 0 0;color:#5d7469;font-size:12px;line-height:1.45}
+.model-workspace-header:has(#model-tab-library[aria-selected=true]){min-height:51px;margin-bottom:10px}
+.model-workspace-header:has(#model-tab-library[aria-selected=true]) .model-workspace-kicker{display:none}
 .model-tabs{
  display:flex;align-items:stretch;gap:4px;flex:none;max-width:100%;padding:4px;
  border:1px solid #d5e3da;border-radius:11px;background:#e9f0ec;
