@@ -344,7 +344,7 @@ main[data-view=anatomy]{max-width:1400px;padding-top:20px}
 
 .ml-tools{
  display:flex;flex-direction:column;gap:3px;min-height:0;overflow:auto;padding:9px 6px;
- background:var(--viewer-rail);border-left:1px solid var(--viewer-rule);scrollbar-width:thin;
+ background:var(--viewer-rail);border-left:1px solid var(--viewer-rule);scrollbar-width:thin;contain:paint;
 }
 .ml-tools button{
  display:grid;justify-items:center;align-content:center;gap:3px;min-height:48px;padding:3px 1px;
