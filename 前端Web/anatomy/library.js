@@ -14,7 +14,6 @@ const icons = {
  capture: '<path d="M4 7h4l2-3h4l2 3h4v13H4z"/><circle cx="12" cy="13" r="3"/>',
  find: '<path d="M5 3h11l3 3v15H5zM8 10h8m-8 4h8m-8 4h5"/>',
  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-9v.1"/>',
- reset: '<circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/>',
  eye: '<path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.4"/>',
  up: '<path d="m5 15 7-7 7 7"/>',
  down: '<path d="m5 9 7 7 7-7"/>',
@@ -23,6 +22,9 @@ const icons = {
 };
 const glyph = name => '<svg viewBox="0 0 24 24" aria-hidden="true">' + icons[name] + '</svg>';
 const shortName = {skeleton:'骨骼', heart:'心脏', airways:'气道', skull:'颅骨', knee:'膝部', shoulder:'肌群', kidneys:'双肾'};
+const minViewScale = .75;
+const perspectiveFov = 33;
+const perspectiveSlope = Math.tan(THREE.MathUtils.degToRad(perspectiveFov / 2));
 
 function disposeModel(model) {
  model?.traverse(node => {
@@ -88,7 +90,7 @@ export function mountLibrary(root, base = '') {
       </div>
       <div class="ml-zoom" role="group" aria-label="缩放与复位">
        <button type="button" data-action="zoom-out" aria-label="缩小" disabled>−</button>
-       <button type="button" data-view="reset" aria-label="复位视角" disabled></button>
+       <button type="button" data-view="reset" title="恢复完整正面视图" disabled>适屏</button>
        <button type="button" data-action="zoom-in" aria-label="放大" disabled>＋</button>
        <details class="ml-adjust">
         <summary>微调</summary>
@@ -137,7 +139,6 @@ export function mountLibrary(root, base = '') {
  $('.ml-back').innerHTML = glyph('back');
  $('.ml-expand').innerHTML = glyph('expand');
  $('.ml-exit').innerHTML = glyph('close');
- $('[data-view=reset]').innerHTML = glyph('reset');
  root.querySelectorAll('[data-orbit]').forEach(button => button.innerHTML = glyph(button.dataset.orbit));
  root.querySelectorAll('[data-tool]').forEach(button => button.insertAdjacentHTML('afterbegin', glyph(button.dataset.tool)));
 
@@ -146,6 +147,7 @@ export function mountLibrary(root, base = '') {
  let renderer, scene, camera, controls, observer, model, pending;
  let meshes = new Map(), hiddenParts = new Set();
  let view = 'front', orthographic = true, halfHeight = 1;
+ let orthographicDistance = 1, maxPerspectiveDistance = Infinity;
  const loader = new GLTFLoader();
  const directions = {
   front: new THREE.Vector3(0, 0, 1), back: new THREE.Vector3(0, 0, -1),
@@ -213,13 +215,15 @@ export function mountLibrary(root, base = '') {
   halfHeight = .53 * Math.max(size.y, width / aspect);
   camera.zoom = 1;
   updateProjection();
-  const distance = orthographic ? sphere.radius * 3 + 1 :
-   halfHeight / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) + depth / 2;
+  const perspectiveDistance = halfHeight / perspectiveSlope + depth / 2;
+  orthographicDistance = sphere.radius * 3 + 1;
+  const distance = orthographic ? orthographicDistance : perspectiveDistance;
+  maxPerspectiveDistance = perspectiveDistance / minViewScale;
   controls.target.copy(sphere.center);
   camera.position.copy(sphere.center).addScaledVector(directions[direction], distance);
   controls.minDistance = Math.max(.035, sphere.radius * .25);
-  controls.maxDistance = Math.max(12, distance * 3);
-  controls.minZoom = .35;
+  controls.maxDistance = orthographic ? Infinity : maxPerspectiveDistance;
+  controls.minZoom = minViewScale;
   controls.maxZoom = 5;
   controls.update();
   view = direction;
@@ -231,15 +235,17 @@ export function mountLibrary(root, base = '') {
 
  function changeProjection() {
   const offset = camera.position.clone().sub(controls.target);
-  const tangent = Math.tan(THREE.MathUtils.degToRad(33 / 2));
-  const span = orthographic ? halfHeight / camera.zoom : offset.length() * tangent;
+  const span = orthographic ? halfHeight / camera.zoom : offset.length() * perspectiveSlope;
   orthographic = !orthographic;
   camera = orthographic ? new THREE.OrthographicCamera(-1, 1, 1, -1, .015, 100) :
-   new THREE.PerspectiveCamera(33, 1, .015, 100);
-  if (orthographic) halfHeight = span;
-  else offset.setLength(span / tangent);
+   new THREE.PerspectiveCamera(perspectiveFov, 1, .015, 100);
+  if (orthographic) {
+   camera.zoom = THREE.MathUtils.clamp(halfHeight / span, controls.minZoom, controls.maxZoom);
+   offset.setLength(orthographicDistance);
+  } else offset.setLength(span / perspectiveSlope);
   camera.position.copy(controls.target).add(offset);
   controls.object = camera;
+  controls.maxDistance = orthographic ? Infinity : maxPerspectiveDistance;
   const toggle = $('[data-action=projection]');
   toggle.textContent = orthographic ? '正交' : '透视';
   toggle.setAttribute('aria-pressed', String(orthographic));

@@ -8,7 +8,7 @@
  --viewer-paper:#f5f8f4;
 }
 .atlas,.medical-library{
- min-width:0;border:1px solid var(--viewer-rule);border-radius:14px;
+ height:max(445px,calc(100dvh - 155px));min-width:0;border:1px solid var(--viewer-rule);border-radius:14px;
  background:var(--viewer-stage);color:var(--viewer-text);color-scheme:dark;
  font:13px/1.45 system-ui,-apple-system,'PingFang SC',sans-serif;
  box-shadow:0 12px 26px #173a2115;
@@ -30,7 +30,6 @@
 
 .atlas {
  display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;
- height:clamp(510px,calc(100dvh - 191px),1080px);
  width:100%;
 }
 .atlas *{box-sizing:border-box}
@@ -46,7 +45,7 @@
 .atlas button svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle}
 .a-titlebar{
  grid-row:1;
- display:flex;align-items:center;gap:12px;min-height:51px;padding:7px 12px 7px 15px;
+ display:flex;align-items:center;gap:12px;min-height:54px;padding:7px 12px 7px 15px;
  border-radius:13px 13px 0 0;
 }
 .a-title{display:flex;align-items:baseline;gap:10px;min-width:0}
@@ -82,7 +81,7 @@
 .atlas .a-channel-row [aria-pressed=false][data-channel-visibility]{color:#969c96}
 .a-channel-row [aria-pressed=true] .a-eye-slash{display:none}
 
-.a-viewer{display:grid;grid-template-columns:minmax(0,1fr) 112px;min-width:0;min-height:0;background:var(--viewer-stage)}
+.a-viewer{display:grid;grid-template:minmax(0,1fr) auto / minmax(0,1fr);min-width:0;min-height:0;background:var(--viewer-stage)}
 .atlas-stage canvas{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 .atlas-stage canvas:active{cursor:grabbing}
 .atlas-stage:is(.a-editing,.a-pick-center) canvas{cursor:crosshair}
@@ -109,25 +108,23 @@
 .a-focus-name em{margin-left:5px}
 .a-selected-ring{position:absolute;width:16px;height:16px;transform:translate(-50%,-50%);border:1.5px solid var(--viewer-accent);border-radius:50%;box-shadow:0 0 0 1px var(--viewer-rail);pointer-events:none}
 
+/* Keep the common view controls together and give the canvas the full center column. */
 .a-view-tools{
- display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:12px;
- min-height:0;padding:13px 6px;overflow:auto;scrollbar-width:thin;border-left:1px solid #ffffff0b;
+ display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 14px;
+ padding:5px 8px;border-top:1px solid var(--viewer-rule);background:var(--viewer-rail);
 }
-.a-layer-tools,.a-mode-tools{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;width:100%}
-.atlas .a-view-tools button{border-color:var(--viewer-rule);background:var(--viewer-rail);font-size:12px}
-.atlas .a-view-tools button[aria-pressed=true]{background:var(--viewer-accent);border-color:var(--viewer-accent);color:#19352a;font-weight:650}
-.atlas .a-layer-tools button{width:42px;height:38px;padding:0;border-radius:9px}
-.a-camera-tools{display:grid;justify-items:center;gap:8px}
-.a-tool-label{font-size:10px;letter-spacing:.15em;color:var(--viewer-muted)}
-.a-compass{display:grid;grid-template-columns:repeat(3,30px);grid-template-rows:repeat(3,30px);gap:2px}
-.atlas :is(.a-compass,.a-zoom) button{display:grid;place-items:center;width:30px;height:30px;min-height:0;padding:0;border-radius:7px}
-.a-compass [data-view=front]{grid-area:1/2}
-.a-compass [data-view=left]{grid-area:2/1}
-.a-compass [data-action=reset-view]{grid-area:2/2}
-.a-compass [data-view=right]{grid-area:2/3}
-.a-compass [data-view=back]{grid-area:3/2}
-.a-zoom{display:flex;gap:7px}
-.atlas .a-mode-tools button{min-height:28px;padding:3px 6px;font-size:11px}
+.a-camera-tools,.a-display-tools,.a-layer-tools,.a-mode-tools,.a-compass,.a-zoom{
+ display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:3px;
+}
+.a-camera-tools,.a-display-tools{gap:6px;min-width:0}
+.a-zoom,.a-mode-tools{border-left:1px solid var(--viewer-rule);padding-left:6px}
+.atlas .a-view-tools button{
+ display:grid;place-items:center;min-width:30px;min-height:30px;padding:0 6px;
+ border-radius:6px;color:var(--viewer-text);font-size:12px;white-space:nowrap;
+}
+.atlas .a-view-tools button[aria-pressed=true],
+.atlas .a-view-tools button[data-action=reset-view]{background:#30473f;color:var(--viewer-accent);font-weight:650}
+.atlas .a-view-tools button svg{width:16px;height:16px}
 
 .atlas-side{
  width:252px;min-height:0;min-width:0;overflow:auto;overscroll-behavior:contain;
@@ -176,14 +173,10 @@
 .a-fullscreen .atlas{height:100%;border:0;border-radius:0}
 .a-fullscreen .a-titlebar,.a-fullscreen .a-footer{border-radius:0}
 .atlas-standalone{margin:0;background:#f5f8f7;padding:10px}
-#atlas-root{max-width:1400px;margin:auto}
-.atlas-standalone .atlas{height:clamp(440px,calc(100dvh - 111px),1080px)}
+#atlas-root{margin:auto}
+.atlas-standalone :is(.atlas,.medical-library){height:max(430px,calc(100dvh - 88px))}
 .atlas-standalone .a-fullscreen .atlas{height:100dvh}
-main[data-view=anatomy]{max-width:1400px;padding-top:20px}
-main[data-view=anatomy]:has(.model-online:not([hidden])){
- max-width:none;padding:12px clamp(12px,1.5vw,28px) 20px;
-}
-#atlas-root:has(.model-online:not([hidden])){max-width:none}
+main[data-view=anatomy]{max-width:none;padding:12px clamp(12px,1.5vw,28px) 20px}
 
 @media(max-width:1000px){
  .atlas-layout{grid-template-columns:115px minmax(0,1fr)}
@@ -191,7 +184,6 @@ main[data-view=anatomy]:has(.model-online:not([hidden])){
 }
 @media(max-width:650px){
  main[data-view=anatomy]{padding-top:12px}
- .atlas{height:clamp(410px,calc(100dvh - 260px),780px)}
  .atlas-layout{grid-template-columns:minmax(0,1fr)}
  .a-titlebar{gap:7px;min-height:46px;padding:5px 6px 5px 9px}
  .a-title strong{font-size:14px}
@@ -199,14 +191,8 @@ main[data-view=anatomy]:has(.model-online:not([hidden])){
  .atlas .a-header-actions button{min-width:34px;padding:4px 6px;justify-content:center}
  .atlas .a-header-actions [data-action=records]::after{content:'记录';font-size:11px}
  .a-sex button{width:28px}
- .a-viewer{grid-template-columns:minmax(0,1fr) 77px}
- .a-view-tools{padding:9px 4px;gap:8px}
- .atlas .a-layer-tools button{width:38px;height:35px}
- .a-compass{grid-template-columns:repeat(3,23px);grid-template-rows:repeat(3,27px);gap:0}
- .atlas .a-compass button{width:23px;height:26px}
- .a-compass button svg{width:15px;height:15px}
- .a-mode-tools{gap:3px}
- .atlas .a-mode-tools button{padding:3px 5px}
+ .a-view-tools{padding:4px 5px}
+ .atlas .a-view-tools button{min-width:28px;min-height:28px;padding:0 4px;font-size:11px}
  .a-channels{display:none;position:absolute;z-index:4;top:0;bottom:0;left:0;width:136px;box-shadow:12px 0 30px #0005}
  .a-channels-open .a-channels{display:flex}
  .atlas .a-rail-close{display:block}
@@ -227,9 +213,8 @@ main[data-view=anatomy]:has(.model-online:not([hidden])){
 
 .medical-library{
  display:grid;grid-template-rows:54px minmax(0,1fr);
- height:max(445px,calc(100dvh - 155px));overflow:hidden;
+ overflow:hidden;
 }
-.atlas-standalone .medical-library{height:max(430px,calc(100dvh - 88px))}
 .medical-library *, .ml-capture *{box-sizing:border-box}
 .medical-library [hidden],.ml-capture [hidden]{display:none!important}
 .medical-library :is(button,summary),.ml-capture button{font:inherit;cursor:pointer}
@@ -334,6 +319,7 @@ main[data-view=anatomy]:has(.model-online:not([hidden])){
 .ml-camera :is([aria-pressed=true],.ml-adjust[open] summary){background:#30473f;color:var(--viewer-accent)}
 .ml-compass [data-action=projection],.ml-adjust summary{font-size:10px}
 .ml-camera .ml-zoom [data-action]{font-size:17px}
+.ml-zoom [data-view=reset]{background:#30473f;color:var(--viewer-accent);font-size:11px;font-weight:650}
 .ml-adjust{position:relative}
 .ml-adjust summary{list-style:none}
 .ml-adjust summary::-webkit-details-marker{display:none}
@@ -383,8 +369,9 @@ main[data-view=anatomy]:has(.model-online:not([hidden])){
  .ml-side{position:absolute;z-index:5;top:0;bottom:0;left:0;width:min(235px,74%);box-shadow:8px 0 30px #07131088}
 }
 @media(max-width:760px){
- .medical-library{height:max(380px,calc(100dvh - 244px));grid-template-rows:45px minmax(0,1fr)}
- .atlas-standalone .medical-library{height:max(410px,calc(100dvh - 103px))}
+ :is(.atlas,.medical-library){height:max(400px,calc(100dvh - 244px))}
+ .medical-library{grid-template-rows:45px minmax(0,1fr)}
+ .atlas-standalone :is(.atlas,.medical-library){height:max(410px,calc(100dvh - 103px))}
  .ml-workbench,.medical-library[data-panel=""] .ml-workbench{grid-template-columns:minmax(0,1fr) 49px}
  .ml-bar{padding:0 6px;gap:6px}
  .ml-bar button{width:30px;height:32px;flex-basis:30px}
@@ -404,15 +391,12 @@ main[data-view=anatomy]:has(.model-online:not([hidden])){
 }
 
 /* The light workspace header frames both dark viewers. */
-.model-workspace-header{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:0 0 15px;min-height:66px}
-.model-workspace-kicker{display:block;color:#436e5f;font-size:10px;font-weight:650;letter-spacing:.17em;line-height:1.5}
+.model-workspace-header{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:0 0 10px;min-height:51px}
 .model-workspace-title{
  margin:1px 0 0;color:#233e35;
  font:650 26px/1.25 'Songti SC','Noto Serif CJK SC','PingFang SC',serif;letter-spacing:.025em;
 }
 .model-workspace-description{margin:5px 0 0;color:#5d7469;font-size:12px;line-height:1.45}
-.model-workspace-header:has(#model-tab-library[aria-selected=true]){min-height:51px;margin-bottom:10px}
-.model-workspace-header:has(#model-tab-library[aria-selected=true]) .model-workspace-kicker{display:none}
 .model-tabs{
  display:flex;align-items:stretch;gap:4px;flex:none;max-width:100%;padding:4px;
  border:1px solid #d5e3da;border-radius:11px;background:#e9f0ec;
@@ -428,7 +412,7 @@ main[data-view=anatomy]:has(.model-online:not([hidden])){
 .model-tab>svg{width:16px;height:16px;flex:0 0 16px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
 @media(max-width:640px){
  .model-workspace-header{flex-direction:column;align-items:stretch;gap:9px;margin-bottom:12px;min-height:0}
- .model-workspace-kicker,.model-workspace-description{display:none}
+ .model-workspace-description{display:none}
  .model-workspace-title{font-size:22px}
  .model-tabs{align-self:stretch}
  .model-tabs>.model-tab{flex:1;min-height:34px;padding:0 8px;font-size:12px}

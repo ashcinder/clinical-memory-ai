@@ -58,28 +58,29 @@ export async function mountAtlas(root,base=''){
      <div class="a-model-loading" role="status">正在载入人体模型…</div>
     </div>
     <div class="a-view-tools" aria-label="三维视图工具">
-     <div class="a-layer-tools" role="group" aria-label="点位显示">
-      <button data-action="names" aria-pressed="false" title="显示穴位名称">点名</button>
-      <button data-action="current-only" aria-pressed="false" title="仅显示当前穴位">仅选</button>
-     </div>
      <div class="a-camera-tools">
-      <span class="a-tool-label">视角</span>
       <div class="a-compass" role="group" aria-label="固定视角">
        <button data-view="front" aria-label="正面" title="正面">前</button>
-       <button data-view="left" aria-label="左侧" title="左侧">左</button>
-       ${tool('reset-view','复位','<circle cx="12" cy="12" r="5"/><path d="M12 2v5m0 10v5M2 12h5m10 0h5"/>')}
-       <button data-view="right" aria-label="右侧" title="右侧">右</button>
        <button data-view="back" aria-label="背面" title="背面">后</button>
+       <button data-view="left" aria-label="左侧" title="左侧">左</button>
+       <button data-view="right" aria-label="右侧" title="右侧">右</button>
       </div>
       <div class="a-zoom" role="group" aria-label="缩放">
-       ${tool('zoom-in','放大','<path d="M12 5v14M5 12h14"/>')}
        ${tool('zoom-out','缩小','<path d="M5 12h14"/>')}
+       <button data-action="reset-view" title="恢复完整正面视图">适屏</button>
+       ${tool('zoom-in','放大','<path d="M12 5v14M5 12h14"/>')}
       </div>
      </div>
-     <div class="a-mode-tools" role="group" aria-label="操作模式">
-      <button data-action="free-view" aria-pressed="false">自由</button>
-      <button data-action="center" aria-pressed="false" disabled>设中心</button>
-      <button data-action="pan" aria-pressed="false" disabled>平移</button>
+     <div class="a-display-tools">
+      <div class="a-layer-tools" role="group" aria-label="点位显示">
+       <button data-action="names" aria-pressed="false" title="显示穴位名称">点名</button>
+       <button data-action="current-only" aria-pressed="false" title="仅显示当前穴位">仅选</button>
+      </div>
+      <div class="a-mode-tools" role="group" aria-label="操作模式">
+       <button data-action="free-view" aria-pressed="false">自由</button>
+       <button data-action="center" aria-pressed="false" disabled>设中心</button>
+       <button data-action="pan" aria-pressed="false" disabled>平移</button>
+      </div>
      </div>
     </div>
    </div>
@@ -161,9 +162,9 @@ export async function mountAtlas(root,base=''){
   if(bounds.isEmpty())return;
   const size=bounds.getSize(new THREE.Vector3()),side=view==='left'||view==='right';
   const slope=Math.tan(THREE.MathUtils.degToRad(camera.fov)/2);
-  const distance=Math.max(size.y/(1.64*slope),(side?size.z:size.x)/(1.76*slope*camera.aspect))+(side?size.x:size.z)/2;
+  const distance=Math.max(size.y,(side?size.z:size.x)/camera.aspect)/(1.86*slope)+(side?size.x:size.z)/2;
   bounds.getCenter(controls.target);
-  controls.maxDistance=Math.max(5,distance*1.6);
+  controls.maxDistance=distance/.75;
   camera.position.copy(controls.target);
   if(side)camera.position.x+=view==='left'?distance:-distance;
   else camera.position.z+=view==='back'?-distance:distance;
