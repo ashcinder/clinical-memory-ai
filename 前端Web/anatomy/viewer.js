@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
+import {allowViewerPageScroll} from './viewport.js';
 import {MODELS,presetAnchors} from './presets.js';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>Array.from(crypto.getRandomValues(new Uint8Array(16)),v=>v.toString(16).padStart(2,'0')).join('');
@@ -54,7 +55,7 @@ export async function mountAtlas(root,base=''){
      </div>
      <div class="a-name-layer" aria-label="当前可见穴位名称"><svg class="a-name-lines" aria-hidden="true"></svg></div>
      <div class="a-selected-ring" hidden aria-hidden="true"></div>
-     <span class="a-hint">拖动旋转 · 滚轮 / 双指缩放</span>
+     <span class="a-hint">拖动旋转 · Ctrl + 滚轮 / 双指缩放</span>
      <div class="a-model-loading" role="status">正在载入人体模型…</div>
     </div>
     <div class="a-view-tools" aria-label="三维视图工具">
@@ -145,6 +146,7 @@ export async function mountAtlas(root,base=''){
  try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true,powerPreference:'low-power'});}catch(e){throw Error('设备未能启用 WebGL，请更新浏览器或 Android System WebView。');}
  renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0,0);renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
  stage.prepend(renderer.domElement);renderer.domElement.setAttribute('aria-label','可旋转缩放的写实人体三维模型');renderer.domElement.tabIndex=0;
+ allowViewerPageScroll(renderer.domElement,fullscreen,signal);
  const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,1,0);controls.minDistance=.4;controls.maxDistance=5;controls.maxPolarAngle=Math.PI*.95;controls.enablePan=false;
  scene.add(new THREE.HemisphereLight(0xffffff,0xb2b7b9,2));
  const key=new THREE.DirectionalLight(0xffefe3,2.7);key.position.set(-2,3,4);scene.add(key);
@@ -153,7 +155,7 @@ export async function mountAtlas(root,base=''){
  const ray=new THREE.Raycaster(),mouse=new THREE.Vector2(),modelCache=new Map();
  let bodyMeshes=[],loading=false;
  const labelRay=new THREE.Raycaster(),nameNodes=new Map();let labelFrame=null;
- function viewHint(){return panMode?'拖动平移 · 双指缩放':freeView?'拖动旋转 · 双击人体设中心':'拖动旋转 · 滚轮 / 双指缩放';}
+ function viewHint(){return panMode?'拖动平移 · 双指缩放':freeView?'拖动旋转 · 双击人体设中心':'拖动旋转 · Ctrl + 滚轮 / 双指缩放';}
  function cameraMode(){controls.enablePan=freeView;controls.zoomToCursor=freeView;controls.minDistance=freeView?.1:.4;controls.maxPolarAngle=freeView?Math.PI-.01:Math.PI*.95;controls.mouseButtons.LEFT=panMode?THREE.MOUSE.PAN:THREE.MOUSE.ROTATE;controls.mouseButtons.MIDDLE=freeView?THREE.MOUSE.PAN:THREE.MOUSE.DOLLY;controls.touches.ONE=panMode?THREE.TOUCH.PAN:THREE.TOUCH.ROTATE;controls.enabled=!pickingCenter;
  $('[data-action=free-view]').setAttribute('aria-pressed',String(freeView));for(const action of ['center','pan'])$('[data-action='+action+']').disabled=!freeView;
  $('[data-action=center]').setAttribute('aria-pressed',String(pickingCenter));$('[data-action=pan]').setAttribute('aria-pressed',String(panMode));stage.classList.toggle('a-pick-center',pickingCenter);$('.a-hint').textContent=pickingCenter?'点击人体表面，设为旋转与缩放中心':viewHint();}

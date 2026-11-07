@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
+import {allowViewerPageScroll} from './viewport.js';
 
 const icons = {
  back: '<path d="m15 5-7 7 7 7"/>',
@@ -78,7 +79,7 @@ export function mountLibrary(root, base = '') {
       <div class="ml-stage-readout">
        <strong class="ml-selected" role="status">模型总览</strong><small class="ml-selected-id"></small>
       </div>
-      <p class="ml-hint">拖动旋转 · 滚轮或双指缩放 · 点选结构</p>
+      <p class="ml-hint">拖动旋转 · Ctrl + 滚轮 / 双指缩放 · 点选结构</p>
      </div>
      <div class="ml-camera" role="group" aria-label="视角与缩放">
       <div class="ml-compass" role="group" aria-label="固定视角">
@@ -272,6 +273,7 @@ export function mountLibrary(root, base = '') {
   const rim = new THREE.DirectionalLight(0xe6effc, 1.5);
   rim.position.set(4, 3, -5);
   scene.add(key, rim);
+  allowViewerPageScroll(renderer.domElement, dialog, events.signal);
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = false;
   controls.addEventListener('change', () => {
@@ -610,7 +612,7 @@ export function mountLibrary(root, base = '') {
   controls.mouseButtons.LEFT = panning ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
   controls.touches.ONE = panning ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE;
   $('[data-tool=pan]').setAttribute('aria-pressed', String(panning));
-  $('.ml-hint').textContent = panning ? '拖动平移 · 滚轮或双指缩放' : '拖动旋转 · 滚轮或双指缩放 · 点选结构';
+  $('.ml-hint').textContent = panning ? '拖动平移 · Ctrl + 滚轮 / 双指缩放' : '拖动旋转 · Ctrl + 滚轮 / 双指缩放 · 点选结构';
  };
  $('[data-tool=capture]').onclick = showCapture;
  $('[data-tool=find]').onclick = () => {
