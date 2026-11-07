@@ -50,6 +50,7 @@ export async function mountAtlas(root,base=''){
   const layer=$('.a-name-layer'),svg=$('.a-name-lines');layer.hidden=loading;
   if(layer.hidden){clearNameNodes();return;}
   const w=stage.clientWidth,h=stage.clientHeight,canvasH=renderer.domElement.clientHeight;
+  if(!w||!h||!canvasH)return;
   svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
   if(!visible){layoutCurrentName(layer,svg,w,h,canvasH);return;}
   const columns=[[],[]],used=new Set(),byID=new Map(active().map(p=>[p.id,p]));
@@ -92,7 +93,7 @@ export async function mountAtlas(root,base=''){
   const endX=leftSide?left+width+3:left-3;
   if(exposed)node.line.setAttribute('points',`${x},${y} ${endX+(leftSide?10:-10)},${labelY} ${endX},${labelY}`);else node.line.removeAttribute('points');
  }
- function render(){if(dead)return;
+ function render(){if(dead||!stage.clientWidth||!stage.clientHeight)return;
   // Keep the selected surface dot small and legible at every zoom distance.
   camera.updateMatrixWorld();for(const m of marks.children)if(m.userData.id===selected){const depth=-m.position.clone().applyMatrix4(camera.matrixWorldInverse).z;const unitsPerPixel=2*Math.max(.001,depth)*Math.tan(THREE.MathUtils.degToRad(camera.fov)/2)/Math.max(1,renderer.domElement.clientHeight);m.scale.setScalar(unitsPerPixel*3/.0065);}
   renderer.render(scene,camera);if(labelFrame===null)labelFrame=requestAnimationFrame(layoutNames);
@@ -133,7 +134,7 @@ export async function mountAtlas(root,base=''){
  renderer.domElement.addEventListener('dblclick',e=>{if(freeView&&!placing)chooseCenter(e);},{signal});
  controls.addEventListener('start',()=>{homeView=null;});
  controls.addEventListener('change',()=>{const angle=Math.atan2(camera.position.x-controls.target.x,camera.position.z-controls.target.z);$('.a-orientation').textContent=Math.abs(angle)<.65?'正面':Math.abs(angle)>2.5?'背面':'侧面';render();});
- const observer=new ResizeObserver(()=>{const views=$('.a-views'),bar=$('.a-camera-bar'),bottom=12+views.offsetHeight;canvasTop=bar.offsetHeight+8;stage.style.setProperty('--a-controls-bottom',bottom+'px');const w=stage.clientWidth,h=Math.max(160,stage.clientHeight-canvasTop-78);renderer.domElement.style.top=canvasTop+'px';renderer.setSize(w,h);camera.aspect=w/h;
+ const observer=new ResizeObserver(()=>{if(!stage.clientWidth||!stage.clientHeight)return;const views=$('.a-views'),bar=$('.a-camera-bar'),bottom=12+views.offsetHeight;canvasTop=bar.offsetHeight+8;stage.style.setProperty('--a-controls-bottom',bottom+'px');const w=stage.clientWidth,h=Math.max(160,stage.clientHeight-canvasTop-78);renderer.domElement.style.top=canvasTop+'px';renderer.setSize(w,h);camera.aspect=w/h;
  // Keep the full-width body in frame when the desktop panel becomes tall and narrow.
  camera.fov=THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(THREE.MathUtils.degToRad(35)/2)*Math.max(1,.72/camera.aspect)));camera.updateProjectionMatrix();if(homeView)setHomeView(homeView);else render();});observer.observe(stage);observer.observe($('.a-camera-bar'));
 

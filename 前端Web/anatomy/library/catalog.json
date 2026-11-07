@@ -1,0 +1,1276 @@
+{
+  "provider": "bodyparts3d",
+  "version": "4.0",
+  "credit": "BodyParts3D, © The Database Center for Life Science licensed under CC Attribution 4.0 International",
+  "license_url": "https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html",
+  "inputs_sha256": {
+    "bodyparts3d.zip": "40665852c49f218326590e204db91064a1ecfc3c6f8cbd7bbbcaac62c7cd409e",
+    "isa_element_parts.txt": "a3de74423f943b0d724ae8f59b3a817f87c423a544f8db98113b1980817cbeaf",
+    "partof.zip": "9fbc713fffeee924a5a657d9813d84d7eb957bded63adb854931dd5e3eb61c97",
+    "partof_element_parts.txt": "3f5f6df1028eb122b30de77c711597b6bb8e5541658e5985859fd228adbf88ea"
+  },
+  "items": [
+    {
+      "id": "heart",
+      "name": "心脏与大血管",
+      "english": "Heart & great vessels",
+      "category": "循环系统",
+      "summary": "心房壁、合并心室壁及相连大血管。心室腔以空间表面表示，可单独查看。",
+      "keywords": [
+        "心脏",
+        "心血管",
+        "冠状动脉",
+        "心房",
+        "心室"
+      ],
+      "author": "Database Center for Life Science",
+      "url": "https://dbarchive.biosciencedbc.jp/en/bodyparts3d/desc.html",
+      "license": "CC BY 4.0",
+      "asset": "heart.glb",
+      "sha256": "df52d16c92bcaf2de6c676e07576a3f5c0bc374e0366940d68e32fe10e4d69b5",
+      "parts": [
+        {
+          "id": "FMA13884",
+          "name": "心室壁",
+          "english": "Wall of ventricle",
+          "color": "#b45053",
+          "hierarchy": "isa",
+          "elements": [
+            {
+              "id": "FJ2428",
+              "sha256": "ac3c7d6714bed8cf549c97b013546541cf67e189dad2107092a59758aa3ccc45"
+            }
+          ]
+        },
+        {
+          "id": "FMA9457",
+          "name": "右心房壁",
+          "english": "Wall of right atrium",
+          "color": "#866c9d",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ2439",
+              "sha256": "e7c21cd1659eced056eb56e28f4fa9019ace451ea6e0333097846177f807bb5a"
+            }
+          ]
+        },
+        {
+          "id": "FMA9531",
+          "name": "左心房壁",
+          "english": "Wall of left atrium",
+          "color": "#d38985",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ2438",
+              "sha256": "187235f3c3612ef27abde924d01c71579c2946435e64319164f43e5ad008284d"
+            }
+          ]
+        },
+        {
+          "id": "FMA3736",
+          "name": "升主动脉",
+          "english": "Ascending aorta",
+          "color": "#cd665a",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3413",
+              "sha256": "f4d566821c5ee6347147631b4d1b1e5c5cb3465e05ec23fadffa161c268c7bb2"
+            }
+          ]
+        },
+        {
+          "id": "FMA3768",
+          "name": "主动脉弓",
+          "english": "Arch of aorta",
+          "color": "#e38367",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3411",
+              "sha256": "7f1bbd874b05ea618649bfd5a51ac2675523f419dd3e5f5e160d90f47bd413db"
+            }
+          ]
+        },
+        {
+          "id": "FMA8612",
+          "name": "肺动脉干",
+          "english": "Pulmonary trunk",
+          "color": "#758aa9",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ2966",
+              "sha256": "5da4132e171716c7a0f78806a14520bee79b993f814de83b1e1f2f2f8cf95edd"
+            }
+          ]
+        },
+        {
+          "id": "FMA4720",
+          "name": "上腔静脉",
+          "english": "Superior vena cava",
+          "color": "#678199",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3645",
+              "sha256": "68710b61d5edce86b6a31ce0a471c88cf63308671f78ba57d9974f6514cdb04b"
+            }
+          ]
+        },
+        {
+          "id": "FMA9291",
+          "name": "右心室腔",
+          "english": "Cavity of right ventricle",
+          "color": "#7897b7",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ2423",
+              "sha256": "390747e238ba9239961d02d1e02516d7af7aacc86d2bc0c29fc835381032ceeb"
+            }
+          ],
+          "cavity": true
+        },
+        {
+          "id": "FMA9466",
+          "name": "左心室腔",
+          "english": "Cavity of left ventricle",
+          "color": "#e5ac75",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ2422",
+              "sha256": "88654bd73fa155daf0b44fd67bccaec81c9e37c105e046076993f2684c463d95"
+            }
+          ],
+          "cavity": true
+        },
+        {
+          "id": "FMA50039",
+          "name": "右冠状动脉树",
+          "english": "Right coronary artery",
+          "color": "#e7b872",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ2667",
+              "sha256": "6bb2898acda5680828658540ed9048abc51b9df9761fed5608567849fcbd6a61"
+            },
+            {
+              "id": "FJ2668",
+              "sha256": "ecd7de3f9aa7a87a85da8abc9c023d6701040c3297fd1f6ba93d7875e871f611"
+            },
+            {
+              "id": "FJ2670",
+              "sha256": "d23c5be67fc7e0a221e6d284772cf89bbc75b31a5bfa431210bd396be8d087b7"
+            },
+            {
+              "id": "FJ2671",
+              "sha256": "095344f7ee5d89c8877b24c76fd57671491f34cb59e0fdf1f0738c54c239b200"
+            },
+            {
+              "id": "FJ2672",
+              "sha256": "0adecd6703d24888e3c236c8a248393777a9b83d902ed9bfc69f258809188092"
+            },
+            {
+              "id": "FJ2673",
+              "sha256": "b3fe7f8dd47fd7758fe4b2f8613c24c642be96d419a7699f85b44a2396a127a7"
+            },
+            {
+              "id": "FJ2674",
+              "sha256": "605cda4cb28547b67d9569ff8576ab7dc9a945d47a9d8b4a15d9552c80daee91"
+            },
+            {
+              "id": "FJ2675",
+              "sha256": "f0d843e88d508d4ab383c4e8131974d9fdcab3b340c87e3002fabde9cf23d3f4"
+            },
+            {
+              "id": "FJ2676",
+              "sha256": "c588c075c7c665691e6789312dad8d86541a1d2916fb63c33d03e38266e213d7"
+            },
+            {
+              "id": "FJ2677",
+              "sha256": "a63f5990cabf34ead2c743bda11b178cdb60a983e7d181c2b757757354f2681e"
+            },
+            {
+              "id": "FJ2692",
+              "sha256": "560c831439ab349de9b564ca92ed175677a3d12963ccd5483314175948797347"
+            },
+            {
+              "id": "FJ2693",
+              "sha256": "ec42da30e165d2cb4ccf189982843b88a8ba006daae95b99104a2061bf30633b"
+            },
+            {
+              "id": "FJ2694",
+              "sha256": "2d2b675af567f743da81826537d13fe72087c98a39741f5848bb70b1676b5c75"
+            },
+            {
+              "id": "FJ2695",
+              "sha256": "00e9b8257eed1ddb8bfb60dfe301b03c08fd8a6e4b83002dad567d8cc738ba73"
+            },
+            {
+              "id": "FJ2696",
+              "sha256": "ec8ecd7100e6a34661db1a99861ef4f3df17c8ac87316cafac2dbf6f895efd5a"
+            },
+            {
+              "id": "FJ2697",
+              "sha256": "e029d3b95fc5b032016ff1e0783a2c71623a55be49cdbbd4be37fcbbfed0117a"
+            },
+            {
+              "id": "FJ2698",
+              "sha256": "2864725de555603dc502c206c9d12bef366358ee4064e8f375c1df9294b7f955"
+            },
+            {
+              "id": "FJ2699",
+              "sha256": "b52176deba592a44bcec3e29d11a8cac00031cac0a35e215d06df515e3224fc4"
+            },
+            {
+              "id": "FJ2700",
+              "sha256": "7c1bda6f9d3170fc5a553a5e917514bb7d108f6c3e37cbe912d6573d634fe983"
+            },
+            {
+              "id": "FJ2714",
+              "sha256": "aa76ceec1e0b4e19b281a2da0e15328d2719eaa1d7b1a3666421bf11ab9c877a"
+            },
+            {
+              "id": "FJ2715",
+              "sha256": "d34c2023e84119131841fe5a1e1251a7252d4900b62b2b1b61d29d3ece4cb51a"
+            },
+            {
+              "id": "FJ2716",
+              "sha256": "ecb5e668e2cf43031263ceed40e29b6862519d8dadef6b21ef63c3398e2f81a5"
+            },
+            {
+              "id": "FJ2717",
+              "sha256": "1dcde62744c8b83892ce1828179d736d2eafdf2fb3cbd74aa61658001dab686b"
+            },
+            {
+              "id": "FJ2718",
+              "sha256": "07ca611daf69f5411871802dbf76e6845519b71df1ef39a772d648c7b1861414"
+            },
+            {
+              "id": "FJ2719",
+              "sha256": "dd10bda525a6b29340babe9b70aa02f8273bedd77519fdc69398dc9f492001b7"
+            },
+            {
+              "id": "FJ2720",
+              "sha256": "996196bea87629d81a5c2040b767026e2a0a77854500999fe9857f3f4a030f5f"
+            },
+            {
+              "id": "FJ2721",
+              "sha256": "d42f1d3059c8a78d65b44ea7934deebd96dbc84338b30341a422a9ce1751c243"
+            },
+            {
+              "id": "FJ2722",
+              "sha256": "f5de57227430b3622ad827348883760596469ed754c473685975be5247cc9abd"
+            },
+            {
+              "id": "FJ2723",
+              "sha256": "a98fe0acbf5a00bd5f73dcbc47f01dfbb932ea72607fd2e74231f6cfe49619d1"
+            }
+          ]
+        },
+        {
+          "id": "FMA50040",
+          "name": "左冠状动脉树",
+          "english": "Left coronary artery",
+          "color": "#f3cd8a",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ2631",
+              "sha256": "06c78376e08c2eed7416d0e2a841e47952b5d95cafa89fbcb7612c072cd65573"
+            },
+            {
+              "id": "FJ2632",
+              "sha256": "71c8621f9ed5a9dd7814c054f9e6f2ec9a480b39141110615bc7090795040272"
+            },
+            {
+              "id": "FJ2633",
+              "sha256": "3a38d05c39634da75a226de3a4665b02614bf38ab4ea3a39fe8ef1096c0d0296"
+            },
+            {
+              "id": "FJ2634",
+              "sha256": "21dff12c8f9beef5d6022dda5c9d25419a72509e5a9fc2e4a33cafe771237442"
+            },
+            {
+              "id": "FJ2635",
+              "sha256": "51114a0f6f2d95fbc18ddbce0cc19431a0b2cb55db18208029fce64f9128ec2c"
+            },
+            {
+              "id": "FJ2636",
+              "sha256": "aa2166cc5bf12de992dd33eaee5953bc23bb739f62610bbbec345d6aea2c1ecc"
+            },
+            {
+              "id": "FJ2637",
+              "sha256": "6c59d4cf0dbdb902fc83e5596f7a181bb66bcbeda24e10c8ce48d4661dfbe34d"
+            },
+            {
+              "id": "FJ2638",
+              "sha256": "aa3ccf75d2a5a5fefe9665b5acafed8f1797f001a01da365bfdc709a8c84aa4b"
+            },
+            {
+              "id": "FJ2639",
+              "sha256": "dc8bcfe30ddcaff7e1e9022bb1013bb884cd03a0fc9d9fae00a924c8d4eef955"
+            },
+            {
+              "id": "FJ2640",
+              "sha256": "38bc0b0b2c9f8a7424098f9dbaa36ed57b07cb9a1211a86a823c779c419035b1"
+            },
+            {
+              "id": "FJ2641",
+              "sha256": "27e5fff1fdeeff77e3c911ffe2a753279cb391b977f2de3f6ea17e21876b0dac"
+            },
+            {
+              "id": "FJ2642",
+              "sha256": "e906224a535dbf5bfb2201cd6fc81880521aa02f5148ae1bbe67404ace96b3a6"
+            },
+            {
+              "id": "FJ2643",
+              "sha256": "303086bfdcb88e2e9bb4cddcfaff2e9be2bf3f1db2c7943d8ccd4a7a38239fac"
+            },
+            {
+              "id": "FJ2644",
+              "sha256": "203a8bc0e029a76f3b291729ebb4cbfd1155bb84ff5724d2eb51d5fa02d36aa9"
+            },
+            {
+              "id": "FJ2645",
+              "sha256": "760b5d48099edb74a6b14fafe02b56ad076c4e4c27c8edb905f21929d192f8b5"
+            },
+            {
+              "id": "FJ2646",
+              "sha256": "1e2f885bc9aafd4270895deb0000a970ca4e494e909e06a5f13b94858d0b8cc9"
+            },
+            {
+              "id": "FJ2647",
+              "sha256": "cd55e20146fe1f08872c6733a2ed3ef5f2397235e2f7f8c77b883f64b5b67d57"
+            },
+            {
+              "id": "FJ2648",
+              "sha256": "14c937696c6e76239474f760324389f5cc955cfe06570ec7c4f61eb4216e8894"
+            },
+            {
+              "id": "FJ2649",
+              "sha256": "0603b5d96efc1cde531c9301a578b05c747080e9a845ca5b244b973c51b14d67"
+            },
+            {
+              "id": "FJ2650",
+              "sha256": "ec32539fad28298dd01611d624051765eac07c989d461151996907381a1220d9"
+            },
+            {
+              "id": "FJ2651",
+              "sha256": "2fb72c01e8e2b65a8f262e314a9b85cd1c2256defc2d00e1bd8d857013c28d54"
+            },
+            {
+              "id": "FJ2652",
+              "sha256": "ebfa7ccd9598b689c247175e49c89ab8ea3baaef763b5554db38306a689be916"
+            },
+            {
+              "id": "FJ2653",
+              "sha256": "fa365a612a1850f3628ef7224ce0988f1fe2d9cdb4e8c6aa4db10d2a1962a4c3"
+            },
+            {
+              "id": "FJ2654",
+              "sha256": "2d4b35919118657f1d5b8d842d2c78021d4676f78082c71e55e7d8aba9616fa8"
+            },
+            {
+              "id": "FJ2737",
+              "sha256": "f350efef8902f0ca4c4ef440a650c3ec4515d6a412340beb596536f4b1b72f32"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "airways",
+      "name": "气管与支气管树",
+      "english": "Trachea & bronchial trees",
+      "category": "呼吸系统",
+      "summary": "沿气管向下观察左右支气管的分叉与肺内走行。",
+      "keywords": [
+        "肺",
+        "肺部",
+        "气道",
+        "呼吸",
+        "lung",
+        "bronchus"
+      ],
+      "author": "Database Center for Life Science",
+      "url": "https://dbarchive.biosciencedbc.jp/en/bodyparts3d/desc.html",
+      "license": "CC BY 4.0",
+      "asset": "airways.glb",
+      "sha256": "b9fc509a787f16b61256a056ac01cefdeb33d574e3d744547e51744ece3f4bc3",
+      "parts": [
+        {
+          "id": "FMA7394",
+          "name": "气管",
+          "english": "Trachea",
+          "color": "#d6c6a5",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ2541",
+              "sha256": "f4c8cd3c70d212b09db6319e3b218b35aecfa02f53678d6886484a31aaa11cd9"
+            }
+          ]
+        },
+        {
+          "id": "FMA26661",
+          "name": "右支气管树",
+          "english": "Right bronchial tree",
+          "color": "#5b979b",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ2449",
+              "sha256": "0b17bf783e9229d279c86e9322b6f6e243b841de14a0409a1fa96456a8a6fd04"
+            },
+            {
+              "id": "FJ2451",
+              "sha256": "5c1771d3c4837b5b69e74441236e1cd1f505bf967e6a81e0c1e17445032eec1e"
+            },
+            {
+              "id": "FJ2452",
+              "sha256": "13a428c6691e43fc62b70f055061518ef59e25bc39f7ff4ba29b72d120ffbaab"
+            },
+            {
+              "id": "FJ2453",
+              "sha256": "4753a2f69f7ca376a149db4fd659ec2ea1f86884a59ce92c51635697bb455843"
+            },
+            {
+              "id": "FJ2454",
+              "sha256": "88123cad730989bea78f4f0c9d1c278763ae0936fc463832dab147c86fa78e34"
+            },
+            {
+              "id": "FJ2455",
+              "sha256": "7758820e2beb33284de3276d986ecfe2947f8a7869d8ad939b54e337f5590743"
+            },
+            {
+              "id": "FJ2456",
+              "sha256": "98b2b20bb08530aca323ac07b2c2d35eeb001fffd4a587f47de825349c09dc26"
+            },
+            {
+              "id": "FJ2457",
+              "sha256": "9693f23e864bc668c5705df406d99f911d65b2dd184d6cf50d923b2046af9a75"
+            },
+            {
+              "id": "FJ2458",
+              "sha256": "311b93c7abf1c094c045c18c2eb7f17963b0d60ad2c874a823f57fb2f11187c6"
+            },
+            {
+              "id": "FJ2459",
+              "sha256": "c93561e1dff5a7ea360a95cd7600f1d7306bfd12e10c4dccd36dfc34c7fba83e"
+            },
+            {
+              "id": "FJ2470",
+              "sha256": "ff2aade1295ecc04ea46f39181b2c6688a9320b374bd98ce45e5e24979d660e4"
+            },
+            {
+              "id": "FJ2481",
+              "sha256": "92669323b5b0c67ab73db4d2e0708c812b356cdcc7695cea86ccd3d9a4c82aa1"
+            },
+            {
+              "id": "FJ2486",
+              "sha256": "24a05a87546c554c7ca8ead6b83d101075c034bcca4bbd565f6555b0546436cd"
+            },
+            {
+              "id": "FJ2487",
+              "sha256": "92b1374c9c5fd44c7c9b30d56ceebe335f04dea0246cc4e7e39931db9a7cf499"
+            },
+            {
+              "id": "FJ2488",
+              "sha256": "0c13f3775d83c97e3680cdcd21dd6a08aaa88e27f3ec194c46656ba3fec86856"
+            },
+            {
+              "id": "FJ2489",
+              "sha256": "4da7026ff7c343f8ba453e3bf6f8b9d6a3ed3951dc912e3cb1bdfd8ef8898778"
+            },
+            {
+              "id": "FJ2490",
+              "sha256": "b4f90915d8bab4bbdc709eb3cfc2ee5f69747a55e7c49e192d901dbc754af57c"
+            },
+            {
+              "id": "FJ2491",
+              "sha256": "70cf62a3f2795a31d105a4529501e35f7d6cac81918b3daa67efa2066c312490"
+            },
+            {
+              "id": "FJ2492",
+              "sha256": "09f07da0cbb3e991fbd11acc3b7972e53322ffc8943a0fddeb6206b43ba314dd"
+            },
+            {
+              "id": "FJ2493",
+              "sha256": "316057eefe3951378a54a8be78a812ef770cb840fcd3510652488e2a6f01bf10"
+            },
+            {
+              "id": "FJ2494",
+              "sha256": "ad18d80f4adfefac9e28afc3e92977ff3a2b91363442125eb1b76ef79dc5198b"
+            },
+            {
+              "id": "FJ2495",
+              "sha256": "05cd679bcc9bdf096f8225fc912629ca7e9d8ac5bdfd953aa035d7f5febdeca0"
+            },
+            {
+              "id": "FJ2496",
+              "sha256": "1c25619334e8c82d823706ca5c95bb9466eb65a00b82e38305cb51e370ceecbb"
+            },
+            {
+              "id": "FJ2497",
+              "sha256": "45f451850b731505fd33b5cb853181290b8ecf2cdb6e9eb38bf4ed45fae06feb"
+            },
+            {
+              "id": "FJ2498",
+              "sha256": "397d42ba5f2579cabf2de58ba365482ddf92c93e74390e74026a06eee0f33da8"
+            },
+            {
+              "id": "FJ2499",
+              "sha256": "dcdf9aa446ea578d1a5029e0ea8354369b0dfb74c98ea6f6f690cac8c26cec8e"
+            },
+            {
+              "id": "FJ2500",
+              "sha256": "30055ea7c3210934af6473ea76fc21e2d491344dde3db588ceed344528e8d3ee"
+            },
+            {
+              "id": "FJ2501",
+              "sha256": "6b6f46acabe02d28557b4313300f496c9c360da605645e60a33053aadc855e49"
+            },
+            {
+              "id": "FJ2502",
+              "sha256": "98e5e5a7e774f2c70a97883365137d700b512ef142b0a8f616fd35a8e2dbf65b"
+            },
+            {
+              "id": "FJ2503",
+              "sha256": "c0b528632a04c5f1f6e64e4a5b1c5f7f931eeac04809be955f367165747c4913"
+            },
+            {
+              "id": "FJ2504",
+              "sha256": "ca40945d3428c057e62be35150bd7569d5749e9d01809da3c57f98fee783fc06"
+            },
+            {
+              "id": "FJ2505",
+              "sha256": "3bba26b9b0d2d0138e227a5e6e3b53226e0e12cceac13014d0e0800a5c314c49"
+            },
+            {
+              "id": "FJ2506",
+              "sha256": "cef0aded90ec711f89d9f133187555ffd6b235718855c7c4df2673f1e41b0dc4"
+            },
+            {
+              "id": "FJ2507",
+              "sha256": "5566feecce7363209e4d8f3910e0699ad93789b50f812008cc5eac427f491a3b"
+            },
+            {
+              "id": "FJ2508",
+              "sha256": "8a6145969f6ece99bc5ebc7bbd8db44178016b5527f0036c1e55d0b187967124"
+            },
+            {
+              "id": "FJ2509",
+              "sha256": "1714bc450b7fadc5735099fdd7bc6ea03f35b591a96c7c63e12e93d5c9ba7aa5"
+            },
+            {
+              "id": "FJ2510",
+              "sha256": "cf2c2acd29c67b6890894472099c3c3387a970fdf6c75496c9dccd38e33cdeaf"
+            },
+            {
+              "id": "FJ2511",
+              "sha256": "edc3b11467d2b2bf91a9691d5f738526b94d7bdde39fa7809d164dec8a2f5505"
+            },
+            {
+              "id": "FJ2512",
+              "sha256": "96f6c4bf177237f27bd0694c6c818f1f5227b5ece8884eacdb9f447592010c2e"
+            },
+            {
+              "id": "FJ2513",
+              "sha256": "4b261ffedf0954bc7e9119c8bae7edf8779cc2114291b8c631f1a487a0045114"
+            },
+            {
+              "id": "FJ2514",
+              "sha256": "9404eb550bacf8b5bab8fc09675717576a8fa7dfb27b9cf5d714172b58f9ae68"
+            },
+            {
+              "id": "FJ2515",
+              "sha256": "0b69795c5ad5bc506e7f51327e4a52032b6ca49d631fff0160317dd608a60966"
+            },
+            {
+              "id": "FJ2516",
+              "sha256": "826b1bc8c191768f3cb8c490511ebedcb8b97454383ba5719c2bc878f7ae0ce9"
+            },
+            {
+              "id": "FJ2517",
+              "sha256": "bedfdb3f698ab46309118fa7ffa5761308f51ca88f7f2467e4657c3a767b2377"
+            },
+            {
+              "id": "FJ2518",
+              "sha256": "3a7e31fde656404844fc4c4c4e4f79b136586a8a3272fe481176a23530771e4c"
+            },
+            {
+              "id": "FJ2519",
+              "sha256": "f599ba9c13ec90e64ffb445b9ff02cfd56bb83ab721256399e2cbd9cff03cb72"
+            },
+            {
+              "id": "FJ2520",
+              "sha256": "39e86b28fd18cb4f9ed2ffbb4a29935d4891000e6b5242b298b6b1755f4d5715"
+            },
+            {
+              "id": "FJ2521",
+              "sha256": "4d07b383a6d4e1a604c7ec0c6677e030cdc609b4065251410a3cae38ff7024be"
+            },
+            {
+              "id": "FJ2522",
+              "sha256": "b19bcb13f7f8dbf8a0fe755c449839689c4addb7e08156a678c7eb6616a8018a"
+            },
+            {
+              "id": "FJ2523",
+              "sha256": "85675485c514feb3c8627923fd7c3a7ac50335ff3824211da29ec21d336c3bb7"
+            },
+            {
+              "id": "FJ2524",
+              "sha256": "a2942179f276ca4450e87736a3d3316aa27b655d2bdf9db730ad269712238d37"
+            },
+            {
+              "id": "FJ2525",
+              "sha256": "68cdd6f1c1b22f5fb4546b9bc645b07cf62da3d0537d5328aa0b1ab9bd25f7b9"
+            },
+            {
+              "id": "FJ2526",
+              "sha256": "5fea18655f20183f11295ecdfdc019277ff395486360a7a0fda16c2621c159f9"
+            },
+            {
+              "id": "FJ2539",
+              "sha256": "0e1e4dc8c326263c21819c3c48a3e2e41e72fa92425983876d4902fa5dcc3074"
+            }
+          ]
+        },
+        {
+          "id": "FMA26662",
+          "name": "左支气管树",
+          "english": "Left bronchial tree",
+          "color": "#86a5bf",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ2441",
+              "sha256": "64b373dbea8fea4f475219800087b0bdec736471a640e2660a9a9cac5f35b3ec"
+            },
+            {
+              "id": "FJ2442",
+              "sha256": "49fbe8509027d1d8e9d572b31de9a3741a02de9eca1ee65a6f1d96b79b35fd57"
+            },
+            {
+              "id": "FJ2443",
+              "sha256": "d9ecc1c75a9021f68a186433dd6f7e6cbe5058459f4c0b94aff3239e0dcff4fd"
+            },
+            {
+              "id": "FJ2445",
+              "sha256": "e38bac437798a86e2ec37730443443134c0923ef9532c75b428dc530b81df32a"
+            },
+            {
+              "id": "FJ2446",
+              "sha256": "56338429270073446704a97d17c52719f8eee320393658d9f1774a645d2908d9"
+            },
+            {
+              "id": "FJ2447",
+              "sha256": "3550c217bbea847d0bff2cdbbebd8f10607247ac6cae96b2458641b18c3ecf06"
+            },
+            {
+              "id": "FJ2448",
+              "sha256": "9b95d3c4d9115b2b5dfb36ecb5ca7a66953a5f87fe4c7f58a6d486c352cfc183"
+            },
+            {
+              "id": "FJ2450",
+              "sha256": "e7741f9d9f72b13ef5ccc5204df336713f48b02cf73baa73ca7a0be2816cde19"
+            },
+            {
+              "id": "FJ2465",
+              "sha256": "e821c7b23402f6e64914d6c485b5a9e37c5e5d9bed386776b6c572486a5777ec"
+            },
+            {
+              "id": "FJ2466",
+              "sha256": "0fbb025940446f5a4c7a46f5e0aadd186b1ce0e14d83ed73f6581c2337143478"
+            },
+            {
+              "id": "FJ2467",
+              "sha256": "adb6e9730a4f48ab4976216c5bc9b28fb2077b9a213f1ca9f6b23d91077c6683"
+            },
+            {
+              "id": "FJ2468",
+              "sha256": "4b97d114f6af1274ae2b07fc7fb1ff426808012b061c20998b3ec75f305f583e"
+            },
+            {
+              "id": "FJ2469",
+              "sha256": "d0ba96fa139c3e4aa58ccfe3e5bbc601845ddb95aeebe15c3e52ba3720b5b4ed"
+            },
+            {
+              "id": "FJ2471",
+              "sha256": "65042bb74a06d48d9fc6adb7d0d33167db7e0195199a6af741acc5a81c9e2bbc"
+            },
+            {
+              "id": "FJ2472",
+              "sha256": "46c5f757ade14ef9d0b4629fbd360ac52d992fa1e3f22a9c4ff986482ddfe0e8"
+            },
+            {
+              "id": "FJ2473",
+              "sha256": "c6db14ca2d3f5ba038b1a64ea29df192cbc5f2319d524214b491b571dc4506a3"
+            },
+            {
+              "id": "FJ2474",
+              "sha256": "bb8e119c4518f5238026a2e37a73faffaeca4958a8f137aeaf27eab89f77dcdd"
+            },
+            {
+              "id": "FJ2475",
+              "sha256": "76ce29f348ed8ba738f35a9cfb7c1b087ead1e734ef4358aca789e45b667c749"
+            },
+            {
+              "id": "FJ2476",
+              "sha256": "7ca6f318aa98dc428c3f5b5237b5cd11744ca0b2ad54e2c23ee4585c1ce8508e"
+            },
+            {
+              "id": "FJ2477",
+              "sha256": "153faedcab2867f0731b9b56727e375b8de11aae2e4e16c72a74f335b8094400"
+            },
+            {
+              "id": "FJ2478",
+              "sha256": "159053dc8c5f1d4bf5021548dc0ff79d2ca980a3108e910a77b828604523aa15"
+            },
+            {
+              "id": "FJ2479",
+              "sha256": "53574009c39352a0fd2a6dd84b68845690b77d652b6b2a8de784ad92aa6c4551"
+            },
+            {
+              "id": "FJ2480",
+              "sha256": "7e07ea18e778db8f00142c69b4b2bb0ee415d294044dc332b138055f902ef4f8"
+            },
+            {
+              "id": "FJ2482",
+              "sha256": "5722b7698bedb29cf076888f776811b1c7d1d729f5ec14f9d51dac8057389e8c"
+            },
+            {
+              "id": "FJ2483",
+              "sha256": "37cee30d3fd34853e8be332261ecebf4a3f2a95170cf414a97d6151ed6c6d22c"
+            },
+            {
+              "id": "FJ2484",
+              "sha256": "859d772c3a7e053109365d3aa777b064d1f6ef7a266d4266405fb1af84cb8196"
+            },
+            {
+              "id": "FJ2485",
+              "sha256": "2f43d9288d325e57de763d458717f04fabd06fc697c337a1fe7d0ae043726f44"
+            },
+            {
+              "id": "FJ2527",
+              "sha256": "2812f475d2c482cd23064de0aa5f2b59c6b72058814d652a45845aa2b0fb0676"
+            },
+            {
+              "id": "FJ2528",
+              "sha256": "bf677fabc8c85fa8b35718048e9138582680a578e1be670ccde9108a14e9be11"
+            },
+            {
+              "id": "FJ2529",
+              "sha256": "cff5d941d69aae1ccfe21bd2cd775a294bea6cd53f3f9239f866811e223bcf33"
+            },
+            {
+              "id": "FJ2530",
+              "sha256": "09eb35909d8fbf647b0e52385ced1e895aa8b8e5e225118cd1fe89fca7571a08"
+            },
+            {
+              "id": "FJ2531",
+              "sha256": "169a4dbc6947dcfd98bb0bcf5f4ffb437ecbf2a7ee51d93944d3ca58252251fd"
+            },
+            {
+              "id": "FJ2532",
+              "sha256": "bf30a052e36f1a984fb9cca54df188a6995875dba5bf07bf7b2b6548dcd1461e"
+            },
+            {
+              "id": "FJ2533",
+              "sha256": "3f033d99e01946940c4191019fc0c174d1d5fa9b28dddc1426968feb61e6d9de"
+            },
+            {
+              "id": "FJ2534",
+              "sha256": "461e5c6c3dc5de63c38dc937e6128fb4889c8605c50a15807037addaae12e79a"
+            },
+            {
+              "id": "FJ2535",
+              "sha256": "4670a1458826c005d352d25bb2e9d029ba7c105f9c94ab1794e72c13fe0bf93d"
+            },
+            {
+              "id": "FJ2536",
+              "sha256": "d3ad0f299e740ab709a4d626a21f7e8fe15eb130de52ec293be518d7eb5cc8f9"
+            },
+            {
+              "id": "FJ2537",
+              "sha256": "b71c206496ab91bab4988e857fb49d4b74daa3e05af02dcb1c7eb2d54defc461"
+            },
+            {
+              "id": "FJ2538",
+              "sha256": "1b0fbbabb7b834cf21554103793e3b6040cd040a4553522db38a0cd14a68dfdf"
+            },
+            {
+              "id": "FJ2540",
+              "sha256": "034abcb466e8f71def0d77707f6266d1fcdbceae26a0dcc0dfd92ec6b5ecb076"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "skull",
+      "name": "颅骨与下颌",
+      "english": "Skull & mandible",
+      "category": "骨骼系统",
+      "summary": "分开观察颅盖、颅底部分骨骼和下颌骨。",
+      "keywords": [
+        "头骨",
+        "颅骨",
+        "头部",
+        "骨骼",
+        "下颌"
+      ],
+      "author": "Database Center for Life Science",
+      "url": "https://dbarchive.biosciencedbc.jp/en/bodyparts3d/desc.html",
+      "license": "CC BY 4.0",
+      "asset": "skull.glb",
+      "sha256": "58e0a6627f2378bbf5a736a8ff6e33e0f6518d55d7d9bda6eb63f2fe4e8c3047",
+      "parts": [
+        {
+          "id": "FMA52734",
+          "name": "额骨",
+          "english": "Frontal bone",
+          "color": "#e2d1af",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3200",
+              "sha256": "9a01d88bd564b462ecadd6ad5bb3bb2274105baa3d211e0f444210d3f499ed64"
+            }
+          ]
+        },
+        {
+          "id": "FMA52735",
+          "name": "枕骨",
+          "english": "Occipital bone",
+          "color": "#c4ae91",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3309",
+              "sha256": "37172b4706d23d51ebb3ce3839cc59c6e4cb4931039901f395703bc7dff52761"
+            }
+          ]
+        },
+        {
+          "id": "FMA52736",
+          "name": "蝶骨",
+          "english": "Sphenoid bone",
+          "color": "#b296ac",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3394",
+              "sha256": "9255a2f02b16d0cf87c68fbfdc7afc4709d1afef94c2e2bb1e035b7f7852aca0"
+            }
+          ]
+        },
+        {
+          "id": "FMA52788",
+          "name": "右顶骨",
+          "english": "Right parietal bone",
+          "color": "#dbbf9b",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3380",
+              "sha256": "fb69a19eaa0585509f45ce1ebb5e8d91af0442629e52cfe1cfd190ca8f2f72b0"
+            }
+          ]
+        },
+        {
+          "id": "FMA52789",
+          "name": "左顶骨",
+          "english": "Left parietal bone",
+          "color": "#c9bea1",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3274",
+              "sha256": "df63a28fa604ff67828d8f382c66cfa46f40306b1b4c17a8062029764047d0e3"
+            }
+          ]
+        },
+        {
+          "id": "FMA52738",
+          "name": "右颞骨",
+          "english": "Right temporal bone",
+          "color": "#a9b3a0",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3386",
+              "sha256": "cae2e4dc5211d50b06e70893eef3bdaf19564ab8ae7923260e800c3498f65f88"
+            }
+          ]
+        },
+        {
+          "id": "FMA52739",
+          "name": "左颞骨",
+          "english": "Left temporal bone",
+          "color": "#a9b3a0",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3281",
+              "sha256": "47cc46f1480c54fe14a2d22361c3b93fcb964538f23d5b425ac718854cff2673"
+            }
+          ]
+        },
+        {
+          "id": "FMA52892",
+          "name": "右颧骨",
+          "english": "Right zygomatic bone",
+          "color": "#cfb494",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3392",
+              "sha256": "e2c25d922162e3a76131e40ddf0356709947fa554b46640fa1880c381bb749c7"
+            }
+          ]
+        },
+        {
+          "id": "FMA52893",
+          "name": "左颧骨",
+          "english": "Left zygomatic bone",
+          "color": "#cfb494",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3287",
+              "sha256": "9cfd8fd359816b5fa5ed9758f26d942c7ada0900aa7f614aff39949fdad3ddee"
+            }
+          ]
+        },
+        {
+          "id": "FMA53649",
+          "name": "右上颌骨",
+          "english": "Right maxilla",
+          "color": "#d9c7ad",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3375",
+              "sha256": "a1be9480b632355859507e590be68146a591d343ad671ca85c43d7be50d8b43c"
+            }
+          ]
+        },
+        {
+          "id": "FMA53650",
+          "name": "左上颌骨",
+          "english": "Left maxilla",
+          "color": "#d9c7ad",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3269",
+              "sha256": "a56eeb3723f4b3cd1d96b113eaba8f253ed49ff76220ba48ac0d1d086b80ff60"
+            }
+          ]
+        },
+        {
+          "id": "FMA52748",
+          "name": "下颌骨",
+          "english": "Mandible",
+          "color": "#d2aa85",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3289",
+              "sha256": "6ae0d7fde4221302f1c74d9e9933e2e05c36efef273bb27a78326d108d140ce8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "knee",
+      "name": "右膝骨性结构",
+      "english": "Right knee bones",
+      "category": "骨骼系统",
+      "summary": "查看右侧股骨、髌骨、胫骨与腓骨的相对位置。",
+      "keywords": [
+        "膝关节",
+        "膝盖",
+        "下肢",
+        "骨骼"
+      ],
+      "author": "Database Center for Life Science",
+      "url": "https://dbarchive.biosciencedbc.jp/en/bodyparts3d/desc.html",
+      "license": "CC BY 4.0",
+      "asset": "knee.glb",
+      "sha256": "0575bc0cf199ee3934455ddccd47b09857cab7ca729d4da06c04308923ad9dc5",
+      "parts": [
+        {
+          "id": "FMA24474",
+          "name": "右股骨",
+          "english": "Right femur",
+          "color": "#decba8",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3365",
+              "sha256": "02fffe2e1b0f8e038d8b7b48e47cbc4925a749446240e676e910bff34d5348de"
+            }
+          ]
+        },
+        {
+          "id": "FMA24486",
+          "name": "右髌骨",
+          "english": "Right patella",
+          "color": "#c79672",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3381",
+              "sha256": "3f53300560b903d8fbc4165af3cdafab8d4f1d0a941ca59c7ef5169d0b838b8a"
+            }
+          ]
+        },
+        {
+          "id": "FMA24477",
+          "name": "右胫骨",
+          "english": "Right tibia",
+          "color": "#c1bd9a",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3387",
+              "sha256": "a658d28799577c26cdf8318aef799dbe90564355a28b5098d8707eee907f9c7d"
+            }
+          ]
+        },
+        {
+          "id": "FMA24480",
+          "name": "右腓骨",
+          "english": "Right fibula",
+          "color": "#aebcae",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3366",
+              "sha256": "05bf4de7604e2fd5099b3a5337d243d2d40f2b8f80daf1694b3aba394aa93942"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shoulder",
+      "name": "右肩与上臂肌群",
+      "english": "Right shoulder & upper arm",
+      "category": "肌肉系统",
+      "summary": "观察肩带骨骼与三角肌、肱二头肌、肱三头肌的相对位置。",
+      "keywords": [
+        "肩关节",
+        "肩臂",
+        "肌肉",
+        "上肢",
+        "biceps",
+        "deltoid"
+      ],
+      "author": "Database Center for Life Science",
+      "url": "https://dbarchive.biosciencedbc.jp/en/bodyparts3d/desc.html",
+      "license": "CC BY 4.0",
+      "asset": "shoulder.glb",
+      "sha256": "f2691a24edfec980ad4eee55faaf075dd136ce93c055e9b91c2d2c12e42203b3",
+      "parts": [
+        {
+          "id": "FMA13322",
+          "name": "右锁骨",
+          "english": "Right clavicle",
+          "color": "#e2d2b5",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3362",
+              "sha256": "1435b8f365652b215180e398b894a5bdfbf9cb13d00ccf06d07038b962e957b9"
+            }
+          ]
+        },
+        {
+          "id": "FMA13395",
+          "name": "右肩胛骨",
+          "english": "Right scapula",
+          "color": "#ddcdb1",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3384",
+              "sha256": "cb68b2e01a22989f20e602d5036a3f1fb28448fe647f599b9bbd61edfbff2320"
+            }
+          ]
+        },
+        {
+          "id": "FMA23130",
+          "name": "右肱骨",
+          "english": "Right humerus",
+          "color": "#e3d5b8",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3368",
+              "sha256": "159fbdeb854044e7b0ebd0d48cfe332afb44a691d09b89ff644a851826d08268"
+            }
+          ]
+        },
+        {
+          "id": "FMA34680",
+          "name": "三角肌锁骨部",
+          "english": "Clavicular part of right deltoid",
+          "color": "#d19481",
+          "hierarchy": "isa",
+          "elements": [
+            {
+              "id": "FJ1468",
+              "sha256": "09eebb4a8d72c91936b0bfde7f35829a58f56103ac158f559186698458bcc616"
+            }
+          ]
+        },
+        {
+          "id": "FMA34682",
+          "name": "三角肌肩峰部",
+          "english": "Acromial part of right deltoid",
+          "color": "#ba6a67",
+          "hierarchy": "isa",
+          "elements": [
+            {
+              "id": "FJ1467",
+              "sha256": "2f69f1a13c836539abca85d9b77f55f96319ad3fdd75c62f498eabe49b266bfe"
+            }
+          ]
+        },
+        {
+          "id": "FMA34684",
+          "name": "三角肌肩胛冈部",
+          "english": "Spinal part of right deltoid",
+          "color": "#ab6569",
+          "hierarchy": "isa",
+          "elements": [
+            {
+              "id": "FJ1513",
+              "sha256": "ef8308c92fd0d01d8c0d7ffd9238305eefc2f28710d7bb58f451512abdc08e99"
+            }
+          ]
+        },
+        {
+          "id": "FMA37684",
+          "name": "肱二头肌短头",
+          "english": "Short head of right biceps brachii",
+          "color": "#d08675",
+          "hierarchy": "isa",
+          "elements": [
+            {
+              "id": "FJ1512",
+              "sha256": "2173b7cce29f11036907b80e068e9bd6c16f22359d6e7994af9684454b99b4d5"
+            }
+          ]
+        },
+        {
+          "id": "FMA37686",
+          "name": "肱二头肌长头",
+          "english": "Long head of right biceps brachii",
+          "color": "#b9615e",
+          "hierarchy": "isa",
+          "elements": [
+            {
+              "id": "FJ1478",
+              "sha256": "2442d2b5ac30c5da42e72eeff83d143df51c7617001cbc6552096a504f29bc07"
+            }
+          ]
+        },
+        {
+          "id": "FMA37695",
+          "name": "肱三头肌内侧头",
+          "english": "Medial head of right triceps brachii",
+          "color": "#8e656c",
+          "hierarchy": "isa",
+          "elements": [
+            {
+              "id": "FJ1480",
+              "sha256": "1ea653667afa5ff0bf0e01d71ac648819655241c130e8dd1778ed2f9561c34c5"
+            }
+          ]
+        },
+        {
+          "id": "FMA37697",
+          "name": "肱三头肌外侧头",
+          "english": "Lateral head of right triceps brachii",
+          "color": "#a16d80",
+          "hierarchy": "isa",
+          "elements": [
+            {
+              "id": "FJ1477",
+              "sha256": "1d1c3b42eec0dffe696bd25cffa81784c87c15f16c9605050fdf1cb2f47698dd"
+            }
+          ]
+        },
+        {
+          "id": "FMA37699",
+          "name": "肱三头肌长头",
+          "english": "Long head of right triceps brachii",
+          "color": "#ad7b86",
+          "hierarchy": "isa",
+          "elements": [
+            {
+              "id": "FJ1479",
+              "sha256": "acc48f746bd07a117357a9c49a1a9850c96b85d7c63cf90a662a45717875a315"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kidneys",
+      "name": "双肾",
+      "english": "Kidneys",
+      "category": "泌尿系统",
+      "summary": "对照左右肾的外形与相对位置，可分别选中。",
+      "keywords": [
+        "肾脏",
+        "腰腹",
+        "肾"
+      ],
+      "author": "Database Center for Life Science",
+      "url": "https://dbarchive.biosciencedbc.jp/en/bodyparts3d/desc.html",
+      "license": "CC BY 4.0",
+      "asset": "kidneys.glb",
+      "sha256": "70350dd4ed8a72a08ffab0297fb8d1db9bf91af5d3120672390a5cbccbd550b4",
+      "parts": [
+        {
+          "id": "FMA7204",
+          "name": "右肾",
+          "english": "Right kidney",
+          "color": "#b26d72",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3147",
+              "sha256": "e21e2ebd5224b1cbf8caabbf4fa788d894819a328a006dcdb2eb8aa6eee5875a"
+            }
+          ]
+        },
+        {
+          "id": "FMA7205",
+          "name": "左肾",
+          "english": "Left kidney",
+          "color": "#c8817a",
+          "hierarchy": "partof",
+          "elements": [
+            {
+              "id": "FJ3145",
+              "sha256": "b52066a987f767ad9e5c3092958bf5dd760d9f05f1497d1fc7f7ff11539bdfd2"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
