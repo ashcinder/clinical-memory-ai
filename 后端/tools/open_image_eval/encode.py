@@ -14,23 +14,16 @@ def read_image(path):
         return ImageOps.exif_transpose(image).convert("RGB")
 
 
-def main():
+def load_encoder(model_dir):
     import torch
     from transformers import AutoImageProcessor, AutoModel
 
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--plan", required=True, type=Path)
-    parser.add_argument("--model", required=True, type=Path)
-    parser.add_argument("--output", required=True, type=Path)
-    args = parser.parse_args()
-    plan = json.loads(args.plan.read_text())
-
     torch.set_num_threads(2)
     processor = AutoImageProcessor.from_pretrained(
-        args.model, local_files_only=True, trust_remote_code=False
+        model_dir, local_files_only=True, trust_remote_code=False
     )
     model = AutoModel.from_pretrained(
-        args.model, local_files_only=True, trust_remote_code=False, use_safetensors=True
+        model_dir, local_files_only=True, trust_remote_code=False, use_safetensors=True
     ).eval()
 
     @torch.inference_mode()
@@ -38,6 +31,18 @@ def main():
         inputs = processor(images=image, return_tensors="pt")
         vectors = model(**inputs).last_hidden_state[:, 0]
         return torch.nn.functional.normalize(vectors, dim=1).numpy().astype(np.float32)
+
+    return encode, torch.__version__
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--plan", required=True, type=Path)
+    parser.add_argument("--model", required=True, type=Path)
+    parser.add_argument("--output", required=True, type=Path)
+    args = parser.parse_args()
+    plan = json.loads(args.plan.read_text())
+    encode, torch_version = load_encoder(args.model)
 
     encode(Image.new("RGB", (224, 224)))
     started = time.perf_counter()
@@ -65,7 +70,7 @@ def main():
         gallery_seconds=gallery_seconds,
         decode_ms=decode_ms,
         encode_ms=encode_ms,
-        torch_version=torch.__version__,
+        torch_version=torch_version,
     )
 
 

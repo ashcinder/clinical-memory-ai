@@ -96,7 +96,7 @@ func (a *App) compareImageBatch(ctx context.Context, query string, queries, cand
 // All eligible images are compared in a small library. Larger libraries use a
 // bounded shortlist from exact/perceptual matches, text retrieval, cached image
 // observations and broad fingerprint distance. Coverage is always disclosed.
-func (a *App) visualImageMatches(ctx context.Context, query string, queries []Attachment, userID int64, category string, fingerprints map[string][]ImageMatch) ([]Note, map[string][]ImageMatch, []string) {
+func (a *App) visualImageMatches(ctx context.Context, query string, queries []Attachment, userID int64, category string, fingerprints map[string][]ImageMatch) ([]Note, map[string][]ImageMatch, []string, bool) {
 	timed, cancel := context.WithTimeout(ctx, 85*time.Second)
 	defer cancel()
 	intent, ok := ctx.Value(imageIntentKey{}).(string)
@@ -138,11 +138,25 @@ func (a *App) visualImageMatches(ctx context.Context, query string, queries []At
 		warnings = append(warnings, "图库较大，本次从最近 2000 张图片中召回；请按资料类型、标签或关键词缩小范围")
 	}
 	scores := map[string]int{}
+	candidateLimit := a.Config.ImageVisualCandidates
+	if candidateLimit == 0 {
+		candidateLimit = maxVisualCandidates
+	}
+	useDINO := a.Config.ImageDINOModel != "" && len(items) > candidateLimit
+	gallery := make([]dinoImage, 0)
+	dinoQueries := make([]dinoImage, 0)
+	strong := map[string]bool{}
+	uploadPath := func(item Attachment) string {
+		return filepath.Join(a.Config.DataDir, "uploads", item.StoredName)
+	}
 	queryFingerprints := []imageFingerprint{}
 	for _, item := range queries {
 		f, e := a.ensureFingerprint(timed, item)
 		if e == nil {
 			queryFingerprints = append(queryFingerprints, f)
+			if useDINO {
+				dinoQueries = append(dinoQueries, dinoImage{Path: uploadPath(item)})
+			}
 		}
 	}
 	terms := unique(tokens(cut(query, 2500)))
@@ -151,10 +165,14 @@ func (a *App) visualImageMatches(ctx context.Context, query string, queries []At
 		for _, m := range fingerprints[*item.NoteID] {
 			if m.AttachmentID == item.ID {
 				scores[item.ID] += 4000
+				strong[item.ID] = true
 			}
 		}
 		f, e := a.ensureFingerprint(timed, item)
 		if e == nil {
+			if useDINO {
+				gallery = append(gallery, dinoImage{ID: item.ID, Path: uploadPath(item), SHA: f.SHA})
+			}
 			for _, q := range queryFingerprints {
 				// Broad distance only proposes candidates; it never proves relevance.
 				_, d, _ := fingerprintMatch(q, f)
@@ -170,10 +188,30 @@ func (a *App) visualImageMatches(ctx context.Context, query string, queries []At
 		}
 	}
 	sort.SliceStable(items, func(i, j int) bool { return scores[items[i].ID] > scores[items[j].ID] })
-	if len(items) > maxVisualCandidates {
-		warnings = append(warnings, fmt.Sprintf("本次对 %d 张候选原图进行视觉比对（筛选范围内共 %d 张）；可补充具体部位、编号或标签以减少漏检", maxVisualCandidates, len(items)))
-		items = items[:maxVisualCandidates]
+	dinoUsed := false
+	if len(items) > candidateLimit {
+		total := len(items)
+		if useDINO {
+			if len(dinoQueries) > 0 && len(gallery) > 0 {
+				ranks, skipped, err := a.dinoRanks(timed, dinoQueries, gallery)
+				if err == nil {
+					items = fuseImageCandidates(items, ranks, strong, candidateLimit)
+					dinoUsed = true
+					if unavailable := total - len(gallery) + skipped; unavailable > 0 {
+						warnings = append(warnings, fmt.Sprintf("%d 张图片未能生成 DINOv2 特征，仍可通过原检索规则召回", unavailable))
+					}
+				}
+			}
+			if !dinoUsed {
+				warnings = append(warnings, "DINOv2 候选检索未完成，已使用图片指纹和文字索引召回")
+			}
+		}
+		if !dinoUsed {
+			items = items[:candidateLimit]
+		}
+		warnings = append(warnings, fmt.Sprintf("本次选择 %d 张原图候选（筛选范围内共 %d 张）；可补充具体部位、编号或标签以减少漏检", len(items), total))
 	}
+
 	found := map[string][]ImageMatch{}
 	weights := map[string]int{}
 	remaining := []Attachment{}
@@ -263,5 +301,5 @@ func (a *App) visualImageMatches(ctx context.Context, query string, queries []At
 	if len(items) > 0 && len(found) == 0 && len(warnings) == 0 {
 		warnings = append(warnings, "已比对候选原图，未找到证据充分的图片匹配；可圈选关键部位后上传，或补充明确名称/编号")
 	}
-	return notes, found, unique(warnings)
+	return notes, found, unique(warnings), dinoUsed
 }

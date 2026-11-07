@@ -122,7 +122,7 @@ func (a *App) search(w http.ResponseWriter, r *http.Request, u User) {
 	}
 
 	imageCtx := context.WithValue(r.Context(), imageIntentKey{}, in.Query)
-	notes, enhanced, extraWarnings := a.retrieveInput(imageCtx, query, in.AttachmentIDs, u.ID, in.Category, in.Limit)
+	notes, enhanced, extraWarnings, dinoUsed := a.retrieveInput(imageCtx, query, in.AttachmentIDs, u.ID, in.Category, in.Limit)
 	warnings = append(warnings, extraWarnings...)
 	engine := "本地图片指纹 + 图片/音频文字索引"
 	if enhanced {
@@ -133,6 +133,9 @@ func (a *App) search(w http.ResponseWriter, r *http.Request, u User) {
 				break
 			}
 		}
+	}
+	if dinoUsed {
+		engine = "DINOv2 候选召回 + 图片指纹与文字索引 + AI 原图视觉比对"
 	}
 	respond(w, 200, map[string]any{"query": query, "warnings": warnings, "items": notes, "engine": engine})
 }
@@ -209,7 +212,7 @@ func (a *App) chat(w http.ResponseWriter, r *http.Request, u User) {
 		notes = append(notes, ownedNote(a.DB, in.NoteID, u.ID, false))
 	} else if in.Mode == "knowledge" {
 		var extraWarnings []string
-		notes, _, extraWarnings = a.retrieveInput(context.WithValue(r.Context(), imageIntentKey{}, in.Message), query, in.AttachmentIDs, u.ID, "", 5)
+		notes, _, extraWarnings, _ = a.retrieveInput(context.WithValue(r.Context(), imageIntentKey{}, in.Message), query, in.AttachmentIDs, u.ID, "", 5)
 		warnings = append(warnings, extraWarnings...)
 		if len(notes) == 0 && strings.Contains("|继续|继续回顾|然后呢|还有呢|详细说说|", "|"+in.Message+"|") {
 			for i := len(history) - 1; i >= 0; i-- {

@@ -37,3 +37,6 @@
 **/*.pfx
 **/*.jks
 **/*.keystore
+
+# Local DINOv2 gallery vectors
+数据库数据/image-embeddings/

@@ -233,7 +233,7 @@ func (a *App) imageMatches(ctx context.Context, queryIDs []string, userID int64,
 
 // Image candidates remain independent of cloud re-ranking: a valid image match is
 // useful even when no text could be recognized. Both modalities are de-duplicated.
-func (a *App) retrieveInput(ctx context.Context, query string, ids []string, userID int64, category string, limit int) ([]Note, bool, []string) {
+func (a *App) retrieveInput(ctx context.Context, query string, ids []string, userID int64, category string, limit int) ([]Note, bool, []string, bool) {
 	if len(ids) > 5 {
 		fail(422, "搜索和对话最多添加 5 份材料")
 	}
@@ -247,11 +247,12 @@ func (a *App) retrieveInput(ctx context.Context, query string, ids []string, use
 	}
 	text := []Note{}
 	enhanced := false
+	dinoUsed := false
 	extra := []string{}
 	c := a.aiConfig(ctx)
 	if len(queries) > 0 && !c.CloudSearchDisabled && c.VisionKey != "" {
 		originalImages, originalMatches := images, matches
-		images, matches, extra = a.visualImageMatches(ctx, query, queries, userID, category, matches)
+		images, matches, extra, dinoUsed = a.visualImageMatches(ctx, query, queries, userID, category, matches)
 		// Exact matches are independent of the bounded visual shortlist, including
 		// old files outside the recent-image window in a larger library.
 		exactImages := []Note{}
@@ -304,5 +305,5 @@ func (a *App) retrieveInput(ctx context.Context, query string, ids []string, use
 		}
 		notes = append(notes, n)
 	}
-	return notes, enhanced, warnings
+	return notes, enhanced, warnings, dinoUsed
 }

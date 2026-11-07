@@ -87,3 +87,21 @@ HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
 ```
 
 本机试跑发现 PyTorch 和 Faiss 的 wheel 带有不同的 OpenMP 运行库，同进程会中止。实验用独立编码进程，经过临时 NPZ 传递特征。模型权重、环境和评测明细保存在实验 worktree 的 output 下，分支提交包含脚本、依赖版本和这份报告。
+
+## 在实验分支的 Web / Android 检索中启用
+
+先按上节准备本地权重与 Python 环境。把下列选项放到实验分支的 `后端/.env`，或在启动 Go 服务时通过环境变量传入。图片理解服务在临记设置中选 DeepSeek，测试数据目录和 MySQL 库单独配置。
+
+```dotenv
+IMAGE_DINO_MODEL=后端/output/open-image-retrieval/dinov2-small
+IMAGE_DINO_PYTHON=后端/output/open-image-retrieval/venv/bin/python
+IMAGE_VISUAL_CANDIDATES=24
+```
+
+配置路径相对于项目根目录，视觉候选上限可设为 1–24。用户开启云端图片搜索且图库超出候选上限时，`POST /api/search` 在原有 SQL 筛选范围内合并指纹、DINOv2 及文字候选，然后通过原来的 DeepSeek 批量原图核验。结构化文字、冲突与相关性门槛沿用原流程。响应中的 `engine` 会标示 DINOv2 是否参与。未设置模型、图库可以全量比较或用户关闭云端搜索时，按原流程处理。
+
+运行时用 NumPy 对归一化向量计算精确相似度，多图以各图库图的最高相似度召回。候选优先保留强指纹，再将剩余名额的约四分之三分给 DINOv2，并以原排序补齐。图库向量按原文件 SHA-256、模型和预处理版本写入数据目录下的 `image-embeddings/`，首次搜索会为缺失项计算向量。工作进程在本机串行运行，有 35 秒限时，失败时提示并回退到原候选排序。DeepSeek 仍只接收有限候选和查询图片。
+
+### 低费用真实接口对照
+
+`TestDINODeepSeekSmallLive` 需要显式传入 `LINJI_RUN_DINO_LIVE=1`、`LINJI_DINO_BENCHMARK`（冻结评测目录）、`LINJI_DINO_REPORT_DIR`（独立输出目录）和 `MYSQL_TEST_DSN`（可创建临时库的专用 MySQL）。用 `PROJECT_ROOT` 指向已有 DeepSeek 配置的目录以只读取得账号配置。测试使用 6 个固定查询，两种模式各最多 4 个候选，累计硬上限 12 次付费请求。余额预检失败时停止，遇到 HTTP 402 或 429 停止后续请求。测试只恢复独立数据库与公开样本缓存，报告记录命中、候选覆盖、用量和服务状态。
