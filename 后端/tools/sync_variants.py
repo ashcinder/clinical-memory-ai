@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 def shared_files(root):
-    fixed = ['AGENTS.md', '多版本同步.md', '图片检索与评测.md', '后端/tools/evaluate_image_search.py', '后端/tools/sync_variants.py', '后端/tools/verify_anatomy.mjs', '后端/deploy/intranet/build-bundle.sh',
+    fixed = ['AGENTS.md', '多版本同步.md', '图片检索与评测.md', '后端/tools/evaluate_image_search.py', '后端/tools/sync_variants.py', '后端/tools/verify_anatomy.mjs', '后端/tools/prepare_anatomy_library.py', '后端/deploy/intranet/build-bundle.sh',
              '后端/go.mod', '后端/go.sum', '后端/internal/server/schema.sql', '数据库数据/schema.sql']
     result = {Path(p) for p in fixed if (root / p).is_file()}
     for folder, patterns in [('后端/cmd', ['*.go']), ('后端/internal/server', ['*.go']),
