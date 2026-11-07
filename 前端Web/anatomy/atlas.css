@@ -178,6 +178,13 @@
 .atlas-standalone .a-fullscreen .atlas{height:100dvh}
 main[data-view=anatomy]{max-width:none;padding:12px clamp(12px,1.5vw,28px) 20px}
 
+@media(min-width:761px) and (hover:hover) and (pointer:fine){
+ .model-local > .atlas,.model-online > .medical-library,
+ .atlas-standalone :is(.model-local > .atlas,.model-online > .medical-library){
+  height:max(860px,100dvh);
+ }
+}
+
 @media(max-width:1000px){
  .atlas-layout{grid-template-columns:115px minmax(0,1fr)}
  .atlas-side{position:absolute;z-index:4;right:0;top:0;bottom:0;width:min(252px,78%);box-shadow:-12px 0 30px #0005}
