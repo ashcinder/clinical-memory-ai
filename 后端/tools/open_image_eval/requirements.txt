@@ -1,0 +1,7 @@
+faiss-cpu==1.15.1
+numpy==2.5.4
+opencv-python-headless==5.0.0.93
+pillow==13.0.0
+torch==2.15.0
+torchvision==0.29.2
+transformers==5.22.2
