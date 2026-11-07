@@ -706,7 +706,7 @@ public final class MainActivity extends Activity {
     @Override public void onBackPressed(){
         android.webkit.WebView web=anatomyWeb;
         if(web==null){super.onBackPressed();return;}
-        web.evaluateJavascript("(()=>{const d=document.querySelector('.ml-capture[open]')||document.querySelector('.ml-fullscreen[open]');if(!d)return false;d.close();return true;})()",closed->{
+        web.evaluateJavascript("(()=>{const dialog=document.querySelector('.ml-capture[open],.ml-fullscreen[open],.a-fullscreen[open]');if(dialog){dialog.close();return true;}const panel=document.querySelector('.model-local:not([hidden]) .atlas-side:not([hidden]) .a-side-head button,.model-local:not([hidden]) .a-channels-open .a-rail-close');if(!panel)return false;panel.click();return true;})()",closed->{
             if(anatomyWeb==web&&!"true".equals(closed))navigateScreen("检索");
         });
     }
