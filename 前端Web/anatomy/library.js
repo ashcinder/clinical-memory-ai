@@ -68,37 +68,41 @@ export function mountLibrary(root, base = '') {
     </div>
    </aside>
    <div class="ml-stage">
-    <div class="ml-viewport" aria-label="可旋转与缩放的三维模型"></div>
     <div class="ml-quick" role="group" aria-label="快速切换模型"></div>
-    <div class="ml-stage-readout">
-     <strong class="ml-selected" role="status">模型总览</strong><small class="ml-selected-id"></small>
-    </div>
+    <div class="ml-viewport" aria-label="可旋转与缩放的三维模型"></div>
     <div class="ml-message" role="status"><p>正在读取解剖目录…</p><button type="button" data-action="reload" hidden>重新载入</button></div>
-    <div class="ml-camera" role="group" aria-label="视角与缩放">
-     <div class="ml-compass" role="group" aria-label="固定视角">
-      <button type="button" data-view="front" aria-label="正面" disabled>前</button>
-      <button type="button" data-view="back" aria-label="背面" disabled>后</button>
-      <button type="button" data-view="left" aria-label="左侧" disabled>左</button>
-      <button type="button" data-view="right" aria-label="右侧" disabled>右</button>
-      <button type="button" data-action="projection" aria-label="切换正交与透视" aria-pressed="true" disabled>正交</button>
+    <div class="ml-stage-footer">
+     <div class="ml-stage-copy">
+      <div class="ml-stage-readout">
+       <strong class="ml-selected" role="status">模型总览</strong><small class="ml-selected-id"></small>
+      </div>
+      <p class="ml-hint">拖动旋转 · 滚轮或双指缩放 · 点选结构</p>
      </div>
-     <div class="ml-zoom" role="group" aria-label="缩放与复位">
-      <button type="button" data-action="zoom-out" aria-label="缩小" disabled>−</button>
-      <button type="button" data-view="reset" aria-label="复位视角" disabled></button>
-      <button type="button" data-action="zoom-in" aria-label="放大" disabled>＋</button>
-      <details class="ml-adjust">
-       <summary>微调</summary>
-       <div class="ml-orbit" role="group" aria-label="微调旋转">
-        <button type="button" data-orbit="up" aria-label="向上旋转" disabled></button>
-        <button type="button" data-orbit="left" aria-label="向左旋转" disabled></button>
-        <span aria-hidden="true"></span>
-        <button type="button" data-orbit="right" aria-label="向右旋转" disabled></button>
-        <button type="button" data-orbit="down" aria-label="向下旋转" disabled></button>
-       </div>
-      </details>
+     <div class="ml-camera" role="group" aria-label="视角与缩放">
+      <div class="ml-compass" role="group" aria-label="固定视角">
+       <button type="button" data-view="front" aria-label="正面" disabled>前</button>
+       <button type="button" data-view="back" aria-label="背面" disabled>后</button>
+       <button type="button" data-view="left" aria-label="左侧" disabled>左</button>
+       <button type="button" data-view="right" aria-label="右侧" disabled>右</button>
+       <button type="button" data-action="projection" aria-label="切换正交与透视" aria-pressed="true" disabled>正交</button>
+      </div>
+      <div class="ml-zoom" role="group" aria-label="缩放与复位">
+       <button type="button" data-action="zoom-out" aria-label="缩小" disabled>−</button>
+       <button type="button" data-view="reset" aria-label="复位视角" disabled></button>
+       <button type="button" data-action="zoom-in" aria-label="放大" disabled>＋</button>
+       <details class="ml-adjust">
+        <summary>微调</summary>
+        <div class="ml-orbit" role="group" aria-label="微调旋转">
+         <button type="button" data-orbit="up" aria-label="向上旋转" disabled></button>
+         <button type="button" data-orbit="left" aria-label="向左旋转" disabled></button>
+         <span aria-hidden="true"></span>
+         <button type="button" data-orbit="right" aria-label="向右旋转" disabled></button>
+         <button type="button" data-orbit="down" aria-label="向下旋转" disabled></button>
+        </div>
+       </details>
+      </div>
      </div>
     </div>
-    <p class="ml-hint">拖动旋转 · 滚轮或双指缩放 · 点选结构</p>
    </div>
    <div class="ml-tools" role="group" aria-label="模型工具">
     <button type="button" data-tool="models">目录</button>
@@ -205,7 +209,8 @@ export function mountLibrary(root, base = '') {
   const width = side ? size.z : size.x;
   const depth = side ? size.x : size.z;
   const aspect = stage.clientWidth / stage.clientHeight;
-  halfHeight = .59 * Math.max(size.y, width / aspect);
+  // Leave a small margin on the limiting axis so the full model stays visible.
+  halfHeight = .53 * Math.max(size.y, width / aspect);
   camera.zoom = 1;
   updateProjection();
   const distance = orthographic ? sphere.radius * 3 + 1 :
