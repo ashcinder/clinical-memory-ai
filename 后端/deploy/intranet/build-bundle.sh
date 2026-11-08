@@ -25,7 +25,10 @@ done
 for asset in index.html app.js styles.css demo-match.js favicon.svg demo-assets.json demo-files anatomy; do
   cp -R "$task_root/前端Web/$asset" "$bundle/前端Web/"
 done
-mkdir -p "$bundle/后端/deploy/intranet"
+mkdir -p "$bundle/后端/deploy/intranet" "$bundle/后端/tools/open_image_eval"
+for asset in retrieve.py encode.py README.md; do
+  cp "$task_root/后端/tools/open_image_eval/$asset" "$bundle/后端/tools/open_image_eval/"
+done
 for asset in README.md VERIFICATION.md clinical-memory.env.example clinical-memory.nginx.conf clinical-memory.service build-bundle.sh check.sh; do
   cp "$task_root/后端/deploy/intranet/$asset" "$bundle/后端/deploy/intranet/"
 done

@@ -20,7 +20,10 @@ def cache_namespace(model, cache):
     signature = hashlib.sha256(b"linji-dinov2-cls-v1")
     for name in ("model.safetensors", "config.json", "preprocessor_config.json"):
         with (model / name).open("rb") as file:
-            signature.update(hashlib.file_digest(file, "sha256").digest())
+            digest = hashlib.sha256()
+            for block in iter(lambda: file.read(1024 * 1024), b""):
+                digest.update(block)
+            signature.update(digest.digest())
     directory = cache / signature.hexdigest()
     directory.mkdir(mode=0o700, parents=True, exist_ok=True)
     return directory
