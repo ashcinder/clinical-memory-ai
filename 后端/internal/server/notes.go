@@ -121,6 +121,12 @@ func (a *App) search(w http.ResponseWriter, r *http.Request, u User) {
 		return
 	}
 
+	if query != "" && len(in.AttachmentIDs) == 0 {
+		if notes, matched := a.organizerPartSearch(query, in.Category, filter, in.Limit, u.ID); matched {
+			respond(w, 200, map[string]any{"query": query, "warnings": warnings, "items": notes, "engine": "标准部位精确检索"})
+			return
+		}
+	}
 	imageCtx := context.WithValue(r.Context(), imageIntentKey{}, in.Query)
 	notes, enhanced, extraWarnings, dinoUsed := a.retrieveInput(imageCtx, query, in.AttachmentIDs, u.ID, in.Category, in.Limit)
 	warnings = append(warnings, extraWarnings...)

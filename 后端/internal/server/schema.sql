@@ -83,3 +83,21 @@ CREATE TABLE IF NOT EXISTS note_details (
  note_id CHAR(32) CHARACTER SET ascii PRIMARY KEY, fields JSON NOT NULL,
  FOREIGN KEY(note_id) REFERENCES notes(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS note_organizer_drafts (
+ id CHAR(32) CHARACTER SET ascii PRIMARY KEY,
+ user_id BIGINT NOT NULL, note_type VARCHAR(64) NOT NULL,
+ note_id CHAR(32) CHARACTER SET ascii NULL,
+ requested_rule VARCHAR(1000) NOT NULL, reusable_rule VARCHAR(1000) NOT NULL DEFAULT '',
+ snapshot JSON NOT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ INDEX organizer_owner(user_id,note_type,created_at),
+ FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+ FOREIGN KEY(note_id) REFERENCES notes(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS note_body_parts (
+ note_id CHAR(32) CHARACTER SET ascii NOT NULL,
+ part_id VARCHAR(64) COLLATE utf8mb4_bin NOT NULL,
+ PRIMARY KEY(note_id,part_id), INDEX part_notes(part_id,note_id),
+ FOREIGN KEY(note_id) REFERENCES notes(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

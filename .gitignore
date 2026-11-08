@@ -40,3 +40,6 @@
 
 # Local DINOv2 gallery vectors
 数据库数据/image-embeddings/
+
+# Published terminology and templates for this installation
+数据库数据/note-organizer.json

@@ -183,12 +183,15 @@ func (a *App) saveNote(tx *sql.Tx, in NoteInput, id string, userID int64, isNew 
 		check(err)
 	}
 	if in.Details != nil {
+		a.saveNoteParts(tx, id, in.Details)
 		_, err := tx.Exec("INSERT INTO note_details(note_id,fields) VALUES (?,?) ON DUPLICATE KEY UPDATE fields=VALUES(fields)", id, jsonText(in.Details))
 		check(err)
 	}
 	writeNoteTypes(tx, id, selected)
 	reindex(tx, id, userID)
-	return ownedNote(tx, id, userID, false)
+	note := ownedNote(tx, id, userID, false)
+	a.confirmOrganizerDraft(tx, in, note, userID)
+	return note
 }
 func unique(in []string) []string {
 	seen := map[string]bool{}

@@ -29,7 +29,7 @@ mkdir -p "$bundle/后端/deploy/intranet" "$bundle/后端/tools/open_image_eval"
 for asset in retrieve.py encode.py README.md; do
   cp "$task_root/后端/tools/open_image_eval/$asset" "$bundle/后端/tools/open_image_eval/"
 done
-for asset in README.md VERIFICATION.md clinical-memory.env.example clinical-memory.nginx.conf clinical-memory.service build-bundle.sh check.sh; do
+for asset in README.md VERIFICATION.md note-organizer.example.json clinical-memory.env.example clinical-memory.nginx.conf clinical-memory.service build-bundle.sh check.sh; do
   cp "$task_root/后端/deploy/intranet/$asset" "$bundle/后端/deploy/intranet/"
 done
 cp "$task_root/数据库数据/schema.sql" "$bundle/数据库数据/"

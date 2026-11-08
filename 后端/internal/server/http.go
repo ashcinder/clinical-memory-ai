@@ -106,6 +106,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/taxonomy", a.guard(a.taxonomy))
 	mux.HandleFunc("POST /api/taxonomy", a.guard(a.mutateTaxonomy))
 	mux.HandleFunc("GET /api/notes", a.guard(a.listNotes))
+	mux.HandleFunc("POST /api/notes/organize", a.guard(a.generateNoteDraft))
 	mux.HandleFunc("POST /api/notes", a.guard(a.createNote))
 	mux.HandleFunc("GET /api/notes/{id}", a.guard(a.getNote))
 	mux.HandleFunc("PUT /api/notes/{id}", a.guard(a.updateNote))

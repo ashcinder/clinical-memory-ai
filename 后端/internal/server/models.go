@@ -48,16 +48,18 @@ type Note struct {
 	AttachmentText string            `json:"attachment_text,omitempty"`
 }
 type NoteInput struct {
-	Details         map[string]string `json:"details"`
-	NoteTypes       []string          `json:"note_types"`
-	ExpectedVersion string            `json:"expected_version,omitempty"`
-	Title           string            `json:"title"`
-	Category        string            `json:"category"`
-	Tags            []string          `json:"tags"`
-	Content         string            `json:"content"`
-	Steps           []string          `json:"steps"`
-	OccurredOn      string            `json:"occurred_on"`
-	AttachmentIDs   []string          `json:"attachment_ids"`
+	OrganizerDraftID      string            `json:"organizer_draft_id,omitempty"`
+	RememberOrganizerRule bool              `json:"remember_organizer_rule,omitempty"`
+	Details               map[string]string `json:"details"`
+	NoteTypes             []string          `json:"note_types"`
+	ExpectedVersion       string            `json:"expected_version,omitempty"`
+	Title                 string            `json:"title"`
+	Category              string            `json:"category"`
+	Tags                  []string          `json:"tags"`
+	Content               string            `json:"content"`
+	Steps                 []string          `json:"steps"`
+	OccurredOn            string            `json:"occurred_on"`
+	AttachmentIDs         []string          `json:"attachment_ids"`
 }
 type Source struct {
 	ID         string `json:"id"`

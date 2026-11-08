@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-var extensions = map[string]string{".txt": "text/plain", ".md": "text/markdown", ".pdf": "application/pdf", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp", ".wav": "audio/wav", ".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".mp4": "audio/mp4", ".ogg": "audio/ogg", ".webm": "audio/webm", ".aac": "audio/aac", ".3gp": "audio/3gpp"}
+var extensions = map[string]string{".docx": docxMIME, ".csv": "text/csv", ".txt": "text/plain", ".md": "text/markdown", ".pdf": "application/pdf", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp", ".wav": "audio/wav", ".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".mp4": "audio/mp4", ".ogg": "audio/ogg", ".webm": "audio/webm", ".aac": "audio/aac", ".3gp": "audio/3gpp"}
 
 func (a *App) upload(w http.ResponseWriter, r *http.Request, u User) {
 	if err := r.ParseMultipartForm(1 << 20); err != nil {
@@ -33,7 +33,7 @@ func (a *App) upload(w http.ResponseWriter, r *http.Request, u User) {
 	extension := strings.ToLower(filepath.Ext(filename))
 	mimetype, ok := extensions[extension]
 	if !ok {
-		fail(415, "支持 JPG/PNG/WebP、音频、PDF、TXT 和 Markdown")
+		fail(415, "支持 JPG/PNG/WebP、音频、PDF、DOCX、CSV、TXT 和 Markdown")
 	}
 	id := newID()
 	stored := id + extension

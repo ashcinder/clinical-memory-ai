@@ -49,7 +49,7 @@ const titles = {
   settings: "服务设置",
 };
 const ACCEPT =
-  ".jpg,.jpeg,.png,.webp,.pdf,.txt,.md,.wav,.mp3,.m4a,.webm,.ogg,.aac,.3gp";
+  ".jpg,.jpeg,.png,.webp,.pdf,.docx,.csv,.txt,.md,.wav,.mp3,.m4a,.webm,.ogg,.aac,.3gp";
 let initialized = false,
   toastTimer,
   recorder,
@@ -1369,9 +1369,10 @@ function confirmAction(title, desc, action, cancel) {
 function editNote(note) {
  const chosenTypes=note?typesOf(note).map((t)=>t.id):[catalogTypes()[0].id];
   let files = [...(note?.attachments || [])];
+  let appliedDraft = null;
   openDialog(
     note?.id ? "编辑笔记" : "新建笔记",
-    `<form id="note-form"><div class="form-grid"><label class="full">笔记标题<input name="title" value="${esc(note?.title || "")}" maxlength="160" placeholder="输入标题" required></label><fieldset class="full editor-types"><legend>资料类型 <small>可多选</small></legend><div class="editor-type-options">${catalogTypes().map((t)=>`<label><input type="checkbox" name="note_types" value="${esc(t.id)}" ${chosenTypes.includes(t.id)?"checked":""}><span>${esc(t.title)}</span></label>`).join("")}</div><div id="editor-type-summary" class="selection-preview"></div></fieldset><section class="full editor-details"><div class="detail-heading"><h4>专属信息 <small>选填</small></h4><span id="detail-progress"></span></div><div id="detail-fields"></div><div class="detail-footer"><div id="detail-more-slot"></div><details class="detail-custom"><summary><span class="detail-custom-plus" aria-hidden="true">＋</span>自定义字段</summary><div class="detail-add"><input id="detail-name" aria-label="自定义字段名称" maxlength="60" placeholder="如：职业、疗程、文献编号"><button type="button" class="text-button" id="add-detail">添加</button></div></details></div></section><label>就诊 / 记录日期<input type="date" name="occurred_on" value="${note?.occurred_on || today()}" required></label><label class="editor-tags">标签 <small>用逗号分隔</small><input name="tags" value="${esc(note?.tags.join("，") || "")}" placeholder="如：咳嗽，复诊，观察记录"></label><label class="full"><span id="editor-content-label">笔记正文</span><textarea name="content" rows="7" maxlength="50000" placeholder="输入笔记内容">${esc(note?.content || "")}</textarea></label><label class="full"><span id="editor-steps-label">记录条目</span> <small>每行一条</small><textarea name="steps" rows="5" placeholder="核对初诊记录&#10;整理处置过程&#10;回顾随访变化">${esc(note?.steps.join("\n") || "")}</textarea></label><div class="full learning-editor-tools"><button type="button" class="text-button" id="insert-outline">插入整理提纲</button><span>仅用于空白正文</span></div><div class="editor-files full"><div class="inline-row between"><h4>关联原始材料</h4><button type="button" class="text-button" id="editor-upload">＋ 上传材料</button></div><div id="editor-file-list"></div><div class="busy-text" id="editor-busy" hidden>正在上传和识别…</div></div></div><p id="note-error" class="error" role="alert"></p><div class="form-actions"><button class="secondary" type="button" id="cancel-note">取消</button><button class="primary" id="save-note">保存笔记</button></div></form>`,
+    `<form id="note-form"><div class="form-grid"><label class="full">笔记标题<input name="title" value="${esc(note?.title || "")}" maxlength="160" placeholder="输入标题" required></label><fieldset class="full editor-types"><legend>资料类型 <small>可多选</small></legend><div class="editor-type-options">${catalogTypes().map((t)=>`<label><input type="checkbox" name="note_types" value="${esc(t.id)}" ${chosenTypes.includes(t.id)?"checked":""}><span>${esc(t.title)}</span></label>`).join("")}</div><div id="editor-type-summary" class="selection-preview"></div></fieldset><section class="full editor-details"><div class="detail-heading"><h4>专属信息 <small>选填</small></h4><span id="detail-progress"></span></div><div id="detail-fields"></div><div class="detail-footer"><div id="detail-more-slot"></div><details class="detail-custom"><summary><span class="detail-custom-plus" aria-hidden="true">＋</span>自定义字段</summary><div class="detail-add"><input id="detail-name" aria-label="自定义字段名称" maxlength="60" placeholder="如：职业、疗程、文献编号"><button type="button" class="text-button" id="add-detail">添加</button></div></details></div></section><label>就诊 / 记录日期<input type="date" name="occurred_on" value="${note?.occurred_on || today()}" required></label><label class="editor-tags">标签 <small>用逗号分隔</small><input name="tags" value="${esc(note?.tags.join("，") || "")}" placeholder="如：咳嗽，复诊，观察记录"></label><label class="full"><span id="editor-content-label">笔记正文</span><textarea name="content" rows="7" maxlength="50000" placeholder="输入笔记内容">${esc(note?.content || "")}</textarea></label><label class="full"><span id="editor-steps-label">记录条目</span> <small>每行一条</small><textarea name="steps" rows="5" placeholder="核对初诊记录&#10;整理处置过程&#10;回顾随访变化">${esc(note?.steps.join("\n") || "")}</textarea></label><div class="full learning-editor-tools"><button type="button" class="text-button" id="insert-outline">插入整理提纲</button><span>仅用于空白正文</span></div><div class="editor-files full"><div class="inline-row between"><h4>关联原始材料</h4><button type="button" class="text-button" id="editor-upload">＋ 上传材料</button></div><div id="editor-file-list"></div><div class="busy-text" id="editor-busy" hidden>正在上传和识别…</div></div>${note?.id ? "" : `<details class="full editor-files" id="organizer"><summary>从材料生成笔记</summary><p class="muted">批量添加原始材料，也可以粘贴零散文字。整理使用已配置的对话模型。</p><label>零散文字<textarea id="organizer-text" name="organizer_text" rows="4" maxlength="48000"></textarea></label><label>本次整理要求（可选）<input id="organizer-rule" name="organizer_rule" maxlength="1000" placeholder="例如按时间顺序记录"></label><label><input id="organizer-remember" type="checkbox" name="organizer_remember"> 保存后在同类笔记中复用这条要求</label><button id="organizer-run" class="secondary" type="button">生成草稿</button><p id="organizer-status" role="status"></p><div id="organizer-preview"></div></details>`}</div><p id="note-error" class="error" role="alert"></p><div class="form-actions"><button class="secondary" type="button" id="cancel-note">取消</button><button class="primary" id="save-note">保存笔记</button></div></form>`,
   );
   function drawFiles() {
     $("#editor-file-list").innerHTML = files.length
@@ -1381,7 +1382,7 @@ function editNote(note) {
               `<div class="editor-file"><span>${esc(a.filename)} · ${extractionLabel(a)}</span><div><button type="button" data-copy-text="${a.id}">插入文本</button> <button type="button" class="remove-file" data-unlink="${a.id}">移除关联</button></div></div>`,
           )
           .join("")
-      : '<small class="muted">支持图片、音频、PDF、TXT / Markdown，单份不超过 20MB。</small>';
+      : '<small class="muted">支持图片、音频、PDF、DOCX、CSV、TXT / Markdown，单份不超过 20MB。</small>';
     $$("[data-unlink]").forEach(
       (b) =>
         (b.onclick = () => {
@@ -1490,6 +1491,67 @@ function editNote(note) {
       files.push(...uploaded);
       drawFiles();
     });
+  const organizerRun = $("#organizer-run");
+  if (organizerRun) organizerRun.onclick = async () => {
+    if (state.busy) return toast("请等待材料上传完成");
+    const form = $("#note-form");
+    const status = $("#organizer-status");
+    const preview = $("#organizer-preview");
+    const request = {
+      note_type: editorType().id,
+      attachment_ids: files.map((file) => file.id),
+      text: $("#organizer-text").value,
+      rule: $("#organizer-rule").value,
+    };
+    organizerRun.disabled = true;
+    status.textContent = "正在整理材料…";
+    preview.replaceChildren();
+    try {
+      const draft = await api("/notes/organize", { method: "POST", body: request });
+      if (!form.isConnected) return;
+      status.textContent = "请核对草稿和原文，应用后可以继续编辑。";
+      const issues = [...(draft.warnings || [])];
+      if (draft.missing?.length) issues.push("缺少资料：" + draft.missing.join("、"));
+      preview.innerHTML = `
+        <h4>${esc(draft.title)}</h4>
+        <p class="reading-text">${esc(draft.content)}</p>
+        ${draft.parts?.length ? `<p>标准部位 · ${esc(draft.parts.join("、"))}</p>` : ""}
+        ${issues.map((issue) => `<p class="muted">${esc(issue)}</p>`).join("")}
+        <details><summary>核对原文</summary><ol>${draft.evidence.map((entry) =>
+          `<li><strong>${esc(draft.source_names[entry.source - 1])}</strong> · ${esc(entry.quote)}</li>`
+        ).join("")}</ol></details>
+        <button class="primary" id="organizer-apply" type="button">应用到编辑器</button>`;
+      $("#organizer-apply").onclick = () => {
+        if (editorType().id !== request.note_type ||
+            files.map((file) => file.id).join(",") !== request.attachment_ids.join(",") ||
+            $("#organizer-text").value !== request.text || $("#organizer-rule").value !== request.rule) {
+          return toast("类型、材料或整理要求已改变，请重新生成");
+        }
+        const title = form.elements.title;
+        const content = form.elements.content;
+        if (content.value.trim() && !window.confirm("用草稿替换当前正文？")) return;
+        if (!title.value.trim()) title.value = draft.title;
+        content.value = draft.content;
+        captureDetails();
+        if (draft.parts?.length || appliedDraft) {
+          const value = (draft.parts || []).join("、");
+          const partInput = $("#note-form [data-detail='标准部位']");
+          if (partInput) partInput.value = value;
+          details.set("标准部位", value);
+          if (value) customDetailNames.add("标准部位");
+          drawDetails();
+        }
+        appliedDraft = { id: draft.id, request };
+        status.textContent = "草稿已填入正文，请核对后保存。";
+        $("#organizer-apply").disabled = true;
+        content.focus();
+      };
+    } catch (error) {
+      status.textContent = error.message;
+    } finally {
+      organizerRun.disabled = false;
+    }
+  };
   bindDraft($("#note-form"), () => files.map((f) => f.id).join(","));
   $("#cancel-note").onclick = () => closeDialog();
   $("#note-form").addEventListener("input", () => {
@@ -1524,6 +1586,15 @@ function editNote(note) {
           .filter(Boolean),
         attachment_ids: files.map((a) => a.id),
       };
+      if (appliedDraft) {
+        if (appliedDraft.request.note_type !== editorType().id ||
+            data.attachment_ids.join(",") !== appliedDraft.request.attachment_ids.join(",")) {
+          throw new Error("资料类型或材料有变化，请重新生成并应用草稿");
+        }
+        data.organizer_draft_id = appliedDraft.id;
+        data.remember_organizer_rule = $("#organizer-remember").checked &&
+          $("#organizer-rule").value === appliedDraft.request.rule;
+      }
       await api("/notes" + (note?.id ? "/" + note.id : ""), {
         method: note?.id ? "PUT" : "POST",
         body: data,

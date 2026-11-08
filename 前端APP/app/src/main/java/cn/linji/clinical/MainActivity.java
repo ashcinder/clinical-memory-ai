@@ -91,6 +91,8 @@ public final class MainActivity extends Activity {
     private String screen="检索",displayName="医生",conversationId=null,chatMode="knowledge";
     private final List<JSONObject> queryFiles=new ArrayList<>(),chatFiles=new ArrayList<>(),chatMessages=new ArrayList<>();
     private Consumer<JSONObject> onPicked,recordDone;
+    private Consumer<List<JSONObject>> onBatchPicked;
+    private int batchCapacity;
     private MediaRecorder recorder;
     private File recordingFile;
     private AlertDialog recordingDialog;
@@ -467,10 +469,100 @@ public final class MainActivity extends Activity {
         };drawDetails[0].run();
         LinearLayout dateTags=row();dateTags.setGravity(Gravity.TOP);LinearLayout dateCell=column(),tagsCell=column();LinearLayout.LayoutParams dcp=new LinearLayout.LayoutParams(0,-2,1);dcp.rightMargin=dp(10);dateTags.addView(dateCell,dcp);dateTags.addView(tagsCell,new LinearLayout.LayoutParams(0,-2,1));LinearLayout.LayoutParams dtp=new LinearLayout.LayoutParams(-1,-2);dtp.topMargin=dp(14);root.addView(dateTags,dtp);EditText date=input(dateCell,"记录日期",note==null?LocalDate.now().toString():str(note,"occurred_on"));EditText tags=input(tagsCell,"标签 · 逗号分隔",note==null?"":String.join("，",strings(array(note,"tags"))));EditText content=input(root,"正文",note==null?str(material,"extracted_text"):str(note,"content"),true);EditText steps=input(root,"步骤 / 学习要点（每行一条）",note==null?"":String.join("\n",strings(array(note,"steps"))),true);
         addButton(root,"选择已有标签",()->{List<String> names=new ArrayList<>();for(JSONObject tag:objects(learningTags))names.add(str(tag,"name"));if(names.isEmpty()){toast("暂无标签，可直接输入或在设置中新增");return;}List<String> selected=split(tags.getText().toString(),"[,，]");boolean[] checked=new boolean[names.size()];for(int i=0;i<names.size();i++)checked[i]=selected.contains(names.get(i));new AlertDialog.Builder(this).setTitle("选择已有标签").setMultiChoiceItems(names.toArray(new String[0]),checked,(d,i,on)->checked[i]=on).setNegativeButton("取消",null).setPositiveButton("确定",(d,w)->{List<String> next=new ArrayList<>(selected);for(int i=0;i<names.size();i++){if(checked[i]&&!next.contains(names.get(i)))next.add(names.get(i));if(!checked[i])next.remove(names.get(i));}if(next.size()>20){toast("每篇笔记最多 20 个标签");return;}tags.setText(String.join("，",next));}).show();});
-        List<JSONObject> files=note==null?new ArrayList<>():new ArrayList<>(objects(array(note,"attachments")));if(material!=null)files.add(material);LinearLayout fileView=column();root.addView(fileView);drawEditorFiles(fileView,files);addButton(root,"＋ 关联新材料",()->pickFile(f->{if(files.size()>=20){toast("最多关联 20 份材料");return;}files.add(f);drawEditorFiles(fileView,files);}));
+        List<JSONObject> files = note == null ? new ArrayList<>() : new ArrayList<>(objects(array(note,"attachments")));
+        if (material != null) files.add(material);
+        LinearLayout fileView = column();
+        root.addView(fileView);
+        drawEditorFiles(fileView,files);
+        addButton(root,"＋ 批量关联材料",false,()->pickEditorFiles(20-files.size(), uploaded -> {
+            if (!p.dialog.isShowing()) return;
+            files.addAll(uploaded);
+            drawEditorFiles(fileView,files);
+        }));
+        final JSONObject[] appliedDraft = {null};
+        EditText organizerRule = new EditText(this);
+        CheckBox rememberRule = new CheckBox(this);
+        if (note == null) {
+            LinearLayout organizer = column();
+            root.addView(organizer);
+            organizer.setVisibility(View.GONE);
+            Button toggle = addButton(root,"从材料生成笔记",false,()->{
+                organizer.setVisibility(organizer.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+            });
+            root.removeView(toggle);
+            root.addView(toggle,root.indexOfChild(organizer));
+            text(organizer,"可以批量关联原件或粘贴文字。整理使用已配置的对话模型。",12,muted,false);
+            EditText source = input(organizer,"零散文字","",true);
+            source.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(48000)});
+            organizerRule.setHint("本次整理要求（可选）");
+            organizerRule.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(1000)});
+            organizer.addView(organizerRule);
+            rememberRule.setText("保存后在同类笔记中复用这条要求");
+            organizer.addView(rememberRule);
+            addButton(organizer,"生成草稿",false,()->{
+                if (working) return;
+                String type = selectedTypes.get(0);
+                String sourceText = source.getText().toString();
+                String rule = organizerRule.getText().toString();
+                JSONArray sourceIDs = ids(files);
+                JSONObject request = obj("note_type",type,"attachment_ids",sourceIDs,"text",sourceText,"rule",rule);
+                work(()->(JSONObject)api.request("/notes/organize","POST",request),draft->{
+                    if (!p.dialog.isShowing()) return;
+                    previewOrganizedNote(draft,()->{
+                        if (!type.equals(selectedTypes.get(0)) || !sourceIDs.toString().equals(ids(files).toString()) ||
+                                !sourceText.equals(source.getText().toString()) || !rule.equals(organizerRule.getText().toString())) {
+                            toast("类型、材料或整理要求已改变，请重新生成");
+                            return;
+                        }
+                        if (title.getText().toString().trim().isEmpty()) title.setText(str(draft,"title"));
+                        content.setText(str(draft,"content"));
+                        List<String> parts = strings(array(draft,"parts"));
+                        EditText partInput = detailInputs.get("标准部位");
+                        String value = String.join("、",parts);
+                        if (partInput != null) partInput.setText(value);
+                        if (!parts.isEmpty()) {
+                            detailValues.put("标准部位",value);
+                            customDetails.add("标准部位");
+                            moreOpen[0] = true;
+                            drawDetails[0].run();
+                        }
+                        appliedDraft[0] = obj("id",str(draft,"id"),"type",type,"ids",sourceIDs.toString(),"rule",rule);
+                        toast("草稿已填入正文，请核对后保存");
+                    },!content.getText().toString().trim().isEmpty());
+                });
+            });
+        }
         java.util.function.Supplier<String> snapshot=()->title.getText()+"\u001f"+selectedTypes.toString()+"\u001f"+date.getText()+"\u001f"+tags.getText()+"\u001f"+content.getText()+"\u001f"+steps.getText()+"\u001f"+ids(files).toString()+detailPayload(detailInputs).toString();String initial=snapshot.get();p.dialog.dirty=()->!snapshot.get().equals(initial);
-        addButton(root,"保存笔记",true,()->{JSONObject data=obj("expected_version",note==null?"":str(note,"version"),"details",detailPayload(detailInputs),"title",title.getText().toString(),"note_types",array(selectedTypes),"occurred_on",date.getText().toString(),"tags",array(split(tags.getText().toString(),"[,，]")),"content",content.getText().toString(),"steps",array(split(steps.getText().toString(),"\\n")),"attachment_ids",ids(files));work(()->api.request(note==null?"/notes":"/notes/"+id(note),note==null?"POST":"PUT",data),v->{lastSearch=null;p.dialog.dismiss();toast("笔记已保存");showScreen(screen);});});
+        addButton(root,"保存笔记",true,()->{JSONObject data=obj("expected_version",note==null?"":str(note,"version"),"details",detailPayload(detailInputs),"title",title.getText().toString(),"note_types",array(selectedTypes),"occurred_on",date.getText().toString(),"tags",array(split(tags.getText().toString(),"[,，]")),"content",content.getText().toString(),"steps",array(split(steps.getText().toString(),"\\n")),"attachment_ids",ids(files));JSONObject draft = appliedDraft[0];
+            if (draft != null) {
+                if (!str(draft,"type").equals(selectedTypes.get(0)) || !str(draft,"ids").equals(ids(files).toString())) {
+                    toast("资料类型或材料有变化，请重新生成并应用草稿");
+                    return;
+                }
+                put(data,"organizer_draft_id",str(draft,"id"));
+                put(data,"remember_organizer_rule",rememberRule.isChecked() && str(draft,"rule").equals(organizerRule.getText().toString()));
+            }
+            work(()->api.request(note==null?"/notes":"/notes/"+id(note),note==null?"POST":"PUT",data),v->{lastSearch=null;p.dialog.dismiss();toast("笔记已保存");showScreen(screen);});});
     }
+    private void previewOrganizedNote(JSONObject draft,Runnable apply,boolean replacesText) {
+        StringBuilder preview = new StringBuilder(str(draft,"content"));
+        List<String> parts = strings(array(draft,"parts"));
+        if (!parts.isEmpty()) preview.append("\n\n标准部位 · ").append(String.join("、",parts));
+        for (String warning : strings(array(draft,"warnings"))) preview.append("\n").append(warning);
+        List<String> missing = strings(array(draft,"missing"));
+        if (!missing.isEmpty()) preview.append("\n缺少资料 · ").append(String.join("、",missing));
+        JSONArray sourceNames = array(draft,"source_names");
+        int index = 0;
+        preview.append("\n\n核对原文");
+        for (JSONObject evidence : objects(array(draft,"evidence"))) {
+            preview.append("\n〔").append(++index).append("〕")
+                    .append(sourceNames.optString(evidence.optInt("source")-1)).append(" · ").append(str(evidence,"quote"));
+        }
+        new AlertDialog.Builder(this).setTitle(str(draft,"title")).setMessage(preview)
+                .setNegativeButton("返回",null)
+                .setPositiveButton(replacesText?"替换当前正文":"应用到编辑器",(dialog,which)->apply.run()).show();
+    }
+
     private void drawDetailGroup(LinearLayout parent,List<String> fields,java.util.Map<String,String> values,java.util.Map<String,EditText> inputs){
         LinearLayout pair=null;int columns=0;
         for(String key:fields){JSONObject spec=detailFieldSpecs.optJSONObject(key);String kind=spec==null?"short":spec.optString("kind","short");boolean wide="long".equals(kind)||"multi".equals(kind);
@@ -684,12 +776,81 @@ public final class MainActivity extends Activity {
         });
     }
     private void pickFile(Consumer<JSONObject> done){if(working){toast("请等待当前操作完成");return;}onPicked=done;Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*");i.putExtra(Intent.EXTRA_MIME_TYPES,new String[]{"image/*","audio/*","application/pdf","text/plain","text/markdown"});startActivityForResult(i,101);}
-    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
-        super.onActivityResult(requestCode,resultCode,data);if(requestCode!=101)return;pickingSearchMaterial=false;if(resultCode!=RESULT_OK||data==null||data.getData()==null||onPicked==null)return;Uri uri=data.getData();Consumer<JSONObject> done=onPicked;onPicked=null;uploadPickedFile(uri,done);
+    private void pickEditorFiles(int capacity,Consumer<List<JSONObject>> done) {
+        if (working) return;
+        if (capacity <= 0) {
+            toast("最多关联 20 份材料");
+            return;
+        }
+        batchCapacity = capacity;
+        onBatchPicked = done;
+        Intent picker = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*");
+        picker.putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true);
+        picker.putExtra(Intent.EXTRA_MIME_TYPES,new String[]{"image/*","audio/*","application/pdf","text/plain","text/markdown","text/csv",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+        startActivityForResult(picker,103);
     }
-    private void uploadPickedFile(Uri uri,Consumer<JSONObject> done){
-        if(isDestroyed()||isFinishing())return;if(working){handler.postDelayed(()->uploadPickedFile(uri,done),150);return;}
-        work(()->{String name="material.txt";try(Cursor c=getContentResolver().query(uri,new String[]{OpenableColumns.DISPLAY_NAME},null,null,null)){if(c!=null&&c.moveToFirst())name=c.getString(0);}java.io.InputStream stream=getContentResolver().openInputStream(uri);if(stream==null)throw new IllegalArgumentException("无法读取文件");return api.upload(name,Api.readBytes(stream,20*1024*1024));},file->{toast(file.optBoolean("demo_match")?"已匹配演示文件，载入预置文本":"ready".equals(str(file,"status"))?"材料已保存并提取文本":"材料已保存，请核对或补充识别文本");done.accept(file);});
+
+    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data) {
+        super.onActivityResult(requestCode,resultCode,data);
+        if (requestCode == 103) {
+            Consumer<List<JSONObject>> done = onBatchPicked;
+            onBatchPicked = null;
+            if (resultCode != RESULT_OK || data == null || done == null) return;
+            List<Uri> selected = new ArrayList<>();
+            android.content.ClipData clip = data.getClipData();
+            if (clip != null) {
+                if (clip.getItemCount() > batchCapacity) {
+                    toast("最多可再关联 "+batchCapacity+" 份材料，请重新选择");
+                    return;
+                }
+                for (int i=0;i<clip.getItemCount();i++) selected.add(clip.getItemAt(i).getUri());
+            } else if (data.getData() != null) selected.add(data.getData());
+            if (selected.isEmpty()) return;
+            List<JSONObject> uploaded = new ArrayList<>();
+            List<String> failures = new ArrayList<>();
+            work(()->{
+                for (Uri uri:selected) {
+                    try { uploaded.add(readPickedFile(uri)); }
+                    catch (Exception error) { failures.add(error.getMessage()); }
+                }
+                return uploaded;
+            },files->{
+                done.accept(files);
+                toast(failures.isEmpty() ? "已关联 "+files.size()+" 份材料" :
+                        "已关联 "+files.size()+" 份，"+failures.size()+" 份失败："+failures.get(0));
+            });
+            return;
+        }
+        if (requestCode != 101) return;
+        pickingSearchMaterial = false;
+        Consumer<JSONObject> done = onPicked;
+        onPicked = null;
+        if (resultCode == RESULT_OK && data != null && data.getData() != null && done != null)
+            uploadPickedFile(data.getData(),done);
+    }
+
+    private JSONObject readPickedFile(Uri uri) throws Exception {
+        String name = "material.txt";
+        try (Cursor cursor = getContentResolver().query(uri,new String[]{OpenableColumns.DISPLAY_NAME},null,null,null)) {
+            if (cursor != null && cursor.moveToFirst()) name = cursor.getString(0);
+        }
+        java.io.InputStream stream = getContentResolver().openInputStream(uri);
+        if (stream == null) throw new IllegalArgumentException("无法读取文件");
+        return api.upload(name,Api.readBytes(stream,20*1024*1024));
+    }
+
+    private void uploadPickedFile(Uri uri,Consumer<JSONObject> done) {
+        if (isDestroyed() || isFinishing()) return;
+        if (working) {
+            handler.postDelayed(()->uploadPickedFile(uri,done),150);
+            return;
+        }
+        work(()->readPickedFile(uri),file->{
+            toast(file.optBoolean("demo_match")?"已匹配演示文件，载入预置文本":
+                    "ready".equals(str(file,"status"))?"材料已保存并提取文本":"材料已保存，请核对或补充识别文本");
+            done.accept(file);
+        });
     }
     private void record(Consumer<JSONObject> done){if(working){toast("请等待当前操作完成");return;}recordDone=done;if(checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED){requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},102);return;}startRecording();}
     @Override public void onRequestPermissionsResult(int code,String[] permissions,int[] results){super.onRequestPermissionsResult(code,permissions,results);if(code==102){if(results.length>0&&results[0]==PackageManager.PERMISSION_GRANTED)startRecording();else toast("未授权麦克风，也可以上传已有音频");}}

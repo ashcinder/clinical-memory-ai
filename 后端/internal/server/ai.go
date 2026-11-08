@@ -91,6 +91,16 @@ func (a *App) completion(ctx context.Context, messages []map[string]any, vision 
 	return strings.TrimSpace(content), nil
 }
 func (a *App) extract(ctx context.Context, path, mimetype string) (string, string, error) {
+	if mimetype == docxMIME {
+		text, err := docxText(path)
+		if err != nil {
+			return "", "extraction_failed", err
+		}
+		if text == "" {
+			return "", "needs_transcript", nil
+		}
+		return text, "ready", nil
+	}
 	if strings.HasPrefix(mimetype, "text/") {
 		data, err := os.ReadFile(path)
 		if err != nil {
