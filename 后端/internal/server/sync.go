@@ -27,6 +27,9 @@ func isSyncedMutation(r *http.Request) bool {
 		return false
 	}
 	p := r.URL.Path
+	if p == "/api/notes/organize" {
+		return false
+	}
 	return p == "/api/taxonomy" || p == "/api/auth/me" || p == "/api/ai-config" || p == "/api/search-settings" || p == "/api/chat" || p == "/api/demo" || p == "/api/notes" || strings.HasPrefix(p, "/api/notes/") || p == "/api/attachments" || strings.HasPrefix(p, "/api/attachments/") || strings.HasPrefix(p, "/api/conversations/")
 }
 func (a *App) syncState(w http.ResponseWriter, r *http.Request, u User) {

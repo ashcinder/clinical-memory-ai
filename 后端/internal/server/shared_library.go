@@ -93,5 +93,8 @@ func isLibraryMutation(r *http.Request) bool {
 		return false
 	}
 	p := r.URL.Path
+	if p == "/api/notes/organize" {
+		return false
+	}
 	return p == "/api/taxonomy" || p == "/api/demo" || p == "/api/notes" || strings.HasPrefix(p, "/api/notes/") || p == "/api/attachments" || strings.HasPrefix(p, "/api/attachments/")
 }

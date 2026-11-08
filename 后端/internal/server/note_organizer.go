@@ -31,21 +31,25 @@ type organizerConfig struct {
 	byTerm    map[string][]organizerPart
 }
 
-func (a *App) organizerConfig() organizerConfig {
+func (a *App) loadOrganizerConfig() (organizerConfig, error) {
 	cfg := organizerConfig{byTerm: make(map[string][]organizerPart)}
 	path := filepath.Join(a.Config.DataDir, "note-organizer.json")
 	info, err := os.Stat(path)
 	if errors.Is(err, os.ErrNotExist) {
-		return cfg
+		return cfg, nil
 	}
-	check(err)
+	if err != nil {
+		return cfg, err
+	}
 	if info.Size() > 2<<20 {
-		fail(500, "整理模板或部位词表超过 2MB")
+		return cfg, apiError{500, "整理模板或部位词表超过 2MB"}
 	}
 	raw, err := os.ReadFile(path)
-	check(err)
+	if err != nil {
+		return cfg, err
+	}
 	if err := json.Unmarshal(raw, &cfg); err != nil {
-		fail(500, "整理模板或部位词表不是有效的 JSON")
+		return cfg, apiError{500, "整理模板或部位词表不是有效的 JSON"}
 	}
 	official := map[string]string{}
 	for _, part := range cfg.Parts {
@@ -53,7 +57,7 @@ func (a *App) organizerConfig() organizerConfig {
 		if id == "" || name == "" || len(part.ID) > 64 || len([]rune(part.Name)) > 80 ||
 			part.ID != strings.TrimSpace(part.ID) || part.Name != strings.TrimSpace(part.Name) ||
 			strings.ContainsAny(part.Name+part.ID, "、,，;；\r\n") || official[id] != "" || official[name] != "" {
-			fail(500, "部位词表存在重复或无效的编号、标准名")
+			return cfg, apiError{500, "部位词表存在重复或无效的编号、标准名"}
 		}
 		official[id], official[name] = id, id
 		seen := map[string]bool{}
@@ -67,10 +71,10 @@ func (a *App) organizerConfig() organizerConfig {
 	}
 	for term, matches := range cfg.byTerm {
 		if official[term] != "" && len(matches) != 1 {
-			fail(500, "部位别名与另一部位的标准名称或编号冲突")
+			return cfg, apiError{500, "部位别名与另一部位的标准名称或编号冲突"}
 		}
 	}
-	return cfg
+	return cfg, nil
 }
 
 func organizerTerm(text string) string { return strings.ToLower(strings.TrimSpace(text)) }
@@ -127,7 +131,8 @@ func (a *App) generateNoteDraft(w http.ResponseWriter, r *http.Request, u User) 
 		fail(422, "最多整理 20 份材料")
 	}
 	typeID := validTypeIDs(loadTaxonomy(a.DB, u.ID).Types, []string{in.Type})[0]
-	cfg := a.organizerConfig()
+	cfg, err := a.loadOrganizerConfig()
+	check(err)
 	template := cfg.Templates[typeID]
 	if len(template.Sections) == 0 {
 		template.Sections = detailTemplates[typeID]
@@ -321,7 +326,8 @@ func (a *App) saveNoteParts(tx *sql.Tx, noteID string, details map[string]string
 	if strings.TrimSpace(value) == "" {
 		return
 	}
-	cfg := a.organizerConfig()
+	cfg, err := a.loadOrganizerConfig()
+	check(err)
 	var names []string
 	for _, raw := range strings.FieldsFunc(value, func(r rune) bool { return strings.ContainsRune("、,，;；\r\n", r) }) {
 		term := organizerTerm(raw)
@@ -341,7 +347,11 @@ func (a *App) saveNoteParts(tx *sql.Tx, noteID string, details map[string]string
 }
 
 func (a *App) organizerPartSearch(query, category string, filter noteFilter, limit int, userID int64) ([]Note, bool) {
-	matches := a.organizerConfig().byTerm[organizerTerm(query)]
+	cfg, err := a.loadOrganizerConfig()
+	if err != nil {
+		return nil, false
+	}
+	matches := cfg.byTerm[organizerTerm(query)]
 	if len(matches) != 1 {
 		return nil, false
 	}

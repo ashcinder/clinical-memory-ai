@@ -162,6 +162,7 @@ POST /api/auth/login                    登录 {username,password}
 POST /api/auth/logout                   退出
 GET  /api/auth/me                       当前账户
 GET  /api/notes?limit=100&amp;offset=0        笔记列表
+POST /api/notes/organize                整理草稿 {note_type,text,rule,attachment_ids}
 POST /api/notes                         创建 {title,category,tags,content,steps,occurred_on,attachment_ids}
 GET/PUT/DELETE /api/notes/{id}           查阅、编辑、删除笔记
 GET/POST /api/attachments               材料列表、上传 multipart file（20MB）
