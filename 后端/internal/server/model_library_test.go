@@ -1,31 +1,68 @@
 package server
 
 import (
-	"context"
-	"io"
+	"crypto/sha256"
+	"encoding/binary"
+	"encoding/json"
+	"fmt"
 	"net/http"
-	"strings"
+	"net/http/httptest"
+	"net/url"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
-type libraryDoer func(*http.Request) (*http.Response, error)
-
-func (f libraryDoer) Do(r *http.Request) (*http.Response, error) { return f(r) }
-func TestModelLibraryProviderParsing(t *testing.T) {
-	client := libraryDoer(func(r *http.Request) (*http.Response, error) {
-		if r.URL.Host != "api.sketchfab.com" || r.URL.Query().Get("q") != "heart anatomy" {
-			t.Fatalf("unexpected provider request: %s", r.URL)
+func TestCuratedModelLibrary(t *testing.T) {
+	a := &App{Config: Config{WebDir: filepath.Join("..", "..", "..", "前端Web")}}
+	read := func(q string) anatomyCatalog {
+		t.Helper()
+		response := httptest.NewRecorder()
+		a.modelLibrary(response, httptest.NewRequest("GET", "/api/anatomy/models?q="+url.QueryEscape(q), nil), User{})
+		var catalog anatomyCatalog
+		if response.Code != http.StatusOK || json.Unmarshal(response.Body.Bytes(), &catalog) != nil {
+			t.Fatalf("unexpected catalog response: %d", response.Code)
 		}
-		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(`{"results":[{"uid":"b018e3f215c14be6ab5c52e5371c3ba5","name":"Head","user":{"displayName":"Author"},"license":{"label":"CC BY"}},{"uid":"https://untrusted.test/model","name":"invalid"}]}`))}, nil
-	})
-	items, err := readModelLibrary(context.Background(), "heart anatomy", client)
-	if err != nil || len(items) != 1 || items[0].Author != "Author" || items[0].License != "CC BY" {
-		t.Fatalf("%+v %v", items, err)
+		return catalog
 	}
-	failing := libraryDoer(func(r *http.Request) (*http.Response, error) {
-		return &http.Response{StatusCode: 429, Body: io.NopCloser(strings.NewReader("rate limited"))}, nil
-	})
-	if _, err := readModelLibrary(context.Background(), "heart", failing); err == nil {
-		t.Fatal("provider failure must be reported")
+	catalog := read("")
+	if catalog.Provider != "bodyparts3d" || len(catalog.Items) == 0 || catalog.Credit == "" {
+		t.Fatal("catalog source attribution missing")
+	}
+	for _, model := range catalog.Items {
+		raw, err := os.ReadFile(filepath.Join(a.Config.WebDir, "anatomy", "library", model.Asset))
+		if err != nil || len(raw) < 20 || fmt.Sprintf("%x", sha256.Sum256(raw)) != model.SHA256 {
+			t.Fatalf("%s: missing or changed GLB asset", model.ID)
+		}
+		if string(raw[:4]) != "glTF" {
+			t.Fatalf("%s: invalid GLB header", model.ID)
+		}
+		size := int(binary.LittleEndian.Uint32(raw[12:16]))
+		if size > len(raw)-20 {
+			t.Fatalf("%s: invalid GLB JSON chunk size", model.ID)
+		}
+		var gltf struct {
+			Nodes []struct{ Name string }
+		}
+		if err := json.Unmarshal(raw[20:20+size], &gltf); err != nil {
+			t.Fatal(err)
+		}
+		if len(gltf.Nodes) != len(model.Parts) {
+			t.Fatalf("%s: structure count differs from model", model.ID)
+		}
+		for i, part := range model.Parts {
+			if part.ID != gltf.Nodes[i].Name || part.Name == "" || len(part.Elements) == 0 {
+				t.Fatalf("%s: invalid source mapping for %s", model.ID, part.ID)
+			}
+		}
+	}
+	if items := read("肺").Items; len(items) == 0 || items[0].ID != "airways" {
+		t.Fatal("exact keyword must outrank a partial structure match")
+	}
+	for query, want := range map[string]string{"fma3768": "heart", "右支气管树": "airways", "髌骨": "knee", "acupuncture shop": ""} {
+		items := read(query).Items
+		if want == "" && len(items) != 0 || want != "" && (len(items) != 1 || items[0].ID != want) {
+			t.Fatalf("unexpected search results for %q", query)
+		}
 	}
 }

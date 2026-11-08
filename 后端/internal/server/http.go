@@ -24,7 +24,7 @@ func Headers(next http.Handler) http.Handler {
 			if r.URL.Path == "/" || strings.HasSuffix(r.URL.Path, ".html") || strings.HasSuffix(r.URL.Path, ".css") || strings.HasSuffix(r.URL.Path, ".js") {
 				w.Header().Set("Cache-Control", "no-cache")
 			}
-			w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' https://static.sketchfab.com; frame-src 'self' https://sketchfab.com; style-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'")
+			w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self'; frame-src 'self'; style-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'")
 		}
 		if r.Method != "GET" && r.Method != "HEAD" && r.Method != "OPTIONS" && r.Header.Get("Origin") != "" {
 			origin, err := url.Parse(r.Header.Get("Origin"))
