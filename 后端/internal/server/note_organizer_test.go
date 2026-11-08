@@ -27,7 +27,7 @@ func TestOrganizerDraftApprovalAndPartSearch(t *testing.T) {
 		requests <- req.Messages[1]["content"]
 		model := organizerOutput{Title: "虚构整理", Items: []organizerItem{
 			{Section: "观察记录", Text: "上午出现不适", Source: 1, Quote: "上午不适"},
-			{Section: "观察记录", Text: "Word 中有局部记录", Source: 2, Quote: "左肩外侧有标注"},
+			{Section: "观察记录", Text: "左肩外侧有标注", Source: 2, Quote: "左肩外侧有标注"},
 			{Section: "观察记录", Text: "虚构结果不得入稿", Source: 2, Quote: "原件里不存在"},
 		}, Mentions: []organizerMention{{Source: 2, Term: "左肩外侧"}, {Source: 1, Term: "肩部"}}}
 		respond(w, 200, map[string]any{"choices": []any{map[string]any{
@@ -65,6 +65,8 @@ func TestOrganizerDraftApprovalAndPartSearch(t *testing.T) {
 	if len(draft["evidence"].([]any)) != 2 || len(draft["parts"].([]any)) != 1 ||
 		!strings.Contains(jsonText(draft["warnings"]), "部位待确认：肩部") ||
 		!strings.Contains(jsonText(draft["missing"]), "待补充") ||
+		!strings.Contains(getString(draft, "content"), "左肩区域有标注") ||
+		!strings.Contains(jsonText(draft["evidence"]), "左肩外侧有标注") ||
 		strings.Contains(getString(draft, "content"), "虚构结果不得入稿") {
 		t.Fatal(draft)
 	}
