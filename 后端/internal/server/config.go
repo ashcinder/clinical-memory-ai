@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -23,6 +24,8 @@ type Config struct {
 	ProviderURLs                                         map[string]string
 	ASRKey, ASRURL, ASRModel                             string
 	CloudSearchDisabled                                  bool
+	ImageDINOModel, ImageDINOPython                      string
+	ImageVisualCandidates                                int
 	LocalASRModel, OCRDataDir                            string
 	CookieSecure                                         bool
 }
@@ -108,6 +111,20 @@ func LoadConfig() (Config, error) {
 	c.VisionKey = env("VISION_API_KEY", c.VisionKey)
 	c.VisionURL = strings.TrimRight(env("VISION_BASE_URL", c.VisionURL), "/")
 	c.VisionModel = env("VISION_MODEL", c.VisionModel)
+	c.ImageDINOModel = strings.TrimSpace(os.Getenv("IMAGE_DINO_MODEL"))
+	c.ImageDINOPython = strings.TrimSpace(os.Getenv("IMAGE_DINO_PYTHON"))
+	if c.ImageDINOModel != "" && !filepath.IsAbs(c.ImageDINOModel) {
+		c.ImageDINOModel = filepath.Join(root, c.ImageDINOModel)
+	}
+	if c.ImageDINOPython != "" && strings.ContainsRune(c.ImageDINOPython, filepath.Separator) && !filepath.IsAbs(c.ImageDINOPython) {
+		c.ImageDINOPython = filepath.Join(root, c.ImageDINOPython)
+	}
+	candidateLimit, err := strconv.Atoi(env("IMAGE_VISUAL_CANDIDATES", strconv.Itoa(maxVisualCandidates)))
+	if err != nil || candidateLimit < 1 || candidateLimit > maxVisualCandidates {
+		return Config{}, fmt.Errorf("IMAGE_VISUAL_CANDIDATES 需介于 1 和 %d", maxVisualCandidates)
+	}
+	c.ImageVisualCandidates = candidateLimit
+
 	c.BasePath = strings.TrimRight(env("PUBLIC_BASE_PATH", ""), "/")
 	if !regexp.MustCompile(`^(/[A-Za-z0-9_-]+)*$`).MatchString(c.BasePath) {
 		return Config{}, fmt.Errorf("PUBLIC_BASE_PATH 需为 /clinical-memory 形式的路径")

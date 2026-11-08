@@ -233,7 +233,7 @@ func (a *App) imageMatches(ctx context.Context, queryIDs []string, userID int64,
 
 // Image candidates remain independent of cloud re-ranking: a valid image match is
 // useful even when no text could be recognized. Both modalities are de-duplicated.
-func (a *App) retrieveInput(ctx context.Context, query string, ids []string, userID int64, category string, limit int) ([]Note, bool, []string) {
+func (a *App) retrieveInput(ctx context.Context, query string, ids []string, userID int64, category string, limit int) ([]Note, bool, []string, bool) {
 	if len(ids) > 5 {
 		fail(422, "搜索和对话最多添加 5 份材料")
 	}
@@ -247,11 +247,12 @@ func (a *App) retrieveInput(ctx context.Context, query string, ids []string, use
 	}
 	text := []Note{}
 	enhanced := false
+	dinoUsed := false
 	extra := []string{}
 	c := a.aiConfig(ctx)
 	if len(queries) > 0 && !c.CloudSearchDisabled && c.VisionKey != "" {
 		originalImages, originalMatches := images, matches
-		images, matches, extra = a.visualImageMatches(ctx, query, queries, userID, category, matches)
+		images, matches, extra, dinoUsed = a.visualImageMatches(ctx, query, queries, userID, category, matches)
 		// Exact matches are independent of the bounded visual shortlist, including
 		// old files outside the recent-image window in a larger library.
 		exactImages := []Note{}
@@ -283,7 +284,18 @@ func (a *App) retrieveInput(ctx context.Context, query string, ids []string, use
 	} else {
 		text, enhanced, extra = a.retrieveRanked(ctx, query, userID, category, limit)
 		if len(queries) > 0 {
-			warnings = append(warnings, "当前未启用云端图片理解，使用图片指纹和文字匹配；未进行原图视觉比对")
+			if a.Config.ImageDINOModel != "" {
+				var suggestions []Note
+				var localWarnings []string
+				suggestions, localWarnings, dinoUsed = a.offlineDINO(ctx, queries, userID, category, limit, matches)
+				images = append(images, suggestions...)
+				warnings = append(warnings, localWarnings...)
+			}
+			if dinoUsed {
+				warnings = append(warnings, "本地 DINOv2 返回外观相似候选，请核对穴位编号、侧别和标记位置")
+			} else {
+				warnings = append(warnings, "当前未启用云端图片理解，使用图片指纹和文字匹配；未进行原图视觉比对")
+			}
 		}
 	}
 	warnings = append(warnings, extra...)
@@ -304,5 +316,5 @@ func (a *App) retrieveInput(ctx context.Context, query string, ids []string, use
 		}
 		notes = append(notes, n)
 	}
-	return notes, enhanced, warnings
+	return notes, enhanced, warnings, dinoUsed
 }
