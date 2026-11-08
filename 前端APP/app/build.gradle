@@ -81,10 +81,11 @@ android {
         applicationId (project.findProperty('linjiPreviewId') ?: 'cn.linji.clinical')
         minSdk 26
         targetSdk 33
-        versionCode 55
-        versionName (localTest ? '2.28.0-local' : intranetUrl == 'https://124.221.183.247/clinical-memory' ? '2.28.0-public' : '2.28.0-intranet')
+        versionCode 56
+        versionName (localTest ? '2.28.1-local' : intranetUrl == 'https://124.221.183.247/clinical-memory' ? '2.28.1-public' : '2.28.1-intranet')
         buildConfigField 'String', 'DEFAULT_SERVER_URL', JsonOutput.toJson(intranetUrl)
     }
+    sourceSets.main.assets.srcDir rootProject.file('../前端Web/organizer-demo')
     buildFeatures { buildConfig true }
     buildTypes { release { minifyEnabled false } }
     compileOptions {

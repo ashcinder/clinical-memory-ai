@@ -4333,3 +4333,47 @@ main[data-view="notes"] .retrieval-filter-panel { margin-top:0; }
  .detail-values{grid-template-columns:1fr}.detail-extra-status{display:none}
  #note-form .editor-type-options{gap:5px}#note-form .editor-type-options label{font-size:11px;padding:4px 6px;gap:4px}
 }
+
+/* Material intake, placed above the search field and the note form. */
+.organizer-entry {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 15px 20px;
+  border: 1px solid #c5ddd3;
+  border-radius: 14px;
+  background: #edf6f1;
+}
+.organizer-mark {
+  display: grid;
+  flex: 0 0 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid #c5ddd3;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--teal);
+}
+.organizer-mark .ui-icon { width: 22px; height: 22px; }
+.organizer-entry-copy { flex: 1; }
+.organizer-entry h2 { margin: 0; font-size: 17px; color: var(--ink); }
+.organizer-entry p { margin: 1px 0 0; font-size: 13px; color: var(--muted); }
+.organizer-entry-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.organizer-entry-actions button { min-height: 44px; white-space: nowrap; }
+.organizer-workspace {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #c5ddd3;
+  border-radius: 12px;
+  background: #f5faf7;
+}
+.organizer-workspace > summary { color: var(--teal); font-size: 16px; font-weight: 650; cursor: pointer; }
+.organizer-workspace > label { margin-block: 10px; }
+.organizer-workspace .editor-files { margin: 12px 0; }
+.organizer-workspace #organizer-preview { overflow-wrap: anywhere; }
+@media (max-width: 650px) {
+  .organizer-entry { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 9px 12px; padding: 12px; }
+  .organizer-mark { width: 36px; height: 36px; }
+  .organizer-entry-actions { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; }
+}

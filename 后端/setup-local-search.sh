@@ -15,6 +15,7 @@ model_root="${DATA_DIR:-../数据库数据}/models"
 mkdir -p "$model_root/tessdata" "$model_root/tools"
 if [[ "$(uname -s)" == Darwin ]]; then
   /usr/bin/swiftc tools/local-ocr.swift -O -o "$model_root/tools/linji-ocr"
+  /usr/bin/swiftc tools/local-pdf.swift -O -o "$model_root/tools/linji-pdf"
 else
   command -v tesseract >/dev/null 2>&1 || { echo "请安装 tesseract 后重试。"; exit 1; }
 fi

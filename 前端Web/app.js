@@ -983,11 +983,22 @@ function renderLibrary() {
   $("#main").classList.add("library-page");
   $("#main").classList.toggle("reading-results", hasResults);
   $("#main").innerHTML =
-    `<h1 class="visually-hidden">${search ? "经验检索" : "学习资料"}</h1>` +
+    `<h1 class="visually-hidden">${search ? "经验检索" : "学习资料"}</h1>
+    <section class="organizer-entry" aria-labelledby="organizer-entry-title">
+      <span class="organizer-mark">${icon("file")}</span>
+      <div class="organizer-entry-copy"><h2 id="organizer-entry-title">从材料生成笔记</h2>
+        <p>一次导入多份材料，整理成可核对的草稿。</p></div>
+      <div class="organizer-entry-actions">
+        <button type="button" class="primary" id="organizer-start">导入材料并整理</button>
+        <button type="button" class="secondary" id="organizer-demo">试用示例</button>
+      </div>
+    </section>` +
     (search
       ? `<section class="search-panel ${hasResults ? "has-results" : ""}"><form id="search-form" class="search-form"><div class="search-input-wrap">${icon("search")}<label class="visually-hidden" for="query">检索内容</label><textarea id="query" class="search-input" placeholder="搜索笔记，或粘贴图片" maxlength="2000" rows="2">${esc(state.lastQuery || "")}</textarea></div><div id="search-files" class="attachment-chips">${fileChips(state.searchFiles, "search")}</div><div class="search-tools"><div class="input-actions"><button type="button" class="tool-btn" id="search-upload" aria-label="添加图片、音频或文档" title="图片、音频或文档">${icon("image")}材料</button><button type="button" class="tool-btn" id="search-record">${icon("mic")}录音</button></div><button class="primary" id="search-submit">检索记录 ${icon("arrow")}</button></div><div class="search-preferences"><div class="search-range-controls" role="group" aria-label="检索范围"><div class="search-scope"><span>资料类型</span><button id="search-scope" type="button" aria-label="选择检索资料类型" aria-haspopup="dialog"></button></div><div class="search-scope"><span>标签</span><button id="search-scope-tags" type="button" aria-label="选择检索标签" aria-haspopup="dialog"></button></div></div>${searchSwitch(true)}</div><div id="search-scope-selection" class="search-scope-selection" aria-label="检索条件" hidden></div><div id="search-busy" class="busy-text" hidden>正在上传并识别材料，请稍候…</div><p id="search-error" class="error" role="alert" hidden></p></form><div class="search-help"><span>可直接粘贴图片 · 单份不超过 20 MB</span><span class="keyboard-hint"><kbd>⌘</kbd> / <kbd>Ctrl</kbd> + <kbd>Enter</kbd> 检索</span></div></section>`
       : "") +
     `<section id="library-results" aria-label="${hasResults ? "检索结果" : "笔记列表"}" tabindex="-1">${libraryFilterBar(visible, filtered, hasResults, search)}${hasResults ? searchSummary() : ""}<div class="notes-grid ${hasResults ? "search-results" : ""}" id="note-list" aria-live="polite">${hasResults ? searchCards(filtered) : cards(filtered)}</div>${!hasResults && state.notes.length < state.total ? '<button class="secondary load-more" id="load-more">加载更多笔记</button>' : ""}</section>`;
+  $("#organizer-start")?.addEventListener("click", () => editNote(null, "pick"));
+  $("#organizer-demo")?.addEventListener("click", () => editNote(null, "demo"));
   bindCards();
   bindResultMaterials(filtered);
   $$("[data-category]").forEach((b)=>b.onclick=()=>filterLibrary(b.dataset.category?toggled(state.categories,b.dataset.category):[]));
@@ -1149,14 +1160,17 @@ async function doSearch(e) {
     }
   }
 }
-function chooseFiles(target, onComplete) {
+function chooseFiles(target, onComplete, afterUpload) {
   if (state.busy || state.searching || state.chatting)
     return toast("请等待当前操作完成");
   const picker = document.createElement("input");
   picker.type = "file";
   picker.accept = ACCEPT;
   picker.multiple = true;
-  picker.onchange = () => uploadFiles([...picker.files], target, onComplete);
+  picker.onchange = async () => {
+    const result = await uploadFiles([...picker.files], target, onComplete);
+    afterUpload?.(result);
+  };
   picker.click();
 }
 async function uploadFiles(files, target, onComplete) {
@@ -1240,6 +1254,8 @@ async function uploadFiles(files, target, onComplete) {
     if (target === "chat") sizeChatInput();
     if (busy?.isConnected) busy.hidden = true;
   }
+  return { uploaded, complete: uploaded.length === files.length &&
+    uploaded.every((item) => item.status === "ready" && item.extracted_text?.trim()) };
 }
 
 async function toggleRecording(target) {
@@ -1366,12 +1382,14 @@ function confirmAction(title, desc, action, cancel) {
     }
   };
 }
-function editNote(note) {
+function editNote(note, entry) {
+  if (entry && (state.busy || state.searching || state.chatting))
+    return toast("请等待当前操作完成");
  const chosenTypes=note?typesOf(note).map((t)=>t.id):[catalogTypes()[0].id];
   let files = [...(note?.attachments || [])];
   let appliedDraft = null;
   openDialog(
-    note?.id ? "编辑笔记" : "新建笔记",
+    note?.id ? "编辑笔记" : entry ? "导入材料并整理" : "新建笔记",
     `<form id="note-form"><div class="form-grid"><label class="full">笔记标题<input name="title" value="${esc(note?.title || "")}" maxlength="160" placeholder="输入标题" required></label><fieldset class="full editor-types"><legend>资料类型 <small>可多选</small></legend><div class="editor-type-options">${catalogTypes().map((t)=>`<label><input type="checkbox" name="note_types" value="${esc(t.id)}" ${chosenTypes.includes(t.id)?"checked":""}><span>${esc(t.title)}</span></label>`).join("")}</div><div id="editor-type-summary" class="selection-preview"></div></fieldset><section class="full editor-details"><div class="detail-heading"><h4>专属信息 <small>选填</small></h4><span id="detail-progress"></span></div><div id="detail-fields"></div><div class="detail-footer"><div id="detail-more-slot"></div><details class="detail-custom"><summary><span class="detail-custom-plus" aria-hidden="true">＋</span>自定义字段</summary><div class="detail-add"><input id="detail-name" aria-label="自定义字段名称" maxlength="60" placeholder="如：职业、疗程、文献编号"><button type="button" class="text-button" id="add-detail">添加</button></div></details></div></section><label>就诊 / 记录日期<input type="date" name="occurred_on" value="${note?.occurred_on || today()}" required></label><label class="editor-tags">标签 <small>用逗号分隔</small><input name="tags" value="${esc(note?.tags.join("，") || "")}" placeholder="如：咳嗽，复诊，观察记录"></label><label class="full"><span id="editor-content-label">笔记正文</span><textarea name="content" rows="7" maxlength="50000" placeholder="输入笔记内容">${esc(note?.content || "")}</textarea></label><label class="full"><span id="editor-steps-label">记录条目</span> <small>每行一条</small><textarea name="steps" rows="5" placeholder="核对初诊记录&#10;整理处置过程&#10;回顾随访变化">${esc(note?.steps.join("\n") || "")}</textarea></label><div class="full learning-editor-tools"><button type="button" class="text-button" id="insert-outline">插入整理提纲</button><span>仅用于空白正文</span></div><div class="editor-files full"><div class="inline-row between"><h4>关联原始材料</h4><button type="button" class="text-button" id="editor-upload">＋ 上传材料</button></div><div id="editor-file-list"></div><div class="busy-text" id="editor-busy" hidden>正在上传和识别…</div></div>${note?.id ? "" : `<details class="full editor-files" id="organizer"><summary>从材料生成笔记</summary><p class="muted">批量添加原始材料，也可以粘贴零散文字。整理使用已配置的对话模型。</p><label>零散文字<textarea id="organizer-text" name="organizer_text" rows="4" maxlength="48000"></textarea></label><label>本次整理要求（可选）<input id="organizer-rule" name="organizer_rule" maxlength="1000" placeholder="例如按时间顺序记录"></label><label><input id="organizer-remember" type="checkbox" name="organizer_remember"> 保存后在同类笔记中复用这条要求</label><button id="organizer-run" class="secondary" type="button">生成草稿</button><p id="organizer-status" role="status"></p><div id="organizer-preview"></div></details>`}</div><p id="note-error" class="error" role="alert"></p><div class="form-actions"><button class="secondary" type="button" id="cancel-note">取消</button><button class="primary" id="save-note">保存笔记</button></div></form>`,
   );
   function drawFiles() {
@@ -1403,6 +1421,16 @@ function editNote(note) {
     );
   }
   drawFiles();
+  if (entry) {
+    const organizer = $("#organizer");
+    const filesPanel = $("#editor-file-list").closest(".editor-files");
+    organizer.open = true;
+    organizer.classList.add("organizer-workspace");
+    organizer.querySelector("summary").after(filesPanel);
+    $("#note-form .form-grid").prepend(organizer);
+    $("#editor-upload").textContent = "＋ 选择文件并生成";
+    $("#editor-upload").className = "primary";
+  }
   const tagInput = $('#note-form [name="tags"]');
   if ((state.taxonomy?.tags || []).length) {
     tagInput.closest("label").insertAdjacentHTML("afterend", `<details class="full editor-tag-picker"><summary>选择已有标签</summary><div class="facet-tags">${state.taxonomy.tags.map((t) => `<button type="button" class="facet-tag" data-editor-tag="${esc(t.name)}">${esc(t.name)}</button>`).join("")}</div></details>`);
@@ -1486,12 +1514,20 @@ function editNote(note) {
     },
     () => Math.max(0, 20 - files.length),
   );
-  $("#editor-upload").onclick = () =>
-    chooseFiles("editor", async (uploaded) => {
-      files.push(...uploaded);
-      drawFiles();
-    });
+  const appendFiles = (uploaded) => {
+    files.push(...uploaded);
+    drawFiles();
+  };
   const organizerRun = $("#organizer-run");
+  const uploadButton = $("#editor-upload");
+  const afterImport = (result) => {
+    if (!organizerRun?.isConnected || !result) return;
+    if (result.complete) organizerRun.click();
+    else $("#organizer-status").textContent = "有材料上传或提取未完成。请核对材料，再点击「生成草稿」。";
+  };
+  uploadButton.onclick = () => {
+    if (!organizerRun?.disabled) chooseFiles("editor", appendFiles, entry ? afterImport : undefined);
+  };
   if (organizerRun) organizerRun.onclick = async () => {
     if (state.busy) return toast("请等待材料上传完成");
     const form = $("#note-form");
@@ -1504,6 +1540,7 @@ function editNote(note) {
       rule: $("#organizer-rule").value,
     };
     organizerRun.disabled = true;
+    uploadButton.disabled = true;
     status.textContent = "正在整理材料…";
     preview.replaceChildren();
     try {
@@ -1550,9 +1587,27 @@ function editNote(note) {
       status.textContent = error.message;
     } finally {
       organizerRun.disabled = false;
+      uploadButton.disabled = false;
     }
   };
   bindDraft($("#note-form"), () => files.map((f) => f.id).join(","));
+  if (entry === "pick") {
+    uploadButton.focus({ preventScroll: true });
+    uploadButton.click();
+  }
+  if (entry === "demo") {
+    const organizer = $("#organizer");
+    $("#organizer-status").textContent = "正在导入两份虚构示例…";
+    Promise.all([["observation.txt", "演示观察.txt"], ["followup.txt", "演示随访.txt"]].map(async ([asset, name]) => {
+      const response = await fetch(siteURL("/organizer-demo/" + asset));
+      if (!response.ok) throw new Error("示例未能载入，请重试。");
+      return new File([await response.blob()], name, { type: "text/plain" });
+    })).then(async (samples) => {
+      if (organizer.isConnected) afterImport(await uploadFiles(samples, "editor", appendFiles));
+    }).catch((error) => {
+      if (organizer.isConnected) $("#organizer-status").textContent = error.message;
+    });
+  }
   $("#cancel-note").onclick = () => closeDialog();
   $("#note-form").addEventListener("input", () => {
     $("#save-note").textContent = "保存笔记";

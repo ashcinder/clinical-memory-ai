@@ -118,10 +118,7 @@ func (a *App) extract(ctx context.Context, path, mimetype string) (string, strin
 		return cut(text, 50000), "ready", nil
 	}
 	if mimetype == "application/pdf" {
-		if _, err := exec.LookPath("pdftotext"); err != nil {
-			return "", "needs_transcript", nil
-		}
-		text, err := commandText(ctx, "pdftotext", "-f", "1", "-l", "100", "-enc", "UTF-8", path, "-")
+		text, err := a.localPDFText(ctx, path)
 		if err != nil {
 			return "", "needs_transcript", nil
 		}

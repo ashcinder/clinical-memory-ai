@@ -30,6 +30,12 @@ func regularFile(path string) bool {
 func (a *App) nativeOCR() string {
 	return filepath.Join(a.Config.DataDir, "models", "tools", "linji-ocr")
 }
+func (a *App) localPDFText(ctx context.Context, path string) (string, error) {
+	if program, err := exec.LookPath("pdftotext"); err == nil {
+		return commandText(ctx, program, "-f", "1", "-l", "100", "-enc", "UTF-8", path, "-")
+	}
+	return commandText(ctx, filepath.Join(a.Config.DataDir, "models", "tools", "linji-pdf"), path)
+}
 func (a *App) localOCRReady() bool {
 	if regularFile(a.nativeOCR()) {
 		return true
