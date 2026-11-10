@@ -106,6 +106,9 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/taxonomy", a.guard(a.taxonomy))
 	mux.HandleFunc("POST /api/taxonomy", a.guard(a.mutateTaxonomy))
 	mux.HandleFunc("GET /api/notes", a.guard(a.listNotes))
+	mux.HandleFunc("GET /api/learning-templates", a.guard(a.listLearningTemplates))
+	mux.HandleFunc("GET /api/notes/{id}/learning", a.guard(a.getLearningNote))
+	mux.HandleFunc("PUT /api/notes/{id}/learning", a.guard(a.updateLearningNote))
 	mux.HandleFunc("POST /api/notes/organize", a.guard(a.generateNoteDraft))
 	mux.HandleFunc("POST /api/notes", a.guard(a.createNote))
 	mux.HandleFunc("GET /api/notes/{id}", a.guard(a.getNote))
@@ -141,7 +144,8 @@ func (a *App) health(w http.ResponseWriter, r *http.Request) {
 func (a *App) settings(w http.ResponseWriter, r *http.Request, u User) {
 	c := a.aiConfig(r.Context())
 	_, pdfErr := exec.LookPath("pdftotext")
-	respond(w, 200, map[string]any{"cloud_search_enabled": !c.CloudSearchDisabled, "local_asr": a.localASRReady(), "local_ocr_languages": a.localOCRReady(), "image_fingerprint": true, "ai_enabled": c.DeepSeekKey != "", "ai_provider": c.AIProvider, "ai_model": c.DeepSeekModel, "deepseek_enabled": c.DeepSeekKey != "", "deepseek_model": c.DeepSeekModel, "vision_provider": c.VisionProvider, "vision_model": c.VisionModel, "vision_enabled": c.VisionKey != "", "asr_enabled": c.ASRKey != "" && c.ASRURL != "", "local_ocr": a.localOCRReady(), "pdf_extraction": pdfErr == nil, "max_upload_mb": 20, "database": "MySQL", "backend": "Go", "external_data_notice": "启用云端 AI 后，检索内容、命中笔记片段或上传材料将发送到配置的第三方服务，产生费用；请先脱敏。"})
+	_, organizerErr := exec.LookPath(c.LocalOrganizerCLI)
+	respond(w, 200, map[string]any{"cloud_search_enabled": !c.CloudSearchDisabled, "local_organizer": regularFile(c.LocalOrganizerModel) && organizerErr == nil, "local_asr": a.localASRReady(), "local_ocr_languages": a.localOCRReady(), "image_fingerprint": true, "ai_enabled": c.DeepSeekKey != "", "ai_provider": c.AIProvider, "ai_model": c.DeepSeekModel, "deepseek_enabled": c.DeepSeekKey != "", "deepseek_model": c.DeepSeekModel, "vision_provider": c.VisionProvider, "vision_model": c.VisionModel, "vision_enabled": c.VisionKey != "", "asr_enabled": c.ASRKey != "" && c.ASRURL != "", "local_ocr": a.localOCRReady(), "pdf_extraction": pdfErr == nil, "max_upload_mb": 20, "database": "MySQL", "backend": "Go", "external_data_notice": "启用云端 AI 后，检索内容、命中笔记片段或上传材料将发送到配置的第三方服务，产生费用；请先脱敏。"})
 }
 func intParam(r *http.Request, key string, defaultValue, minValue, maxValue int) int {
 	raw := r.URL.Query().Get(key)
@@ -162,7 +166,9 @@ POST /api/auth/login                    登录 {username,password}
 POST /api/auth/logout                   退出
 GET  /api/auth/me                       当前账户
 GET  /api/notes?limit=100&amp;offset=0        笔记列表
-POST /api/notes/organize                整理草稿 {note_type,text,rule,attachment_ids}
+GET  /api/learning-templates           已启用范本列表
+GET/PUT /api/notes/{id}/learning        查看与管理资料用途、范本版本
+POST /api/notes/organize                整理草稿 {note_type,text,rule,attachment_ids,template_id}
 POST /api/notes                         创建 {title,category,tags,content,steps,occurred_on,attachment_ids}
 GET/PUT/DELETE /api/notes/{id}           查阅、编辑、删除笔记
 GET/POST /api/attachments               材料列表、上传 multipart file（20MB）

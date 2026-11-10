@@ -22,6 +22,15 @@ func (a *App) updateNote(w http.ResponseWriter, r *http.Request, u User) {
 func (a *App) getNote(w http.ResponseWriter, r *http.Request, u User) {
 	note := ownedNote(a.DB, r.PathValue("id"), u.ID, false)
 	note.BodyBlocks = a.loadOrganizerBody(note)
+	var raw sql.NullString
+	err := a.DB.QueryRow(`SELECT JSON_EXTRACT(snapshot,'$.draft.template_reference')
+		FROM note_organizer_drafts WHERE note_id=? ORDER BY created_at DESC,id DESC LIMIT 1`, note.ID).Scan(&raw)
+	if err != sql.ErrNoRows {
+		check(err)
+		if raw.Valid {
+			check(jsonUnmarshal(raw.String, &note.TemplateReference))
+		}
+	}
 	respond(w, 200, note)
 }
 func (a *App) deleteNote(w http.ResponseWriter, r *http.Request, u User) {
@@ -49,6 +58,10 @@ func (a *App) noteListFiltered(userID int64, category string, limit, offset int,
 		where += " AND category=?"
 		args = append(args, category)
 	}
+	if filter.LibraryRole != "" {
+		where += " AND (" + libraryRoleSQL + ")=?"
+		args = append(args, filter.LibraryRole)
+	}
 	constraint, filterArgs := filterSQL(filter, "notes.")
 	where += constraint
 	args = append(args, filterArgs...)
@@ -73,8 +86,11 @@ func (a *App) noteListFiltered(userID int64, category string, limit, offset int,
 func (a *App) listNotes(w http.ResponseWriter, r *http.Request, u User) {
 	limit := intParam(r, "limit", 100, 1, 100)
 	offset := intParam(r, "offset", 0, 0, 10000000)
-	filter := noteFilter{Type: r.URL.Query().Get("note_type"), Tag: r.URL.Query().Get("tag"), TypeIDs: r.URL.Query()["note_types"], Tags: r.URL.Query()["tags"], Types: loadTaxonomy(a.DB, u.ID).Types}
+	filter := noteFilter{LibraryRole: r.URL.Query().Get("library_role"), Type: r.URL.Query().Get("note_type"), Tag: r.URL.Query().Get("tag"), TypeIDs: r.URL.Query()["note_types"], Tags: r.URL.Query()["tags"], Types: loadTaxonomy(a.DB, u.ID).Types}
 	filter.validate()
+	if !contains([]string{"", "reference", "raw", "generated", "note"}, filter.LibraryRole) {
+		fail(422, "资料用途筛选无效")
+	}
 	items, total := a.noteListFiltered(u.ID, r.URL.Query().Get("category"), limit, offset, filter)
 	respond(w, 200, map[string]any{"total": total, "items": items})
 }

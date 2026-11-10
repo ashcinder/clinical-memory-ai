@@ -42,12 +42,27 @@ const state = {
 };
 const titles = {
   search: "经验检索",
-  notes: "学习资料",
+  notes: "资料库",
   materials: "材料归档",
   anatomy: "穴位图谱",
   chat: "AI 对话",
   settings: "服务设置",
 };
+const libraryRoles = [["", "全部用途"], ["reference", "学习范本"], ["raw", "原始材料"], ["generated", "生成笔记"], ["note", "普通笔记"]];
+state.libraryRole = "";
+function learningLabel(note) {
+  const meta = note.learning;
+  if (!meta || !meta.role) return "";
+  if (meta.role === "reference") return meta.is_default ? "学习范本 · 默认" : meta.enabled ? "学习范本 · 已启用" : meta.template_version ? "学习范本 · 已停用" : "学习范本 · 待确认";
+  return meta.role === "generated" ? "生成笔记 · 已确认" : libraryRoles.find(([role]) => role === meta.role)?.[1] || "";
+}
+function learningBadge(note) {
+  const label = learningLabel(note);
+  return label ? `<span class="learning-badge" data-role="${esc(note.learning.role)}">${esc(label)}</span>` : "";
+}
+function templateUsed(ref) {
+  return ref ? `<p class="template-used">本次参考 <strong>${esc(ref.title)}</strong> · 第 ${esc(ref.version)} 版</p>` : "";
+}
 const ACCEPT =
   ".jpg,.jpeg,.png,.webp,.pdf,.docx,.csv,.txt,.md,.wav,.mp3,.m4a,.webm,.ogg,.aac,.3gp";
 let initialized = false,
@@ -141,7 +156,7 @@ function typeBadges(note) { return typesOf(note).map((t)=>`<span class="category
 function toggled(values,value) { return values.includes(value)?values.filter((v)=>v!==value):[...values,value]; }
 function matchesTypes(note,ids) { return !ids.length||typesOf(note).some((t)=>ids.includes(t.id)); }
 function matchesTags(note,tags) { return tags.every((tag)=>(note.tags||[]).includes(tag)); }
-function filterParams(types=state.categories,tags=state.tagFilters) { const params=new URLSearchParams();types.forEach((v)=>params.append("note_types",v));tags.forEach((v)=>params.append("tags",v));return params.toString(); }
+function filterParams(types=state.categories,tags=state.tagFilters) { const params=new URLSearchParams();if(state.view==="notes"&&state.libraryRole)params.set("library_role",state.libraryRole);types.forEach((v)=>params.append("note_types",v));tags.forEach((v)=>params.append("tags",v));return params.toString(); }
 function categoryChoices(current = "") {
   current ||= catalogTypes()[0]?.title || "其他资料";
   const items = catalogTypes()
@@ -208,13 +223,13 @@ function readingContent(note) {
       : "")
   );
 }
-async function filterLibrary(types, tags = state.tagFilters) {
+async function filterLibrary(types, tags = state.tagFilters, role = state.libraryRole) {
   if (state.searching || state.busy) return;
   types=Array.isArray(types)?types:types?[types]:[];tags=Array.isArray(tags)?tags:tags?[tags]:[];
-  const requestID=++libraryRequest,view=state.view,previous={types:state.categories,tags:state.tagFilters};
+  const requestID=++libraryRequest,view=state.view,previous={types:state.categories,tags:state.tagFilters,role:state.libraryRole};
   const trigger=document.activeElement,focus=trigger?.dataset.category!==undefined?["category",trigger.dataset.category]:trigger?.dataset.tag!==undefined?["tag",trigger.dataset.tag]:null;
-  state.categories=types;state.tagFilters=tags;
-  if(state.view==="notes"||!state.results){try{const data=await api("/notes?"+filterParams(types,tags));if(requestID!==libraryRequest||view!==state.view)return;state.notes=data.items;state.total=data.total;}catch(error){if(requestID===libraryRequest){state.categories=previous.types;state.tagFilters=previous.tags;toast(error.message);}return;}}
+  state.categories=types;state.tagFilters=tags;state.libraryRole=role;
+  if(state.view==="notes"||!state.results){try{const data=await api("/notes?"+filterParams(types,tags));if(requestID!==libraryRequest||view!==state.view)return;state.notes=data.items;state.total=data.total;}catch(error){if(requestID===libraryRequest){state.categories=previous.types;state.tagFilters=previous.tags;state.libraryRole=previous.role;toast(error.message);}return;}}
   if(requestID!==libraryRequest||view!==state.view)return;const y=scrollY;renderLibrary();if(focus){const b=$$(`[data-${focus[0]}]`).find((e)=>e.dataset[focus[0]]===focus[1]);b?.focus({preventScroll:true});}window.scrollTo(0,y);
 }
 
@@ -348,6 +363,7 @@ function showAuth(isInitialized) {
   deletedConversations.clear();
   state.results = null;
   state.notes = [];
+  state.libraryRole = "";
   state.searchFiles = [];
   state.chatFiles = [];
   state.messages = [];
@@ -595,7 +611,7 @@ async function navigate(view) {
     if (view === "search" || view === "notes") {
       state.categories = [];
       state.tagFilters = [];
-      const data = await api("/notes");
+      const data = await api("/notes?"+filterParams());
       state.notes = data.items;
       state.total = data.total;
       renderLibrary();
@@ -794,7 +810,7 @@ function searchCards(notes) {
                 ? "DINOv2 本地相似候选"
                 : "近似指纹，未完成视觉验证"
           : "";
-      return `<article class="result-card learning-result" aria-labelledby="result-title-${n.id}"><div class="result-meta"><span class="note-type-badges">${typeBadges(n)}</span><span class="meta-dot">·</span><time>${dateLabel(n.occurred_on)}</time></div>
+      return `<article class="result-card learning-result" aria-labelledby="result-title-${n.id}"><div class="result-meta"><span class="note-type-badges">${typeBadges(n)}${learningBadge(n)}</span><span class="meta-dot">·</span><time>${dateLabel(n.occurred_on)}</time></div>
  <h3 class="result-title" id="result-title-${n.id}"><button data-note="${n.id}">${marked(n.title, e.terms)}</button></h3>
  <div class="result-columns ${files.length ? "" : "content-only"}"><div class="result-reading">${readingContent(n)}
  ${
@@ -948,7 +964,7 @@ function cards(notes) {
   return notes
     .map(
       (n) =>
-        `<button class="note-card" data-note="${n.id}"><div class="card-meta"><span class="note-type-badges">${typeBadges(n)}</span><span>${dateLabel(n.occurred_on)}</span></div><h3>${esc(n.title)}</h3><p>${esc(n.content || n.attachments?.map((a) => a.extracted_text).join(" ") || "打开笔记，查看治疗步骤与关联材料。")}</p><div class="tags">${n.tags
+        `<button class="note-card" data-note="${n.id}"><div class="card-meta"><span class="note-type-badges">${typeBadges(n)}${learningBadge(n)}</span><span>${dateLabel(n.occurred_on)}</span></div><h3>${esc(n.title)}</h3><p>${esc(n.content || n.attachments?.map((a) => a.extracted_text).join(" ") || "打开笔记，查看治疗步骤与关联材料。")}</p><div class="tags">${n.tags
           .slice(0, 4)
           .map((t) => `<span class="tag">${esc(t)}</span>`)
           .join(
@@ -983,22 +999,25 @@ function renderLibrary() {
   $("#main").classList.add("library-page");
   $("#main").classList.toggle("reading-results", hasResults);
   $("#main").innerHTML =
-    `<h1 class="visually-hidden">${search ? "经验检索" : "学习资料"}</h1>
+    `<h1 class="visually-hidden">${search ? "经验检索" : "资料库"}</h1>
     <section class="organizer-entry" aria-labelledby="organizer-entry-title">
       <span class="organizer-mark">${icon("file")}</span>
       <div class="organizer-entry-copy"><h2 id="organizer-entry-title">从材料生成笔记</h2>
         <p>一次导入多份材料，整理成可核对的草稿。</p></div>
       <div class="organizer-entry-actions">
         <button type="button" class="primary" id="organizer-start">导入材料并整理</button>
-        <button type="button" class="secondary" id="organizer-demo">试用示例</button>
+        ${search ? '<button type="button" class="secondary" id="organizer-demo">试用示例</button>' : '<button type="button" class="secondary" id="reference-upload">上传已整理资料</button>'}
       </div>
     </section>` +
+    (!search ? `<div class="library-roles" role="group" aria-label="资料用途">${libraryRoles.map(([id,label])=>`<button type="button" class="secondary" data-library-role="${id}" aria-pressed="${state.libraryRole===id}">${label}</button>`).join("")}</div>` : "") +
     (search
       ? `<section class="search-panel ${hasResults ? "has-results" : ""}"><form id="search-form" class="search-form"><div class="search-input-wrap">${icon("search")}<label class="visually-hidden" for="query">检索内容</label><textarea id="query" class="search-input" placeholder="搜索笔记，或粘贴图片" maxlength="2000" rows="2">${esc(state.lastQuery || "")}</textarea></div><div id="search-files" class="attachment-chips">${fileChips(state.searchFiles, "search")}</div><div class="search-tools"><div class="input-actions"><button type="button" class="tool-btn" id="search-upload" aria-label="添加图片、音频或文档" title="图片、音频或文档">${icon("image")}材料</button><button type="button" class="tool-btn" id="search-record">${icon("mic")}录音</button></div><button class="primary" id="search-submit">检索记录 ${icon("arrow")}</button></div><div class="search-preferences"><div class="search-range-controls" role="group" aria-label="检索范围"><div class="search-scope"><span>资料类型</span><button id="search-scope" type="button" aria-label="选择检索资料类型" aria-haspopup="dialog"></button></div><div class="search-scope"><span>标签</span><button id="search-scope-tags" type="button" aria-label="选择检索标签" aria-haspopup="dialog"></button></div></div>${searchSwitch(true)}</div><div id="search-scope-selection" class="search-scope-selection" aria-label="检索条件" hidden></div><div id="search-busy" class="busy-text" hidden>正在上传并识别材料，请稍候…</div><p id="search-error" class="error" role="alert" hidden></p></form><div class="search-help"><span>可直接粘贴图片 · 单份不超过 20 MB</span><span class="keyboard-hint"><kbd>⌘</kbd> / <kbd>Ctrl</kbd> + <kbd>Enter</kbd> 检索</span></div></section>`
       : "") +
     `<section id="library-results" aria-label="${hasResults ? "检索结果" : "笔记列表"}" tabindex="-1">${libraryFilterBar(visible, filtered, hasResults, search)}${hasResults ? searchSummary() : ""}<div class="notes-grid ${hasResults ? "search-results" : ""}" id="note-list" aria-live="polite">${hasResults ? searchCards(filtered) : cards(filtered)}</div>${!hasResults && state.notes.length < state.total ? '<button class="secondary load-more" id="load-more">加载更多笔记</button>' : ""}</section>`;
   $("#organizer-start")?.addEventListener("click", () => editNote(null, "pick"));
   $("#organizer-demo")?.addEventListener("click", () => editNote(null, "demo"));
+  $("#reference-upload")?.addEventListener("click", () => editNote(null, "reference"));
+  $$("[data-library-role]").forEach((b)=>b.onclick=()=>filterLibrary(state.categories,state.tagFilters,b.dataset.libraryRole));
   bindCards();
   bindResultMaterials(filtered);
   $$("[data-category]").forEach((b)=>b.onclick=()=>filterLibrary(b.dataset.category?toggled(state.categories,b.dataset.category):[]));
@@ -1380,9 +1399,10 @@ async function showNote(id) {
     const files = (n.attachments || []).filter((file) => !placed.has(file.id));
     openDialog(
       "完整记录",
-      `<div class="reader-meta"><span class="note-type-badges">${typeBadges(n)}</span><time>${dateLabel(n.occurred_on)}</time></div><h1 class="note-detail-title">${esc(n.title)}</h1><div class="tags">${n.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>${Object.keys(n.details||{}).length?`<section class="reader-section"><h3>专属信息</h3><dl class="detail-values">${Object.entries(n.details).map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl></section>`:""}<section class="reader-section">${n.body_blocks?.length ? "" : `<h3>${esc(type.content_label)}</h3>`}${organizedBody(n.body_blocks, n.content, n.attachments)}</section>${!n.body_blocks?.length || n.steps.length ? `<section class="reader-section"><h3>${esc(type.steps_label)} <span>${n.steps.length} 项</span></h3>${n.steps.length ? `<ol class="step-list">${n.steps.map((step, i) => `<li><span class="step-number">${i + 1}</span><span class="step-text">${esc(step)}</span></li>`).join("")}</ol>` : '<p class="muted">尚未记录步骤，可编辑补充。</p>'}</section>` : ""}${!n.body_blocks?.length || files.length ? `<section class="reader-section"><h3>${n.body_blocks?.length ? "其他原件" : "原始材料"} <span>${files.length} 份</span></h3><div class="reader-materials">${files.map((a) => `<button class="reader-file" data-material="${a.id}">${a.mime.startsWith("image/") ? `<img src="${APP_BASE}/api/attachments/${a.id}/thumbnail" alt="${esc(a.filename)}" loading="lazy">` : icon(a.mime.startsWith("audio/") ? "mic" : "file")}<span><b>${esc(a.filename)}</b><small>${extractionLabel(a)}</small></span>${icon("arrow")}</button>`).join("") || '<p class="muted">尚无关联材料</p>'}</div></section>` : ""}<div class="detail-meta">最后更新 ${dateLabel(n.updated_at)}</div><div class="form-actions reader-actions"><button class="text-button danger" id="delete-note">删除笔记</button><button class="secondary" id="recall-note">回顾这篇记录</button><button class="primary" id="edit-note">编辑笔记</button></div>`,
+      `<div class="reader-meta"><span class="note-type-badges">${typeBadges(n)}${learningBadge(n)}</span><time>${dateLabel(n.occurred_on)}</time></div><h1 class="note-detail-title">${esc(n.title)}</h1>${templateUsed(n.template_reference)}<button class="secondary" id="manage-learning">${n.learning?.role==="reference" ? "管理学习范本" : "设置资料用途"}</button><div class="tags">${n.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>${Object.keys(n.details||{}).length?`<section class="reader-section"><h3>专属信息</h3><dl class="detail-values">${Object.entries(n.details).map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl></section>`:""}<section class="reader-section">${n.body_blocks?.length ? "" : `<h3>${esc(type.content_label)}</h3>`}${organizedBody(n.body_blocks, n.content, n.attachments)}</section>${!n.body_blocks?.length || n.steps.length ? `<section class="reader-section"><h3>${esc(type.steps_label)} <span>${n.steps.length} 项</span></h3>${n.steps.length ? `<ol class="step-list">${n.steps.map((step, i) => `<li><span class="step-number">${i + 1}</span><span class="step-text">${esc(step)}</span></li>`).join("")}</ol>` : '<p class="muted">尚未记录步骤，可编辑补充。</p>'}</section>` : ""}${!n.body_blocks?.length || files.length ? `<section class="reader-section"><h3>${n.body_blocks?.length ? "其他原件" : "原始材料"} <span>${files.length} 份</span></h3><div class="reader-materials">${files.map((a) => `<button class="reader-file" data-material="${a.id}">${a.mime.startsWith("image/") ? `<img src="${APP_BASE}/api/attachments/${a.id}/thumbnail" alt="${esc(a.filename)}" loading="lazy">` : icon(a.mime.startsWith("audio/") ? "mic" : "file")}<span><b>${esc(a.filename)}</b><small>${extractionLabel(a)}</small></span>${icon("arrow")}</button>`).join("") || '<p class="muted">尚无关联材料</p>'}</div></section>` : ""}<div class="detail-meta">最后更新 ${dateLabel(n.updated_at)}</div><div class="form-actions reader-actions"><button class="text-button danger" id="delete-note">删除笔记</button><button class="secondary" id="recall-note">回顾这篇记录</button><button class="primary" id="edit-note">编辑笔记</button></div>`,
     );
     $("#edit-note").onclick = () => editNote(n);
+    $("#manage-learning").onclick = () => editLearning(n);
     $("#recall-note").onclick = () => startNoteRecall(n);
     $$("[data-material]").forEach(
       (b) =>
@@ -1424,15 +1444,60 @@ function confirmAction(title, desc, action, cancel) {
     }
   };
 }
+async function editLearning(note) {
+  try {
+    const {learning, profile, versions} = await api("/notes/"+note.id+"/learning");
+    openDialog("资料用途与范本", `
+      <p>${learningBadge({learning})} <strong>${esc(note.title)}</strong></p>
+      <p class="muted">确认后可用于同类笔记。这里只保存可复用的章节、规则和脱敏短例。</p>
+      <form id="learning-form">
+        <label>章节顺序 <small>每行一个</small><textarea name="sections" rows="5" required>${esc(profile.sections.join("\n"))}</textarea></label>
+        <label>范本规则<textarea name="rules" rows="5" maxlength="4000" required>${esc(profile.rules)}</textarea></label>
+        <label>脱敏短例 <small>选填</small><textarea name="example" rows="3" maxlength="1000">${esc(profile.example || "")}</textarea></label>
+        <label><input name="default" type="checkbox" ${learning.is_default || !learning.template_version ? "checked" : ""}> 设为当前资料类型的默认范本</label>
+        <div class="form-actions"><button class="primary" type="submit">确认并启用范本</button></div>
+        <p id="learning-error" class="error" role="alert"></p>
+        <div class="form-actions">
+          ${learning.enabled ? '<button type="button" class="secondary" data-learning-action="disable">停用范本</button>' : ""}
+          <button type="button" class="secondary" data-learning-action="raw">标为原始材料</button>
+          <button type="button" class="secondary" data-learning-action="note">标为普通笔记</button>
+        </div>
+        ${versions.length > 1 ? `<div class="inline-row"><label>历史版本<select name="restore_version">${versions.map((v)=>`<option value="${v}">第 ${v} 版</option>`).join("")}</select></label><button type="button" class="secondary" data-learning-action="restore">恢复为新版本</button></div>` : ""}
+      </form>`);
+    setDialogBack(() => showNote(note.id));
+    const form = $("#learning-form");
+    bindDraft(form);
+    async function save(action) {
+      const data = new FormData(form);
+      const body = {action, revision:learning.revision, is_default:data.has("default")};
+      if (action==="approve") body.profile = {sections:data.get("sections").split("\n").map((s)=>s.trim()).filter(Boolean),rules:data.get("rules"),example:data.get("example")};
+      if (action==="restore") body.restore_version = Number(data.get("restore_version"));
+      const buttons = $$("button", form);
+      buttons.forEach((b)=>b.disabled=true);
+      try {
+        await api("/notes/"+note.id+"/learning", {method:"PUT",body});
+        closeDialog(true);
+        await navigate(state.view);
+        await showNote(note.id);
+        toast("资料用途已保存");
+      } catch (error) {
+        $("#learning-error").textContent=error.message;
+      } finally { buttons.forEach((b)=>b.disabled=false); }
+    }
+    form.onsubmit = (e)=>{e.preventDefault();save("approve");};
+    $$("[data-learning-action]", form).forEach((b)=>b.onclick=()=>save(b.dataset.learningAction));
+  } catch (error) { toast(error.message); }
+}
 function editNote(note, entry) {
   if (entry && (state.busy || state.searching || state.chatting))
     return toast("请等待当前操作完成");
  const chosenTypes=note?typesOf(note).map((t)=>t.id):[catalogTypes()[0].id];
   let files = [...(note?.attachments || [])];
   let appliedDraft = null;
+  const referenceImport = entry === "reference";
   openDialog(
-    note?.id ? "编辑笔记" : entry ? "导入材料并整理" : "新建笔记",
-    `<form id="note-form"><div class="form-grid"><label class="full">笔记标题<input name="title" value="${esc(note?.title || "")}" maxlength="160" placeholder="输入标题" required></label><fieldset class="full editor-types"><legend>资料类型 <small>可多选</small></legend><div class="editor-type-options">${catalogTypes().map((t)=>`<label><input type="checkbox" name="note_types" value="${esc(t.id)}" ${chosenTypes.includes(t.id)?"checked":""}><span>${esc(t.title)}</span></label>`).join("")}</div><div id="editor-type-summary" class="selection-preview"></div></fieldset><section class="full editor-details"><div class="detail-heading"><h4>专属信息 <small>选填</small></h4><span id="detail-progress"></span></div><div id="detail-fields"></div><div class="detail-footer"><div id="detail-more-slot"></div><details class="detail-custom"><summary><span class="detail-custom-plus" aria-hidden="true">＋</span>自定义字段</summary><div class="detail-add"><input id="detail-name" aria-label="自定义字段名称" maxlength="60" placeholder="如：职业、疗程、文献编号"><button type="button" class="text-button" id="add-detail">添加</button></div></details></div></section><label>就诊 / 记录日期<input type="date" name="occurred_on" value="${note?.occurred_on || today()}" required></label><label class="editor-tags">标签 <small>用逗号分隔</small><input name="tags" value="${esc(note?.tags.join("，") || "")}" placeholder="如：咳嗽，复诊，观察记录"></label><label class="full"><span id="editor-content-label">笔记正文</span><textarea name="content" rows="7" maxlength="50000" placeholder="输入笔记内容">${esc(note?.content || "")}</textarea></label><label class="full"><span id="editor-steps-label">记录条目</span> <small>每行一条</small><textarea name="steps" rows="5" placeholder="核对初诊记录&#10;整理处置过程&#10;回顾随访变化">${esc(note?.steps.join("\n") || "")}</textarea></label><div class="full learning-editor-tools"><button type="button" class="text-button" id="insert-outline">插入整理提纲</button><span>仅用于空白正文</span></div><div class="editor-files full"><div class="inline-row between"><h4>关联原始材料</h4><button type="button" class="text-button" id="editor-upload">＋ 上传材料</button></div><div id="editor-file-list"></div><div class="busy-text" id="editor-busy" hidden>正在上传和识别…</div></div>${note?.id ? "" : `<details class="full editor-files" id="organizer"><summary>从材料生成笔记</summary><p class="muted">批量添加原始材料，也可以粘贴零散文字。整理使用已配置的对话模型。</p><label>零散文字<textarea id="organizer-text" name="organizer_text" rows="4" maxlength="48000"></textarea></label><label>本次整理要求（可选）<input id="organizer-rule" name="organizer_rule" maxlength="1000" placeholder="例如按时间顺序记录"></label><label><input id="organizer-remember" type="checkbox" name="organizer_remember"> 保存后在同类笔记中复用这条要求</label><button id="organizer-run" class="secondary" type="button">生成草稿</button><p id="organizer-status" role="status"></p><div id="organizer-preview"></div></details>`}</div><p id="note-error" class="error" role="alert"></p><div class="form-actions"><button class="secondary" type="button" id="cancel-note">取消</button><button class="primary" id="save-note">保存笔记</button></div></form>`,
+    note?.id ? "编辑笔记" : referenceImport ? "上传已整理资料" : entry ? "导入材料并整理" : "新建笔记",
+    `<form id="note-form"><div class="form-grid"><label class="full">笔记标题<input name="title" value="${esc(note?.title || "")}" maxlength="160" placeholder="输入标题" required></label><fieldset class="full editor-types"><legend>资料类型 <small>可多选</small></legend><div class="editor-type-options">${catalogTypes().map((t)=>`<label><input type="checkbox" name="note_types" value="${esc(t.id)}" ${chosenTypes.includes(t.id)?"checked":""}><span>${esc(t.title)}</span></label>`).join("")}</div><div id="editor-type-summary" class="selection-preview"></div></fieldset><section class="full editor-details"><div class="detail-heading"><h4>专属信息 <small>选填</small></h4><span id="detail-progress"></span></div><div id="detail-fields"></div><div class="detail-footer"><div id="detail-more-slot"></div><details class="detail-custom"><summary><span class="detail-custom-plus" aria-hidden="true">＋</span>自定义字段</summary><div class="detail-add"><input id="detail-name" aria-label="自定义字段名称" maxlength="60" placeholder="如：职业、疗程、文献编号"><button type="button" class="text-button" id="add-detail">添加</button></div></details></div></section><label>就诊 / 记录日期<input type="date" name="occurred_on" value="${note?.occurred_on || today()}" required></label><label class="editor-tags">标签 <small>用逗号分隔</small><input name="tags" value="${esc(note?.tags.join("，") || "")}" placeholder="如：咳嗽，复诊，观察记录"></label><label class="full"><span id="editor-content-label">笔记正文</span><textarea name="content" rows="7" maxlength="50000" placeholder="输入笔记内容">${esc(note?.content || "")}</textarea></label><label class="full"><span id="editor-steps-label">记录条目</span> <small>每行一条</small><textarea name="steps" rows="5" placeholder="核对初诊记录&#10;整理处置过程&#10;回顾随访变化">${esc(note?.steps.join("\n") || "")}</textarea></label><div class="full learning-editor-tools"><button type="button" class="text-button" id="insert-outline">插入整理提纲</button><span>仅用于空白正文</span></div><div class="editor-files full"><div class="inline-row between"><h4>关联原始材料</h4><button type="button" class="text-button" id="editor-upload">＋ 上传材料</button></div><div id="editor-file-list"></div><div class="busy-text" id="editor-busy" hidden>正在上传和识别…</div></div>${note?.id || referenceImport ? "" : `<details class="full editor-files" id="organizer"><summary>从材料生成笔记</summary><p class="muted">批量添加原始材料，也可以粘贴零散文字。整理使用已配置的对话模型。</p><label>零散文字<textarea id="organizer-text" name="organizer_text" rows="4" maxlength="48000"></textarea></label><label>本次参考范本<select name="template_id" id="organizer-template"><option value="">自动选择默认范本</option><option value="builtin">内置范本</option></select></label><label>本次整理要求（可选）<input id="organizer-rule" name="organizer_rule" maxlength="1000" placeholder="例如按时间顺序记录"></label><label><input id="organizer-remember" type="checkbox" name="organizer_remember"> 保存后在同类笔记中复用这条要求</label><button id="organizer-run" class="secondary" type="button">生成草稿</button><p id="organizer-status" role="status"></p><div id="organizer-preview"></div></details>`}</div><p id="note-error" class="error" role="alert"></p><div class="form-actions"><button class="secondary" type="button" id="cancel-note">取消</button><button class="primary" id="save-note">保存笔记</button></div></form>`,
   );
   function drawFiles() {
     $("#editor-file-list").innerHTML = files.length
@@ -1463,7 +1528,12 @@ function editNote(note, entry) {
     );
   }
   drawFiles();
-  if (entry) {
+  if (referenceImport) {
+    const filesPanel = $("#editor-file-list").closest(".editor-files");
+    $("#note-form .form-grid").prepend(filesPanel);
+    $("#editor-upload").textContent = "＋ 选择已整理文件";
+    filesPanel.insertAdjacentHTML("afterbegin",'<p class="muted">保存为待确认的学习范本，再确认可复用的章节和写法。</p>');
+  } else if (entry) {
     const organizer = $("#organizer");
     const filesPanel = $("#editor-file-list").closest(".editor-files");
     organizer.open = true;
@@ -1482,6 +1552,19 @@ function editNote(note, entry) {
   }
   const editorTypeIDs=()=>$$('#note-form [name="note_types"]:checked').map((e)=>e.value);
   const editorType=()=>catalogTypes().find((t)=>t.id===editorTypeIDs()[0])||catalogTypes().find((t)=>t.id==="other");
+  let learningTemplates = [];
+  const templateSelect = $("#organizer-template");
+  function drawTemplateOptions() {
+    if (!templateSelect?.isConnected) return;
+    const previous = templateSelect.value;
+    const scope = editorType().id;
+    const matching = learningTemplates.filter((item)=>item.scope===scope||item.scope==="other");
+    const preferred = matching.find((item)=>item.scope===scope&&item.is_default) || matching.find((item)=>item.scope==="other"&&item.is_default);
+    templateSelect.replaceChildren(new Option(preferred ? "自动 · "+preferred.title : "自动 · 内置范本",""),new Option("内置范本","builtin"));
+    matching.forEach((item)=>templateSelect.add(new Option(item.title+" · 第 "+item.version+" 版",item.note_id)));
+    if ([...templateSelect.options].some((option)=>option.value===previous)) templateSelect.value=previous;
+  }
+  if (templateSelect) api("/learning-templates").then((data)=>{learningTemplates=data.items;drawTemplateOptions();}).catch((error)=>toast(error.message));
   const details = new Map(Object.entries(note?.details || {}));
   let visibleDetailNames = [], extraOpen = false;
   const knownDetailNames=new Set(Object.values(state.taxonomy?.detail_templates||{}).flat());
@@ -1528,7 +1611,7 @@ function editNote(note, entry) {
     $('.editor-details').oninput=detailProgress;detailProgress();
   }
   $('#add-detail').onclick=()=>{const input=$('#detail-name'),key=input.value.trim();if(!key)return toast('请输入字段名称');if(visibleDetailNames.includes(key))return toast('该字段已存在');if(details.size>=100)return toast('最多 100 个字段');captureDetails();details.set(key,'');customDetailNames.add(key);extraOpen=true;const extra=$('#detail-extra');if(extra)extra.open=true;input.value='';drawDetails();$$('.editor-details [data-detail]').at(-1)?.focus();$('#note-form').dispatchEvent(new Event('input',{bubbles:true}));};
-  function updateLabels(){drawDetails();const type=editorType();$('#editor-content-label').textContent=type.content_label;$('#editor-steps-label').textContent=type.steps_label;$('#editor-type-summary').textContent="已选："+editorTypeIDs().map((id)=>catalogTypes().find((t)=>t.id===id).title).join("、");}
+  function updateLabels(){drawDetails();drawTemplateOptions();const type=editorType();$('#editor-content-label').textContent=type.content_label;$('#editor-steps-label').textContent=type.steps_label;$('#editor-type-summary').textContent="已选："+editorTypeIDs().map((id)=>catalogTypes().find((t)=>t.id===id).title).join("、");}
   $$('#note-form [name="note_types"]').forEach((input)=>input.onchange=()=>{if(input.checked){if(input.value==="other")$$('#note-form [name="note_types"]').forEach((e)=>e.checked=e===input);else $('#note-form [name="note_types"][value="other"]').checked=false;}if(!editorTypeIDs().length)$('#note-form [name="note_types"][value="other"]').checked=true;updateLabels();});updateLabels();
   $("#insert-outline").onclick = () => {
     const input = $('#note-form [name="content"]');
@@ -1558,6 +1641,12 @@ function editNote(note, entry) {
   );
   const appendFiles = (uploaded) => {
     files.push(...uploaded);
+    if (referenceImport && uploaded.length) {
+      const form = $("#note-form");
+      if (!form.elements.title.value.trim()) form.elements.title.value = uploaded[0].filename.replace(/\.[^.]+$/, "").slice(0,160);
+      const content = uploaded.map((file)=>file.extracted_text?.trim()).filter(Boolean).join("\n\n");
+      if (!form.elements.content.value.trim() && content) form.elements.content.value=[...content].slice(0,50000).join("");
+    }
     drawFiles();
   };
   const organizerRun = $("#organizer-run");
@@ -1568,7 +1657,7 @@ function editNote(note, entry) {
     else $("#organizer-status").textContent = "请核对上传与识别结果，确认有可用文字后再生成草稿。";
   };
   uploadButton.onclick = () => {
-    if (!organizerRun?.disabled) chooseFiles("editor", appendFiles, entry ? afterImport : undefined);
+    if (!organizerRun?.disabled) chooseFiles("editor", appendFiles, entry && !referenceImport ? afterImport : undefined);
   };
   if (organizerRun) organizerRun.onclick = async () => {
     if (state.busy) return toast("请等待材料上传完成");
@@ -1580,6 +1669,7 @@ function editNote(note, entry) {
       attachment_ids: files.map((file) => file.id),
       text: $("#organizer-text").value,
       rule: $("#organizer-rule").value,
+      template_id: templateSelect.value,
     };
     organizerRun.disabled = true;
     uploadButton.disabled = true;
@@ -1592,7 +1682,8 @@ function editNote(note, entry) {
       const issues = [...(draft.warnings || [])];
       if (draft.missing?.length) issues.push("缺少资料：" + draft.missing.join("、"));
       preview.innerHTML = `
-        <h4>${esc(draft.title)}</h4>
+        <h4>${esc(draft.title)} <small>待核对</small></h4>
+        ${templateUsed(draft.template_reference)}
         ${organizedBody(draft.body_blocks, draft.content, files)}
         ${draft.parts?.length ? `<p>标准部位 · ${esc(draft.parts.join("、"))}</p>` : ""}
         ${issues.map((issue) => `<p class="muted">${esc(issue)}</p>`).join("")}
@@ -1600,7 +1691,7 @@ function editNote(note, entry) {
       $("#organizer-apply").onclick = () => {
         if (editorType().id !== request.note_type ||
             files.map((file) => file.id).join(",") !== request.attachment_ids.join(",") ||
-            $("#organizer-text").value !== request.text || $("#organizer-rule").value !== request.rule) {
+            $("#organizer-text").value !== request.text || $("#organizer-rule").value !== request.rule || templateSelect.value !== request.template_id) {
           return toast("类型、材料或整理要求已改变，请重新生成");
         }
         const title = form.elements.title;
@@ -1630,7 +1721,7 @@ function editNote(note, entry) {
     }
   };
   bindDraft($("#note-form"), () => files.map((f) => f.id).join(","));
-  if (entry === "pick") {
+  if (entry === "pick" || referenceImport) {
     uploadButton.focus({ preventScroll: true });
     uploadButton.click();
   }
@@ -1682,21 +1773,27 @@ function editNote(note, entry) {
       };
       if (appliedDraft) {
         if (appliedDraft.request.note_type !== editorType().id ||
-            data.attachment_ids.join(",") !== appliedDraft.request.attachment_ids.join(",")) {
+            data.attachment_ids.join(",") !== appliedDraft.request.attachment_ids.join(",") ||
+            templateSelect.value !== appliedDraft.request.template_id) {
           throw new Error("资料类型或材料有变化，请重新生成并应用草稿");
         }
         data.organizer_draft_id = appliedDraft.id;
         data.remember_organizer_rule = $("#organizer-remember").checked &&
           $("#organizer-rule").value === appliedDraft.request.rule;
       }
-      await api("/notes" + (note?.id ? "/" + note.id : ""), {
+      if (referenceImport) {
+        if (!data.content.trim()) throw new Error("请提供可阅读的成品正文");
+        data.library_role = "reference";
+      }
+      const savedNote = await api("/notes" + (note?.id ? "/" + note.id : ""), {
         method: note?.id ? "PUT" : "POST",
         body: data,
       });
       closeDialog(true);
       state.results = null;
       await navigate(state.view);
-      toast("笔记已保存");
+      toast(referenceImport ? "已保存为待确认范本" : "笔记已保存");
+      if (referenceImport) await editLearning(savedNote);
     } catch (e) {
       $("#note-error").textContent = e.message;
     } finally {

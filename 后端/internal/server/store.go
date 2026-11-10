@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unicode"
 )
@@ -19,12 +20,13 @@ import (
 var schema string
 
 type App struct {
-	DB               *sql.DB
-	Config           Config
-	Client           HTTPDoer
-	aiSettingsMu     sync.Mutex
-	imageVisionMu    sync.Mutex
-	imageVisionSlots chan struct{}
+	DB                 *sql.DB
+	Config             Config
+	Client             HTTPDoer
+	aiSettingsMu       sync.Mutex
+	imageVisionMu      sync.Mutex
+	imageVisionSlots   chan struct{}
+	localOrganizerBusy atomic.Bool
 }
 
 func New(c Config) (*App, error) {
@@ -107,6 +109,7 @@ func ownedNote(q queryer, id string, userID int64, lock bool) Note {
 		n.Attachments = append(n.Attachments, a)
 	}
 	check(rows.Err())
+	rows.Close()
 	n.Details = map[string]string{}
 	var rawDetails string
 	detailErr := q.QueryRow("SELECT fields FROM note_details WHERE note_id=?", id).Scan(&rawDetails)
@@ -114,6 +117,7 @@ func ownedNote(q queryer, id string, userID int64, lock bool) Note {
 		check(detailErr)
 		check(jsonUnmarshal(rawDetails, &n.Details))
 	}
+	n.Learning = loadLearningMeta(q, n)
 	n.Version = digest(jsonText(n))
 	return n
 }
@@ -188,9 +192,27 @@ func (a *App) saveNote(tx *sql.Tx, in NoteInput, id string, userID int64, isNew 
 		check(err)
 	}
 	writeNoteTypes(tx, id, selected)
+	if in.LibraryRole != "" {
+		if !isNew || (in.LibraryRole != "reference" && in.LibraryRole != "raw") || in.OrganizerDraftID != "" {
+			fail(422, "请选择有效的新资料用途")
+		}
+		if in.LibraryRole == "reference" && strings.TrimSpace(in.Content) == "" {
+			fail(422, "学习范本需要可阅读的成品正文")
+		}
+		writeLearningMeta(tx, id, learningMeta{Role: in.LibraryRole, Revision: 1})
+	}
+	if !isNew && selected[0] != current.NoteType && current.Learning.Version > 0 {
+		meta := current.Learning
+		meta.Revision++
+		meta.Enabled, meta.Default = false, false
+		writeLearningMeta(tx, id, meta)
+	}
 	reindex(tx, id, userID)
 	note := ownedNote(tx, id, userID, false)
 	a.confirmOrganizerDraft(tx, in, note, userID)
+	if in.OrganizerDraftID != "" {
+		note = ownedNote(tx, id, userID, false)
+	}
 	return note
 }
 func unique(in []string) []string {

@@ -30,25 +30,28 @@ type Attachment struct {
 	ExtractionError *string `json:"extraction_error,omitempty"`
 }
 type Note struct {
-	BodyBlocks     []organizerBlock  `json:"body_blocks,omitempty"`
-	Details        map[string]string `json:"details"`
-	NoteType       string            `json:"note_type"`
-	NoteTypes      []string          `json:"note_types"`
-	SearchMatch    *SearchEvidence   `json:"search_match,omitempty"`
-	Version        string            `json:"version"`
-	ID             string            `json:"id"`
-	Title          string            `json:"title"`
-	Category       string            `json:"category"`
-	Tags           []string          `json:"tags"`
-	Content        string            `json:"content"`
-	Steps          []string          `json:"steps"`
-	OccurredOn     string            `json:"occurred_on"`
-	CreatedAt      string            `json:"created_at"`
-	UpdatedAt      string            `json:"updated_at"`
-	Attachments    []Attachment      `json:"attachments"`
-	AttachmentText string            `json:"attachment_text,omitempty"`
+	Learning          learningMeta       `json:"learning"`
+	TemplateReference *learningReference `json:"template_reference,omitempty"`
+	BodyBlocks        []organizerBlock   `json:"body_blocks,omitempty"`
+	Details           map[string]string  `json:"details"`
+	NoteType          string             `json:"note_type"`
+	NoteTypes         []string           `json:"note_types"`
+	SearchMatch       *SearchEvidence    `json:"search_match,omitempty"`
+	Version           string             `json:"version"`
+	ID                string             `json:"id"`
+	Title             string             `json:"title"`
+	Category          string             `json:"category"`
+	Tags              []string           `json:"tags"`
+	Content           string             `json:"content"`
+	Steps             []string           `json:"steps"`
+	OccurredOn        string             `json:"occurred_on"`
+	CreatedAt         string             `json:"created_at"`
+	UpdatedAt         string             `json:"updated_at"`
+	Attachments       []Attachment       `json:"attachments"`
+	AttachmentText    string             `json:"attachment_text,omitempty"`
 }
 type NoteInput struct {
+	LibraryRole           string            `json:"library_role,omitempty"`
 	OrganizerDraftID      string            `json:"organizer_draft_id,omitempty"`
 	RememberOrganizerRule bool              `json:"remember_organizer_rule,omitempty"`
 	Details               map[string]string `json:"details"`

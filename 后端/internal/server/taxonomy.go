@@ -414,6 +414,7 @@ func writeNoteTypes(tx *sql.Tx, id string, ids []string) {
 }
 
 type noteFilter struct {
+	LibraryRole   string
 	Type, Tag     string
 	TypeIDs, Tags []string
 	Types         []NoteType

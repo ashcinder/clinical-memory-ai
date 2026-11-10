@@ -101,3 +101,30 @@ CREATE TABLE IF NOT EXISTS note_body_parts (
  PRIMARY KEY(note_id,part_id), INDEX part_notes(part_id,note_id),
  FOREIGN KEY(note_id) REFERENCES notes(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS note_learning (
+ note_id CHAR(32) CHARACTER SET ascii PRIMARY KEY,
+ role VARCHAR(16) CHARACTER SET ascii NOT NULL,
+ scope VARCHAR(64) CHARACTER SET ascii NOT NULL DEFAULT '',
+ revision INT NOT NULL, template_version INT NOT NULL DEFAULT 0,
+ enabled BOOLEAN NOT NULL DEFAULT FALSE,
+ default_scope VARCHAR(64) CHARACTER SET ascii UNIQUE,
+ FOREIGN KEY(note_id) REFERENCES notes(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS note_learning_versions (
+ note_id CHAR(32) CHARACTER SET ascii NOT NULL, version INT NOT NULL,
+ scope VARCHAR(64) CHARACTER SET ascii NOT NULL, profile JSON NOT NULL,
+ PRIMARY KEY(note_id,version),
+ FOREIGN KEY(note_id) REFERENCES notes(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- Preserve the explicitly labelled legacy imports as candidates or raw records.
+-- Rows changed by the user take precedence over those historical labels.
+INSERT IGNORE INTO note_learning(note_id,role,revision)
+SELECT id, CASE WHEN title LIKE '已整理｜%' THEN 'reference' ELSE 'raw' END, 1
+FROM notes WHERE
+ (title LIKE '已整理｜%' AND JSON_CONTAINS(tags,JSON_QUOTE('已整理'))) OR
+ (title LIKE '原始材料｜%' AND JSON_CONTAINS(tags,JSON_QUOTE('原始材料'))) OR
+ (title LIKE '原始转写｜%' AND JSON_CONTAINS(tags,JSON_QUOTE('原始转写')));

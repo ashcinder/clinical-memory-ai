@@ -4392,3 +4392,10 @@ main[data-view="notes"] .retrieval-filter-panel { margin-top:0; }
 .organized-sources summary { cursor: pointer; width: fit-content; padding: .3rem 0; color: #22665c; }
 .organized-source { border-left: 2px solid #d4e3df; margin: .3rem 0 .6rem; padding-left: .65rem; overflow-wrap: anywhere; }
 .organized-source blockquote { margin: .25rem 0 0; white-space: pre-wrap; line-height: 1.55; }
+
+.library-roles { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0; }
+.library-roles [aria-pressed="true"] { border-color: #22665c; color: #22665c; background: #e8f2ee; }
+.learning-badge { display: inline-block; border-radius: .3rem; padding: .18rem .4rem; font-size: .75rem; color: #43575a; background: #eef2f3; }
+.learning-badge[data-role="reference"] { background: #e8f2ee; color: #22665c; }
+.template-used { font-size: .86rem; color: #526f6b; overflow-wrap: anywhere; }
+#learning-form { display: grid; gap: .65rem; }

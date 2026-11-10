@@ -135,3 +135,32 @@ func TestOrganizerBodyKeepsMediaWithSupportedParagraph(t *testing.T) {
 		t.Fatalf("old citations are not displayed inline: %+v", old)
 	}
 }
+
+func TestOrganizerProcedurePhotoUsesTreatmentSectionOnSameDate(t *testing.T) {
+	files := []Attachment{{ID: "photo", MIME: "image/jpeg", Filename: "图2_超声引导操作.jpg"}}
+	sources := []organizerSource{
+		{Name: "原件", Text: "2026-11-08 查体记录。\n2026-11-08 进行了注射。\n2026-11-08 注射操作对应图2。"},
+		{Name: files[0].Filename, AttachmentID: files[0].ID},
+	}
+	draft := organizerDraft{Content: "【初诊检查】\n查体完成。\n\n【初诊处置】\n实施注射。", Evidence: []organizerItem{
+		{Section: "初诊检查", Text: "查体完成。", Source: 1, Quote: "2026-11-08 查体记录。", Media: []int{2}},
+		{Section: "初诊处置", Text: "实施注射。", Source: 1, Quote: "进行了注射。"},
+	}}
+	body := organizerBody(draft.Content, draft, sources, files)
+	if len(body[1].Media) != 0 || !contains(body[3].Media, "photo") {
+		t.Fatalf("the image must follow the procedure: %+v", body)
+	}
+}
+
+func TestOrganizerRestoresWhitespaceInExactQuotation(t *testing.T) {
+	sources := []organizerSource{{Text: "接诊登记。\n日期为 2026-11-08。\n初诊已完成检查。\n处置,进行注射；图2。"}}
+	if got := organizerVerbatimQuote(sources, 1, "日期为2026-11-08。初诊已完成检查。"); got != "日期为 2026-11-08。\n初诊已完成检查。" {
+		t.Fatalf("quote did not return the original source span: %q", got)
+	}
+	if got := organizerVerbatimQuote(sources, 1, "处置，进行注射；图 2。"); got != "处置,进行注射；图2。" {
+		t.Fatalf("CSV punctuation was not restored: %q", got)
+	}
+	if got := organizerVerbatimQuote(sources, 1, "初诊未完成检查。"); got != "" {
+		t.Fatal("changed clinical meaning was incorrectly accepted")
+	}
+}

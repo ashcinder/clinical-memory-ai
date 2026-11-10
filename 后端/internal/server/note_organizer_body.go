@@ -80,7 +80,29 @@ func organizerFigureDates(sources []organizerSource) map[string][]string {
 	return dates
 }
 
-func organizerMediaMatches(filename string, refs []organizerReference, figureDates map[string][]string) bool {
+// Recover the date or figure printed on the same source line when the model
+// cites only a short phrase. Never extend an ambiguous or repeated quotation.
+func organizerMediaContexts(sources []organizerSource, refs []organizerReference) []organizerReference {
+	contexts := append([]organizerReference(nil), refs...)
+	for _, ref := range refs {
+		if !validOrganizerQuote(sources, ref.Source, ref.Quote) || strings.Contains(ref.Quote, "\n") {
+			continue
+		}
+		source := sources[ref.Source-1].Text
+		if strings.Count(source, ref.Quote) != 1 {
+			continue
+		}
+		start := strings.Index(source, ref.Quote)
+		left := strings.LastIndexByte(source[:start], '\n') + 1
+		line, _, _ := strings.Cut(source[left:], "\n")
+		if line != ref.Quote && len([]rune(line)) <= 600 {
+			contexts = append(contexts, organizerReference{ref.Source, line})
+		}
+	}
+	return contexts
+}
+
+func organizerMediaEvidence(filename string, refs []organizerReference, figureDates map[string][]string) (sameDate, sameFigure bool) {
 	dates := organizerDates(filename)
 	figure := organizerFigureName.FindStringSubmatch(filename)
 	if len(dates) == 0 && len(figure) > 0 {
@@ -88,11 +110,25 @@ func organizerMediaMatches(filename string, refs []organizerReference, figureDat
 	}
 	for _, ref := range refs {
 		mentioned := organizerDates(ref.Quote)
-		if len(dates) == 1 && len(mentioned) == 1 && mentioned[0] == dates[0] {
+		sameDate = sameDate || (len(dates) == 1 && len(mentioned) == 1 && mentioned[0] == dates[0])
+		figures := unique(organizerFigureRef.FindAllString(ref.Quote, -1))
+		sameFigure = sameFigure || (len(figure) > 0 && len(figures) == 1 && figures[0] == figure[1])
+	}
+	return sameDate, sameFigure
+}
+
+func organizerProcedureImage(filename string) bool {
+	for _, token := range []string{"操作", "注射", "手术", "术中", "处置"} {
+		if strings.Contains(filename, token) {
 			return true
 		}
-		figures := unique(organizerFigureRef.FindAllString(ref.Quote, -1))
-		if len(figure) > 0 && len(figures) == 1 && figures[0] == figure[1] {
+	}
+	return false
+}
+
+func organizerProcedureSection(section string) bool {
+	for _, token := range []string{"处置", "操作", "干预", "治疗情况概述", "处理经过"} {
+		if strings.Contains(section, token) {
 			return true
 		}
 	}
@@ -170,13 +206,14 @@ func organizerBody(content string, draft organizerDraft, sources []organizerSour
 				}
 				block.Citations = append(block.Citations, organizerCitation{source.Name, ref.Quote, source.AttachmentID})
 			}
+			evidence.refs = organizerMediaContexts(sources, evidence.refs)
 			placements[len(blocks)] = evidence
 		}
 		blocks = append(blocks, block)
 	}
 	placed := map[string]bool{}
 	figureDates := organizerFigureDates(sources)
-	addMedia := func(block *organizerBlock, index int, evidence supported, explicit bool) {
+	addMedia := func(index, requested int, explicit bool) {
 		if index < 1 || index > len(sources) {
 			return
 		}
@@ -184,27 +221,58 @@ func organizerBody(content string, draft organizerDraft, sources []organizerSour
 		if !organizerMedia(file.MIME) || placed[file.ID] {
 			return
 		}
-		cited := false
-		for _, cite := range block.Citations {
-			cited = cited || cite.AttachmentID == file.ID
+		best, bestScore, ambiguous := -1, 0, false
+		procedure := strings.HasPrefix(file.MIME, "image/") && organizerProcedureImage(file.Filename)
+		for i := range blocks {
+			evidence, ok := placements[i]
+			if !ok {
+				continue
+			}
+			date, figure := organizerMediaEvidence(file.Filename, evidence.refs, figureDates)
+			score := 0
+			switch {
+			case procedure && organizerProcedureSection(evidence.item.Section) && (figure || date):
+				score = 5
+			case figure:
+				score = 4
+			case explicit && i == requested && date && !procedure:
+				score = 1
+			}
+			for _, cite := range blocks[i].Citations {
+				if cite.AttachmentID == file.ID {
+					score = 6
+					break
+				}
+			}
+			if score == 0 {
+				continue
+			}
+			if score > bestScore || (score == bestScore && i == requested && explicit) {
+				best, bestScore, ambiguous = i, score, false
+			} else if score == bestScore && (!explicit || best != requested) {
+				ambiguous = true
+			}
 		}
-		if !cited && (!explicit || !organizerMediaMatches(file.Filename, evidence.refs, figureDates)) {
-			return
+		if best >= 0 && !ambiguous {
+			blocks[best].Media = append(blocks[best].Media, file.ID)
+			placed[file.ID] = true
 		}
-		block.Media = append(block.Media, file.ID)
-		placed[file.ID] = true
 	}
 	for i := range blocks {
-		evidence := placements[i]
-		for _, index := range evidence.item.Media {
-			addMedia(&blocks[i], index, evidence, true)
+		for _, index := range placements[i].item.Media {
+			addMedia(index, i, true)
 		}
 	}
 	for i := range blocks {
-		evidence := placements[i]
-		for _, ref := range evidence.refs {
-			addMedia(&blocks[i], ref.Source, evidence, false)
+		for _, ref := range placements[i].refs {
+			addMedia(ref.Source, i, false)
 		}
 	}
+	for i, source := range sources {
+		if strings.HasPrefix(attached[source.AttachmentID].MIME, "image/") {
+			addMedia(i+1, -1, false)
+		}
+	}
+
 	return blocks
 }

@@ -78,6 +78,9 @@ public final class MainActivity extends Activity {
  private final List<String> searchCategories=new ArrayList<>(),searchTags=new ArrayList<>(),browseTypes=new ArrayList<>(),browseTags=new ArrayList<>(),searchScopes=new ArrayList<>(),scopeTags=new ArrayList<>();
  private String completedScopeSummary="";
  private String settingsSection="account";
+ private String browseLibraryRole="";
+ private static final String[] LIBRARY_ROLES={"","reference","raw","generated","note"};
+ private static final String[] LIBRARY_LABELS={"全部用途","学习范本","原始材料","生成笔记","普通笔记"};
     private JSONObject lastSearch=null;
     private JSONObject detailTemplates=new JSONObject(),detailFieldSpecs=new JSONObject(),detailPrimaryFields=new JSONObject();
     private JSONArray learningTypes=LearningCatalog.defaults(),learningTags=new JSONArray();
@@ -170,7 +173,7 @@ public final class MainActivity extends Activity {
         });
     }
     private LinearLayout scrollRoot(){ScrollView scroll=new ScrollView(this);scroll.setFillViewport(true);LinearLayout root=column();root.setPadding(dp(22),dp(26),dp(22),dp(30));scroll.addView(root);setContentView(scroll);return root;}
-    private void showAuth(){searchScopes.clear();scopeTags.clear();completedScopeSummary="";lastSearch=null;searchDraft="";chatDraft="";completedSearchQuery="";searchTags.clear();browseTypes.clear();browseTags.clear();queryFiles.clear();chatFiles.clear();chatMessages.clear();conversationId=null;recallNoteId="";settingsDirty=false;syncVersion="";
+    private void showAuth(){searchScopes.clear();scopeTags.clear();completedScopeSummary="";lastSearch=null;searchDraft="";chatDraft="";completedSearchQuery="";searchTags.clear();browseTypes.clear();browseTags.clear();browseLibraryRole="";queryFiles.clear();chatFiles.clear();chatMessages.clear();conversationId=null;recallNoteId="";settingsDirty=false;syncVersion="";
         LinearLayout root=scrollRoot();root.setBackgroundColor(canvas);
         LinearLayout brand=row();LinearLayout.LayoutParams brandGap=new LinearLayout.LayoutParams(-1,-2);brandGap.bottomMargin=dp(28);root.addView(brand,brandGap);
         TextView mark=chip("临",teal,mint);mark.setTextSize(21);mark.setGravity(Gravity.CENTER);mark.setPadding(0,0,0,0);brand.addView(mark,new LinearLayout.LayoutParams(dp(46),dp(46)));
@@ -210,7 +213,7 @@ public final class MainActivity extends Activity {
         for(String item:Arrays.asList("检索","笔记","穴位","材料","对话","设置")){
             boolean active=screen.equals(item);LinearLayout tab=column();tab.setGravity(Gravity.CENTER);tab.setPadding(0,dp(3),0,dp(3));tab.setBackground(new RippleDrawable(ColorStateList.valueOf(mint),bg(Color.WHITE,10,null),null));
             LinearLayout iconPill=row();iconPill.setGravity(Gravity.CENTER);iconPill.setBackground(bg(active?mint:Color.WHITE,11,null));LineIcon icon=new LineIcon(this,item,active?teal:muted);iconPill.addView(icon,new LinearLayout.LayoutParams(dp(22),dp(22)));tab.addView(iconPill,new LinearLayout.LayoutParams(dp(48),dp(30)));
-            TextView label=new TextView(this);label.setText("笔记".equals(item)?"学习资料":item);label.setGravity(Gravity.CENTER);label.setTextSize(10.5f);label.setTextColor(active?teal:muted);label.setTypeface(null,active?Typeface.BOLD:Typeface.NORMAL);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.topMargin=dp(3);tab.addView(label,lp);
+            TextView label=new TextView(this);label.setText("笔记".equals(item)?"资料库":item);label.setGravity(Gravity.CENTER);label.setTextSize(10.5f);label.setTextColor(active?teal:muted);label.setTypeface(null,active?Typeface.BOLD:Typeface.NORMAL);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.topMargin=dp(3);tab.addView(label,lp);
             tab.setContentDescription(item);tab.setClickable(true);tab.setFocusable(true);tab.setOnClickListener(v->{if(working)toast("请等待当前操作完成");else navigateScreen(item);});
             LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(58),1);p.setMarginStart(dp(2));p.setMarginEnd(dp(2));nav.addView(tab,p);
         }
@@ -385,7 +388,7 @@ public final class MainActivity extends Activity {
         if(notes.length()==0){LinearLayout empty=card(parent);text(empty,"还没有找到相关记录",15,ink,true);text(empty,"试试其他关键词，或先保存一篇笔记。",12,muted,false);return;}
         for(JSONObject note:objects(notes)){
             LinearLayout c=card(parent);LinearLayout top=row();TextView tag=chip(typeNames(note),muted,Color.WHITE);tag.setPadding(0,0,0,0);top.addView(tag,new LinearLayout.LayoutParams(0,-2,1));TextView date=new TextView(this);date.setText(str(note,"occurred_on"));date.setTextColor(muted);date.setTextSize(11);date.setGravity(Gravity.END|Gravity.CENTER_VERTICAL);top.addView(date,new LinearLayout.LayoutParams(-2,-2));LinearLayout.LayoutParams meta=new LinearLayout.LayoutParams(-1,-2);meta.bottomMargin=dp(10);c.addView(top,meta);
-            text(c,str(note,"title"),18,ink,true);String content=str(note,"content");TextView excerpt=text(c,content.isEmpty()?"打开查看治疗步骤与材料":cut(content,120),13,muted,false);excerpt.setMaxLines(2);excerpt.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            text(c,str(note,"title"),18,ink,true);String role=libraryLabel(note);if(!role.isEmpty())text(c,role,11,teal,true);String content=str(note,"content");TextView excerpt=text(c,content.isEmpty()?"打开查看治疗步骤与材料":cut(content,120),13,muted,false);excerpt.setMaxLines(2);excerpt.setEllipsize(android.text.TextUtils.TruncateAt.END);
             View divider=new View(this);divider.setBackgroundColor(border);LinearLayout.LayoutParams line=new LinearLayout.LayoutParams(-1,dp(1));line.topMargin=dp(3);line.bottomMargin=dp(12);c.addView(divider,line);
             TextView foot=text(c,array(note,"steps").length()+" 个步骤  ·  "+array(note,"attachments").length()+" 份材料",11,muted,false);((LinearLayout.LayoutParams)foot.getLayoutParams()).bottomMargin=0;
             c.setFocusable(true);c.setClickable(true);c.setContentDescription("打开笔记："+str(note,"title"));c.setOnClickListener(v->showNote(id(note)));
@@ -412,10 +415,17 @@ public final class MainActivity extends Activity {
     }
     private void notesScreen(){
         body.setPadding(dp(20),dp(12),dp(20),dp(24));
-        pageHeading("学习资料","按用途整理笔记，以标签连接同一主题。");
-        work(()->{loadLearningCatalog();return (JSONObject)api.request("/notes?limit=100"+filterURL(browseTypes,browseTags));},data->{
-            LinearLayout controls=row();Button type=button("资料类型："+(browseTypes.isEmpty()?"全部":browseTypes.size()+" 项"),false,()->chooseTypes(browseTypes,selected->{replace(browseTypes,selected);showScreen("笔记");}));type.setTextSize(12);controls.addView(type,new LinearLayout.LayoutParams(0,dp(44),1));Button tag=button("标签："+(browseTags.isEmpty()?"全部":browseTags.size()+" 项"),false,()->chooseTags(null,browseTags,selected->{replace(browseTags,selected);showScreen("笔记");}));tag.setTextSize(12);controls.addView(tag,new LinearLayout.LayoutParams(0,dp(44),1));body.addView(controls);selectedFilters(body,browseTypes,browseTags,()->showScreen("笔记"));addButton(body,"管理分类与标签",this::showTaxonomyManager);sectionLabel(body,"资料列表",data.optInt("total")+" 篇");LinearLayout results=column();body.addView(results);listNotes(results,array(data,"items"));int[] offset={array(data,"items").length()};Button more=button("加载更多资料",false,()->{});more.setVisibility(offset[0]<data.optInt("total")?View.VISIBLE:View.GONE);more.setOnClickListener(v->work(()->(JSONObject)api.request("/notes?offset="+offset[0]+filterURL(browseTypes,browseTags)),next->{JSONArray items=array(next,"items");listNotes(results,items);offset[0]+=items.length();more.setVisibility(offset[0]<next.optInt("total")?View.VISIBLE:View.GONE);}));body.addView(more);
-            if(data.optInt("total")==0)addButton(results,"新建学习资料",true,()->editNote(null,null));
+        pageHeading("资料库","按用途筛选范本、原始材料和笔记。");
+        addButton(body,"上传已整理资料",true,()->openOrganizer("reference"));
+        int roleIndex=Arrays.asList(LIBRARY_ROLES).indexOf(browseLibraryRole);
+        addButton(body,"资料用途 · "+LIBRARY_LABELS[Math.max(0,roleIndex)],()->new AlertDialog.Builder(this)
+                .setTitle("资料用途").setSingleChoiceItems(LIBRARY_LABELS,roleIndex,(d,which)->{
+                    browseLibraryRole=LIBRARY_ROLES[which];d.dismiss();showScreen("笔记");
+                }).setNegativeButton("取消",null).show());
+        String roleFilter=browseLibraryRole.isEmpty()?"":"&library_role="+browseLibraryRole;
+        work(()->{loadLearningCatalog();return (JSONObject)api.request("/notes?limit=100"+filterURL(browseTypes,browseTags)+roleFilter);},data->{
+            LinearLayout controls=row();Button type=button("资料类型："+(browseTypes.isEmpty()?"全部":browseTypes.size()+" 项"),false,()->chooseTypes(browseTypes,selected->{replace(browseTypes,selected);showScreen("笔记");}));type.setTextSize(12);controls.addView(type,new LinearLayout.LayoutParams(0,dp(44),1));Button tag=button("标签："+(browseTags.isEmpty()?"全部":browseTags.size()+" 项"),false,()->chooseTags(null,browseTags,selected->{replace(browseTags,selected);showScreen("笔记");}));tag.setTextSize(12);controls.addView(tag,new LinearLayout.LayoutParams(0,dp(44),1));body.addView(controls);selectedFilters(body,browseTypes,browseTags,()->showScreen("笔记"));addButton(body,"管理分类与标签",this::showTaxonomyManager);sectionLabel(body,"资料列表",data.optInt("total")+" 篇");LinearLayout results=column();body.addView(results);listNotes(results,array(data,"items"));int[] offset={array(data,"items").length()};Button more=button("加载更多资料",false,()->{});more.setVisibility(offset[0]<data.optInt("total")?View.VISIBLE:View.GONE);more.setOnClickListener(v->work(()->(JSONObject)api.request("/notes?offset="+offset[0]+filterURL(browseTypes,browseTags)+roleFilter),next->{JSONArray items=array(next,"items");listNotes(results,items);offset[0]+=items.length();more.setVisibility(offset[0]<next.optInt("total")?View.VISIBLE:View.GONE);}));body.addView(more);
+            if(data.optInt("total")==0)addButton(results,"新建笔记",true,()->editNote(null,null));
         });
     }
     private final class GuardedDialog extends Dialog {
@@ -439,6 +449,12 @@ public final class MainActivity extends Activity {
     private void navigateScreen(String target){if(screen.equals(target))return;if(anatomyWeb!=null){anatomyWeb.evaluateJavascript("document.querySelector('#atlas-root')?.dataset.dirty === 'true'",value->{if("true".equals(value))new AlertDialog.Builder(this).setMessage("有未保存的图谱修改，确定放弃吗？").setNegativeButton("继续编辑",null).setPositiveButton("放弃修改",(d,w)->showScreen(target)).show();else showScreen(target);});return;}if("对话".equals(screen)){EditText draft=body.findViewWithTag("chat-input");if(draft!=null)chatDraft=draft.getText().toString();}if(settingsDirty){new AlertDialog.Builder(this).setTitle("设置尚未保存").setMessage("保存后才能在其他设备使用，是否放弃修改？").setNegativeButton("继续编辑",null).setPositiveButton("放弃修改",(d,w)->showScreen(target)).show();}else showScreen(target);}
     private void showNote(String noteId){work(()->(JSONObject)api.request("/notes/"+noteId),note->{
         Panel p=panel("完整记录");LinearLayout root=p.root;text(root,typeNames(note)+"  ·  "+str(note,"occurred_on"),11,teal,false);text(root,str(note,"title"),23,ink,true);text(root,String.join("  ·  ",strings(array(note,"tags"))),11,muted,false);
+        String role=libraryLabel(note);
+        if(!role.isEmpty()){
+            text(root,role,12,teal,true);
+            addButton(root,"reference".equals(str(note.optJSONObject("learning"),"role"))?"管理学习范本":"设置资料用途",()->{p.dialog.dismiss();editLearning(note);});
+        }
+        showTemplateReference(root,note.optJSONObject("template_reference"));
         JSONObject details=note.optJSONObject("details");if(details!=null&&details.length()>0){sectionLabel(root,"专属信息","");java.util.Iterator<String> keys=details.keys();while(keys.hasNext()){String key=keys.next();text(root,key,12,teal,true);TextView value=text(root,details.optString(key),15,ink,false);value.setTextIsSelectable(true);}}
         JSONArray files=array(note,"attachments"),blocks=array(note,"body_blocks"),steps=array(note,"steps");
         if(blocks.length()==0)sectionLabel(root,str(learningType(note),"content_label"),"");
@@ -458,6 +474,87 @@ public final class MainActivity extends Activity {
         divider(root,15,15);addButton(root,"编辑笔记",true,()->{p.dialog.dismiss();editNote(note,null);});addButton(root,"回顾这篇记录",()->startNoteRecall(note,p));
         Button delete=addButton(root,"删除笔记",()->new AlertDialog.Builder(this).setTitle("删除笔记？").setMessage("所有账户都将无法查看这篇笔记；原件保留。").setNegativeButton("取消",null).setPositiveButton("删除",(d,w)->work(()->api.request("/notes/"+noteId,"DELETE"),v->{lastSearch=null;p.dialog.dismiss();showScreen(screen);})).show());delete.setTextColor(Color.rgb(164,80,67));
     });}
+    private String libraryLabel(JSONObject note){
+        JSONObject meta=note.optJSONObject("learning");
+        if(meta==null)return "";
+        String role=str(meta,"role");
+        if("reference".equals(role)){
+            if(meta.optBoolean("is_default"))return "学习范本 · 默认";
+            if(meta.optBoolean("enabled"))return "学习范本 · 已启用";
+            return meta.optInt("template_version")>0?"学习范本 · 已停用":"学习范本 · 待确认";
+        }
+        if("generated".equals(role))return "生成笔记 · 已确认";
+        int i=Arrays.asList(LIBRARY_ROLES).indexOf(role);
+        return i>0?LIBRARY_LABELS[i]:"";
+    }
+
+    private void showTemplateReference(LinearLayout root,JSONObject ref){
+        if(ref!=null)text(root,"本次参考 "+str(ref,"title")+" · 第 "+ref.optInt("version")+" 版",12,teal,false);
+    }
+
+    private void editLearning(JSONObject note){
+        String path="/notes/"+id(note)+"/learning";
+        work(()->(JSONObject)api.request(path),data->{
+            Panel p=panel("资料用途与范本");
+            text(p.root,str(note,"title"),17,ink,true);
+            text(p.root,"只保存可复用的章节、规则和脱敏短例。",12,muted,false);
+            JSONObject meta=data.optJSONObject("learning"),profile=data.optJSONObject("profile");
+            String originalSections=String.join("\n",strings(array(profile,"sections")));
+            EditText sections=input(p.root,"章节顺序（每行一个）",originalSections,true);
+            EditText rules=input(p.root,"范本规则",str(profile,"rules"),true);
+            EditText example=input(p.root,"脱敏短例（选填）",str(profile,"example"),true);
+            rules.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(4000)});
+            example.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(1000)});
+            CheckBox makeDefault=new CheckBox(this);
+            makeDefault.setText("设为当前资料类型的默认范本");
+            boolean initialDefault=meta.optBoolean("is_default")||meta.optInt("template_version")==0;
+            makeDefault.setChecked(initialDefault);
+            p.root.addView(makeDefault);
+            p.dialog.dirty=()->!sections.getText().toString().equals(originalSections)
+                    ||!rules.getText().toString().equals(str(profile,"rules"))
+                    ||!example.getText().toString().equals(str(profile,"example"))
+                    ||makeDefault.isChecked()!=initialDefault;
+            java.util.function.BiConsumer<String,Integer> save=(action,version)->{
+                JSONObject payload=obj("action",action,"revision",meta.optInt("revision"),"is_default",makeDefault.isChecked());
+                if("approve".equals(action))put(payload,"profile",obj("sections",array(split(sections.getText().toString(),"\n")),
+                        "rules",rules.getText().toString(),"example",example.getText().toString()));
+                if("restore".equals(action))put(payload,"restore_version",version);
+                work(()->api.request(path,"PUT",payload),updated->{
+                    lastSearch=null;p.dialog.dismiss();showNote(id(note));
+                });
+            };
+            addButton(p.root,"确认并启用范本",true,()->save.accept("approve",0));
+            if(meta.optBoolean("enabled"))addButton(p.root,"停用范本",()->save.accept("disable",0));
+            addButton(p.root,"标为原始材料",()->save.accept("raw",0));
+            addButton(p.root,"标为普通笔记",()->save.accept("note",0));
+            JSONArray versions=array(data,"versions");
+            if(versions.length()>1)addButton(p.root,"恢复历史版本",()->{
+                String[] labels=new String[versions.length()];
+                for(int i=0;i<labels.length;i++)labels[i]="第 "+versions.optInt(i)+" 版";
+                new AlertDialog.Builder(this).setTitle("恢复为新版本").setItems(labels,
+                        (d,which)->save.accept("restore",versions.optInt(which))).setNegativeButton("取消",null).show();
+            });
+        });
+    }
+
+    private void chooseOrganizerTemplate(String scope,Consumer<JSONObject> chosen){
+        work(()->(JSONObject)api.request("/learning-templates"),catalog->{
+            List<JSONObject> options=new ArrayList<>();
+            options.add(obj("note_id","","title","自动选择默认范本"));
+            options.add(obj("note_id","builtin","title","内置范本"));
+            for(JSONObject item:objects(array(catalog,"items"))){
+                if(scope.equals(str(item,"scope"))||"other".equals(str(item,"scope")))options.add(item);
+            }
+            String[] labels=new String[options.size()];
+            for(int i=0;i<labels.length;i++){
+                JSONObject item=options.get(i);
+                labels[i]=str(item,"title")+(item.optBoolean("is_default")?" · 默认":"");
+            }
+            new AlertDialog.Builder(this).setTitle("本次参考范本").setItems(labels,(d,which)->chosen.accept(options.get(which)))
+                    .setNegativeButton("取消",null).show();
+        });
+    }
+
     private void startNoteRecall(JSONObject note,Panel panel){
         if(working||chatSending){toast("请等待当前操作完成");return;}
         Runnable open=()->{panel.dialog.dismiss();conversationId=null;recallNoteId="";chatMessages.clear();chatFiles.clear();chatMode="knowledge";chatError="";chatSending=false;chatDraft="请回顾「"+str(note,"title")+"」的记录与已保存步骤";recallNoteId=id(note);showScreen("对话");if(chatInput!=null){chatInput.setSelection(chatInput.length());updateChatSend();}};
@@ -471,14 +568,17 @@ public final class MainActivity extends Activity {
         if (!working) work(()->{loadLearningCatalog();return true;},v->editNoteLoaded(null,null,entry));
     }
     private void editNoteLoaded(JSONObject note,JSONObject material,String entry){
-        boolean directImport = !entry.isEmpty();
+        boolean referenceImport = "reference".equals(entry);
+        boolean directImport = !entry.isEmpty()&&!referenceImport;
+        final String[] selectedTemplate={""};
+        final Button[] templateButton={null};
         java.util.LinkedHashMap<String,EditText> detailInputs=new java.util.LinkedHashMap<>();
         java.util.LinkedHashMap<String,String> detailValues=new java.util.LinkedHashMap<>();
         JSONObject savedDetails=note==null?null:note.optJSONObject("details");
         if(savedDetails!=null){java.util.Iterator<String> keys=savedDetails.keys();while(keys.hasNext()){String key=keys.next();detailValues.put(key,savedDetails.optString(key));}}
         LinearLayout detailBox=column();
         Runnable[] drawDetails={()->{}};
-        Panel p=panel(note==null?(directImport?"导入材料并整理":"新建笔记"):"编辑笔记");LinearLayout root=p.root;EditText title=input(root,"标题",note==null?str(material,"filename"):str(note,"title"));List<String> selectedTypes=note==null?new ArrayList<>(Arrays.asList(str(learningTypes.optJSONObject(0),"id"))):new ArrayList<>(typeIDs(note));TextView category=text(root,"",13,teal,true);Runnable typeSummary=()->{List<String> names=new ArrayList<>();for(String id:selectedTypes)names.add(str(learningType(obj("note_type",id)),"title"));category.setText("已选类型："+String.join("、",names));drawDetails[0].run();};typeSummary.run();addButton(root,"选择资料类型（可多选）",()->chooseTypes(selectedTypes,chosen->{replace(selectedTypes,chosen);if(selectedTypes.size()>1)selectedTypes.remove("other");if(selectedTypes.isEmpty())selectedTypes.add("other");typeSummary.run();}));root.addView(detailBox);
+        Panel p=panel(note==null?(referenceImport?"上传已整理资料":directImport?"导入材料并整理":"新建笔记"):"编辑笔记");LinearLayout root=p.root;EditText title=input(root,"标题",note==null?str(material,"filename"):str(note,"title"));List<String> selectedTypes=note==null?new ArrayList<>(Arrays.asList(str(learningTypes.optJSONObject(0),"id"))):new ArrayList<>(typeIDs(note));TextView category=text(root,"",13,teal,true);Runnable typeSummary=()->{List<String> names=new ArrayList<>();for(String id:selectedTypes)names.add(str(learningType(obj("note_type",id)),"title"));category.setText("已选类型："+String.join("、",names));drawDetails[0].run();};typeSummary.run();addButton(root,"选择资料类型（可多选）",()->chooseTypes(selectedTypes,chosen->{replace(selectedTypes,chosen);if(selectedTypes.size()>1)selectedTypes.remove("other");if(selectedTypes.isEmpty())selectedTypes.add("other");selectedTemplate[0]="";if(templateButton[0]!=null)templateButton[0].setText("参考范本 · 自动");typeSummary.run();}));root.addView(detailBox);
         final boolean[] moreOpen={false};
         java.util.Set<String> knownDetails=new java.util.HashSet<>(),customDetails=new java.util.HashSet<>();
         java.util.Iterator<String> templateKeys=detailTemplates.keys();while(templateKeys.hasNext())knownDetails.addAll(strings(array(detailTemplates,templateKeys.next())));
@@ -512,16 +612,19 @@ public final class MainActivity extends Activity {
             intake.setPadding(dp(14),dp(10),dp(14),dp(8));
             intake.setBackground(bg(Color.rgb(237,246,241),14,border));
             root.addView(intake,0);
+        } else if(referenceImport){
+            root.addView(intake,0);
+            text(intake,"保存为待确认的学习范本，再核对章节和写法。",12,muted,false);
         } else root.addView(intake);
         intake.addView(fileView);
         drawEditorFiles(fileView,files);
-        Button uploadButton = addButton(intake,directImport?"＋ 选择文件并生成":"＋ 批量关联材料",directImport,()->{});
+        Button uploadButton = addButton(intake,referenceImport?"＋ 选择已整理文件":directImport?"＋ 选择文件并生成":"＋ 批量关联材料",directImport,()->{});
         final JSONObject[] appliedDraft = {null};
         EditText organizerRule = new EditText(this);
         CheckBox rememberRule = new CheckBox(this);
         Button generate = null;
         TextView progress = null;
-        if (note == null) {
+        if (note == null && !referenceImport) {
             LinearLayout organizer = column();
             if (directImport) intake.addView(organizer);
             else {
@@ -537,6 +640,10 @@ public final class MainActivity extends Activity {
             organizerRule.setHint("本次整理要求（可选）");
             organizerRule.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(1000)});
             organizer.addView(organizerRule);
+            templateButton[0]=addButton(organizer,"参考范本 · 自动",()->chooseOrganizerTemplate(selectedTypes.get(0),item->{
+                selectedTemplate[0]=str(item,"note_id");
+                templateButton[0].setText("参考范本 · "+str(item,"title"));
+            }));
             rememberRule.setText("保存后在同类笔记中复用这条要求");
             organizer.addView(rememberRule);
             Button run = addButton(organizer,"生成草稿",false,()->{});
@@ -551,7 +658,8 @@ public final class MainActivity extends Activity {
                 String sourceText = source.getText().toString();
                 String rule = organizerRule.getText().toString();
                 JSONArray sourceIDs = ids(files);
-                JSONObject request = obj("note_type",type,"attachment_ids",sourceIDs,"text",sourceText,"rule",rule);
+                String templateID=selectedTemplate[0];
+                JSONObject request = obj("note_type",type,"attachment_ids",sourceIDs,"text",sourceText,"rule",rule,"template_id",templateID);
                 runStatus.setVisibility(View.VISIBLE);
                 runStatus.setText("正在整理材料…");
                 work(()->(JSONObject)api.request("/notes/organize","POST",request),draft->{
@@ -559,7 +667,8 @@ public final class MainActivity extends Activity {
                     runStatus.setText("草稿已生成，请核对后应用。");
                     previewOrganizedNote(draft,array(files),()->{
                         if (!type.equals(selectedTypes.get(0)) || !sourceIDs.toString().equals(ids(files).toString()) ||
-                                !sourceText.equals(source.getText().toString()) || !rule.equals(organizerRule.getText().toString())) {
+                                !sourceText.equals(source.getText().toString()) || !rule.equals(organizerRule.getText().toString()) ||
+                                !templateID.equals(selectedTemplate[0])) {
                             toast("类型、材料或整理要求已改变，请重新生成");
                             return;
                         }
@@ -575,7 +684,7 @@ public final class MainActivity extends Activity {
                             moreOpen[0] = true;
                             drawDetails[0].run();
                         }
-                        appliedDraft[0] = obj("id",str(draft,"id"),"type",type,"ids",sourceIDs.toString(),"rule",rule);
+                        appliedDraft[0] = obj("id",str(draft,"id"),"type",type,"ids",sourceIDs.toString(),"rule",rule,"template_id",templateID);
                         toast("草稿已填入正文。改写的段落需重新核对，其原件会保留");
                     },!content.getText().toString().trim().isEmpty());
                 },error->runStatus.setText(error.getMessage()==null?"整理失败，请重试。":error.getMessage()));
@@ -586,6 +695,14 @@ public final class MainActivity extends Activity {
         java.util.function.BiConsumer<List<JSONObject>, Boolean> finishImport = (uploaded,complete)->{
             if (!p.dialog.isShowing()) return;
             files.addAll(uploaded);
+            if(referenceImport&&!uploaded.isEmpty()){
+                if(title.getText().toString().trim().isEmpty())title.setText(str(uploaded.get(0),"filename").replaceFirst("\\.[^.]+$",""));
+                if(content.getText().toString().trim().isEmpty()){
+                    List<String> paragraphs=new ArrayList<>();
+                    for(JSONObject file:uploaded)if(!str(file,"extracted_text").trim().isEmpty())paragraphs.add(str(file,"extracted_text").trim());
+                    content.setText(cut(String.join("\n\n",paragraphs),50000));
+                }
+            }
             drawEditorFiles(fileView,files);
             if (!directImport || run == null || runStatus == null) return;
             if (complete && files.stream().anyMatch(file->!str(file,"extracted_text").trim().isEmpty()) &&
@@ -607,15 +724,24 @@ public final class MainActivity extends Activity {
         java.util.function.Supplier<String> snapshot=()->title.getText()+"\u001f"+selectedTypes.toString()+"\u001f"+date.getText()+"\u001f"+tags.getText()+"\u001f"+content.getText()+"\u001f"+steps.getText()+"\u001f"+ids(files).toString()+detailPayload(detailInputs).toString();String initial=snapshot.get();p.dialog.dirty=()->!snapshot.get().equals(initial);
         addButton(root,"保存笔记",true,()->{JSONObject data=obj("expected_version",note==null?"":str(note,"version"),"details",detailPayload(detailInputs),"title",title.getText().toString(),"note_types",array(selectedTypes),"occurred_on",date.getText().toString(),"tags",array(split(tags.getText().toString(),"[,，]")),"content",content.getText().toString(),"steps",array(split(steps.getText().toString(),"\\n")),"attachment_ids",ids(files));JSONObject draft = appliedDraft[0];
             if (draft != null) {
-                if (!str(draft,"type").equals(selectedTypes.get(0)) || !str(draft,"ids").equals(ids(files).toString())) {
+                if (!str(draft,"type").equals(selectedTypes.get(0)) || !str(draft,"ids").equals(ids(files).toString()) ||
+                        !str(draft,"template_id").equals(selectedTemplate[0])) {
                     toast("资料类型或材料有变化，请重新生成并应用草稿");
                     return;
                 }
                 put(data,"organizer_draft_id",str(draft,"id"));
                 put(data,"remember_organizer_rule",rememberRule.isChecked() && str(draft,"rule").equals(organizerRule.getText().toString()));
             }
-            work(()->api.request(note==null?"/notes":"/notes/"+id(note),note==null?"POST":"PUT",data),v->{lastSearch=null;p.dialog.dismiss();toast("笔记已保存");showScreen(screen);});});
-        if ("pick".equals(entry)) uploadButton.performClick();
+            if(referenceImport){
+                if(content.getText().toString().trim().isEmpty()){toast("请提供可阅读的成品正文");return;}
+                put(data,"library_role","reference");
+            }
+            work(()->(JSONObject)api.request(note==null?"/notes":"/notes/"+id(note),note==null?"POST":"PUT",data),saved->{
+                lastSearch=null;p.dialog.dismiss();
+                if(referenceImport)editLearning(saved);else{toast("笔记已保存");showScreen(screen);}
+            });
+        });
+        if ("pick".equals(entry)||referenceImport) uploadButton.performClick();
         if ("demo".equals(entry) && runStatus != null) {
             runStatus.setVisibility(View.VISIBLE);
             runStatus.setText("正在导入两份虚构示例…");
@@ -629,7 +755,8 @@ public final class MainActivity extends Activity {
         }
     }
     private void previewOrganizedNote(JSONObject draft,JSONArray files,Runnable apply,boolean replacesText) {
-        Panel p=panel(str(draft,"title"));
+        Panel p=panel(str(draft,"title")+" · 待核对");
+        showTemplateReference(p.root,draft.optJSONObject("template_reference"));
         List<String> parts=strings(array(draft,"parts"));
         if(!parts.isEmpty())text(p.root,"标准部位 · "+String.join("、",parts),12,teal,false);
         for(String warning:strings(array(draft,"warnings")))text(p.root,warning,12,muted,false);

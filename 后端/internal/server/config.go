@@ -26,6 +26,7 @@ type Config struct {
 	CloudSearchDisabled                                  bool
 	ImageDINOModel, ImageDINOPython                      string
 	ImageVisualCandidates                                int
+	LocalOrganizerModel, LocalOrganizerCLI               string
 	LocalASRModel, OCRDataDir                            string
 	CookieSecure                                         bool
 }
@@ -130,6 +131,8 @@ func LoadConfig() (Config, error) {
 		return Config{}, fmt.Errorf("PUBLIC_BASE_PATH 需为 /clinical-memory 形式的路径")
 	}
 	c.DataDir, _ = filepath.Abs(c.DataDir)
+	c.LocalOrganizerModel = env("LOCAL_ORGANIZER_MODEL", "")
+	c.LocalOrganizerCLI = env("LOCAL_ORGANIZER_CLI", "llama-cli")
 	c.LocalASRModel = env("LOCAL_ASR_MODEL", filepath.Join(c.DataDir, "models", "ggml-base.bin"))
 	c.OCRDataDir = env("OCR_DATA_DIR", filepath.Join(c.DataDir, "models", "tessdata"))
 	return c, nil
