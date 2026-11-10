@@ -83,6 +83,11 @@ func TestOrganizerDraftApprovalAndPartSearch(t *testing.T) {
 	if approved["details"].(map[string]any)[partField] != "左肩区域" {
 		t.Fatal(approved)
 	}
+	read := c.request("GET", "/api/notes/"+getString(approved, "id"), nil, 200)
+	if strings.Contains(getString(read, "content"), "〔") ||
+		!strings.Contains(jsonText(read["body_blocks"]), "左肩外侧有标注") {
+		t.Fatal("saved note did not retain inline source", read)
+	}
 	for _, term := range []string{"LEFT1", "左肩区域", "左肩外侧"} {
 		hits := c.request("POST", "/api/search", SearchInput{Query: term}, 200)
 		if getString(hits, "engine") != "标准部位精确检索" || len(hits["items"].([]any)) != 1 {
@@ -94,5 +99,39 @@ func TestOrganizerDraftApprovalAndPartSearch(t *testing.T) {
 	prompt := <-requests
 	if !strings.Contains(prompt, reusable) || strings.Contains(prompt, note.Title) {
 		t.Fatal("the approved reusable rule should be sent without the prior final note")
+	}
+}
+
+func TestOrganizerBodyKeepsMediaWithSupportedParagraph(t *testing.T) {
+	files := []Attachment{
+		{ID: "scan", MIME: "image/jpeg", Filename: "图1_初诊.jpg"},
+		{ID: "audio", MIME: "audio/wav", Filename: "随访.wav"},
+		{ID: "dated", MIME: "image/jpeg", Filename: "随访-20261108.jpg"},
+		{ID: "unrelated", MIME: "image/jpeg", Filename: "图10_其他检查.jpg"},
+	}
+	sources := []organizerSource{
+		{Name: "检查记录", Text: "2026-11-07 初诊检查已完成。\n2026年11月8日复诊。\n2026-11-07 初诊对应图1。"},
+		{Name: files[0].Filename, AttachmentID: files[0].ID},
+		{Name: files[1].Filename, AttachmentID: files[1].ID, Text: "患者自述症状缓解。"},
+		{Name: files[2].Filename, AttachmentID: files[2].ID},
+		{Name: files[3].Filename, AttachmentID: files[3].ID},
+	}
+	draft := organizerDraft{Content: "【初诊】\n检查已完成。\n\n【复诊】\n症状缓解。", Evidence: []organizerItem{
+		{Section: "初诊", Text: "检查已完成。", Source: 1, Quote: "2026-11-07 初诊检查已完成。", Media: []int{2, 4, 5, 99}},
+		{Section: "复诊", Text: "症状缓解。", Source: 3, Quote: "患者自述症状缓解。", Support: []organizerReference{{1, "2026年11月8日复诊。"}}, Media: []int{4}},
+	}}
+	body := organizerBody(draft.Content, draft, sources, files)
+	if len(body) != 4 || strings.Join(body[1].Media, ",") != "scan" ||
+		strings.Join(body[3].Media, ",") != "dated,audio" || len(body[3].Citations) != 2 {
+		t.Fatalf("incorrect placement: %+v", body)
+	}
+	edited := organizerBody(strings.Replace(draft.Content, "检查已完成。", "检查待完成。", 1), draft, sources, files)
+	if len(edited[1].Citations) != 0 || len(edited[1].Media) != 0 || len(edited[3].Media) != 2 {
+		t.Fatalf("edited paragraph inherited stale sources: %+v", edited)
+	}
+	legacy := organizerDraft{Content: "【复诊】\n症状缓解。 〔1〕\n\n【材料来源】\n〔1〕随访.wav", Evidence: []organizerItem{draft.Evidence[1]}}
+	old := organizerBody(legacy.Content, legacy, sources, files)
+	if len(old) != 2 || old[1].Text != "症状缓解。" || !contains(old[1].Media, "audio") {
+		t.Fatalf("old citations are not displayed inline: %+v", old)
 	}
 }

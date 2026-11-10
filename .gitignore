@@ -43,3 +43,6 @@
 
 # Published terminology and templates for this installation
 数据库数据/note-organizer.json
+
+# Local patient materials used for template review
+/病人数据/

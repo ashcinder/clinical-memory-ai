@@ -20,7 +20,9 @@ func (a *App) updateNote(w http.ResponseWriter, r *http.Request, u User) {
 	respond(w, 200, n)
 }
 func (a *App) getNote(w http.ResponseWriter, r *http.Request, u User) {
-	respond(w, 200, ownedNote(a.DB, r.PathValue("id"), u.ID, false))
+	note := ownedNote(a.DB, r.PathValue("id"), u.ID, false)
+	note.BodyBlocks = a.loadOrganizerBody(note)
+	respond(w, 200, note)
 }
 func (a *App) deleteNote(w http.ResponseWriter, r *http.Request, u User) {
 	withTx(a, func(tx *sql.Tx) bool {

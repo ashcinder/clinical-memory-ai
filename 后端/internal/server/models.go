@@ -30,6 +30,7 @@ type Attachment struct {
 	ExtractionError *string `json:"extraction_error,omitempty"`
 }
 type Note struct {
+	BodyBlocks     []organizerBlock  `json:"body_blocks,omitempty"`
 	Details        map[string]string `json:"details"`
 	NoteType       string            `json:"note_type"`
 	NoteTypes      []string          `json:"note_types"`
@@ -174,8 +175,8 @@ func (n *NoteInput) validate() {
 	bounded("正文", n.Content, 0, 50000)
 	n.Tags = cleanItems(n.Tags, 20)
 	n.Steps = cleanItems(n.Steps, 50)
-	if len(n.AttachmentIDs) > 20 {
-		fail(422, "最多关联 20 份材料")
+	if len(n.AttachmentIDs) > maxNoteMaterials {
+		fail(422, "最多关联 60 份材料")
 	}
 	if n.OccurredOn == "" {
 		n.OccurredOn = time.Now().Format("2006-01-02")

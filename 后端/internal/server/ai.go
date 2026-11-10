@@ -32,6 +32,9 @@ func newAIClient() *http.Client {
 	return &http.Client{Timeout: 120 * time.Second, CheckRedirect: func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }}
 }
 func (a *App) completion(ctx context.Context, messages []map[string]any, vision bool) (string, error) {
+	return a.completionWithLimit(ctx, messages, vision, 3000)
+}
+func (a *App) completionWithLimit(ctx context.Context, messages []map[string]any, vision bool, maxTokens int) (string, error) {
 	if vision {
 		release, err := a.acquireImageSlot(ctx)
 		if err != nil {
@@ -44,7 +47,7 @@ func (a *App) completion(ctx context.Context, messages []map[string]any, vision 
 	if vision {
 		key, base, model = c.VisionKey, c.VisionURL, c.VisionModel
 	}
-	body := map[string]any{"model": model, "messages": messages, "max_tokens": 3000, "stream": false}
+	body := map[string]any{"model": model, "messages": messages, "max_tokens": maxTokens, "stream": false}
 	if parsed, err := url.Parse(base); err == nil && parsed.Hostname() == "api.deepseek.com" {
 		body["thinking"] = map[string]string{"type": "disabled"}
 	}

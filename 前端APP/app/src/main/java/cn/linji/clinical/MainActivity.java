@@ -12,6 +12,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.media.MediaRecorder;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -61,6 +62,8 @@ public final class MainActivity extends Activity {
     private final ExecutorService executor=Executors.newSingleThreadExecutor();
     private final Handler handler=new Handler(Looper.getMainLooper());
     private Api api;
+    private MediaPlayer noteAudio;
+    private Button noteAudioButton;
     private TokenStore tokenStore;
     private LinearLayout body,screenHost,chatMessageList;
     private EditText chatInput;
@@ -437,9 +440,21 @@ public final class MainActivity extends Activity {
     private void showNote(String noteId){work(()->(JSONObject)api.request("/notes/"+noteId),note->{
         Panel p=panel("完整记录");LinearLayout root=p.root;text(root,typeNames(note)+"  ·  "+str(note,"occurred_on"),11,teal,false);text(root,str(note,"title"),23,ink,true);text(root,String.join("  ·  ",strings(array(note,"tags"))),11,muted,false);
         JSONObject details=note.optJSONObject("details");if(details!=null&&details.length()>0){sectionLabel(root,"专属信息","");java.util.Iterator<String> keys=details.keys();while(keys.hasNext()){String key=keys.next();text(root,key,12,teal,true);TextView value=text(root,details.optString(key),15,ink,false);value.setTextIsSelectable(true);}}
-        sectionLabel(root,str(learningType(note),"content_label"),"");TextView content=text(root,str(note,"content").isEmpty()?"尚未填写正文":str(note,"content"),15,ink,false);content.setTextIsSelectable(true);
-        JSONArray steps=array(note,"steps");sectionLabel(root,str(learningType(note),"steps_label"),steps.length()+" 项");for(int i=0;i<steps.length();i++)stepRow(root,steps.optString(i),i+1,new JSONArray());if(steps.length()==0)text(root,"尚未填写步骤",12,muted,false);
-        JSONArray files=array(note,"attachments");sectionLabel(root,"原始材料",files.length()+" 份");for(JSONObject file:objects(files))addButton(root,str(file,"filename"),()->showAttachment(file));if(files.length()==0)text(root,"未关联原始材料",12,muted,false);
+        JSONArray files=array(note,"attachments"),blocks=array(note,"body_blocks"),steps=array(note,"steps");
+        if(blocks.length()==0)sectionLabel(root,str(learningType(note),"content_label"),"");
+        java.util.Set<String> inline=drawOrganizedBody(root,note,files);
+        if(steps.length()>0||blocks.length()==0){
+            sectionLabel(root,str(learningType(note),"steps_label"),steps.length()+" 项");
+            for(int i=0;i<steps.length();i++)stepRow(root,steps.optString(i),i+1,new JSONArray());
+            if(steps.length()==0)text(root,"尚未填写步骤",12,muted,false);
+        }
+        List<JSONObject> remaining=objects(files);
+        remaining.removeIf(file->inline.contains(id(file)));
+        if(!remaining.isEmpty()||blocks.length()==0){
+            sectionLabel(root,blocks.length()==0?"原始材料":"其他原件",remaining.size()+" 份");
+            for(JSONObject file:remaining)addButton(root,str(file,"filename"),()->showAttachment(file));
+            if(remaining.isEmpty())text(root,"未关联原始材料",12,muted,false);
+        }
         divider(root,15,15);addButton(root,"编辑笔记",true,()->{p.dialog.dismiss();editNote(note,null);});addButton(root,"回顾这篇记录",()->startNoteRecall(note,p));
         Button delete=addButton(root,"删除笔记",()->new AlertDialog.Builder(this).setTitle("删除笔记？").setMessage("所有账户都将无法查看这篇笔记；原件保留。").setNegativeButton("取消",null).setPositiveButton("删除",(d,w)->work(()->api.request("/notes/"+noteId,"DELETE"),v->{lastSearch=null;p.dialog.dismiss();showScreen(screen);})).show());delete.setTextColor(Color.rgb(164,80,67));
     });}
@@ -542,7 +557,7 @@ public final class MainActivity extends Activity {
                 work(()->(JSONObject)api.request("/notes/organize","POST",request),draft->{
                     if (!p.dialog.isShowing()) return;
                     runStatus.setText("草稿已生成，请核对后应用。");
-                    previewOrganizedNote(draft,()->{
+                    previewOrganizedNote(draft,array(files),()->{
                         if (!type.equals(selectedTypes.get(0)) || !sourceIDs.toString().equals(ids(files).toString()) ||
                                 !sourceText.equals(source.getText().toString()) || !rule.equals(organizerRule.getText().toString())) {
                             toast("类型、材料或整理要求已改变，请重新生成");
@@ -561,7 +576,7 @@ public final class MainActivity extends Activity {
                             drawDetails[0].run();
                         }
                         appliedDraft[0] = obj("id",str(draft,"id"),"type",type,"ids",sourceIDs.toString(),"rule",rule);
-                        toast("草稿已填入正文，请核对后保存");
+                        toast("草稿已填入正文。改写的段落需重新核对，其原件会保留");
                     },!content.getText().toString().trim().isEmpty());
                 },error->runStatus.setText(error.getMessage()==null?"整理失败，请重试。":error.getMessage()));
             });
@@ -573,14 +588,17 @@ public final class MainActivity extends Activity {
             files.addAll(uploaded);
             drawEditorFiles(fileView,files);
             if (!directImport || run == null || runStatus == null) return;
-            if (complete && uploaded.stream().allMatch(file->"ready".equals(str(file,"status")) &&
-                    !str(file,"extracted_text").trim().isEmpty())) run.performClick();
+            if (complete && files.stream().anyMatch(file->!str(file,"extracted_text").trim().isEmpty()) &&
+                    uploaded.stream().allMatch(file->{
+                        String mime=str(file,"mime");
+                        return mime.startsWith("image/")||mime.startsWith("audio/")||!str(file,"extracted_text").trim().isEmpty();
+                    })) run.performClick();
             else {
                 runStatus.setVisibility(View.VISIBLE);
-                runStatus.setText("有材料上传或提取未完成。请核对材料，再点击「生成草稿」。");
+                runStatus.setText("请核对上传与识别结果，确认有可用文字后再生成草稿。");
             }
         };
-        uploadButton.setOnClickListener(v->pickEditorFiles(20-files.size(),finishImport,()->{
+        uploadButton.setOnClickListener(v->pickEditorFiles(60-files.size(),finishImport,()->{
             if (directImport && runStatus != null) {
                 runStatus.setVisibility(View.VISIBLE);
                 runStatus.setText("正在上传并读取材料…");
@@ -610,23 +628,112 @@ public final class MainActivity extends Activity {
             },uploaded->finishImport.accept(uploaded,true),error->finishImport.accept(samples,false));
         }
     }
-    private void previewOrganizedNote(JSONObject draft,Runnable apply,boolean replacesText) {
-        StringBuilder preview = new StringBuilder(str(draft,"content"));
-        List<String> parts = strings(array(draft,"parts"));
-        if (!parts.isEmpty()) preview.append("\n\n标准部位 · ").append(String.join("、",parts));
-        for (String warning : strings(array(draft,"warnings"))) preview.append("\n").append(warning);
-        List<String> missing = strings(array(draft,"missing"));
-        if (!missing.isEmpty()) preview.append("\n缺少资料 · ").append(String.join("、",missing));
-        JSONArray sourceNames = array(draft,"source_names");
-        int index = 0;
-        preview.append("\n\n核对原文");
-        for (JSONObject evidence : objects(array(draft,"evidence"))) {
-            preview.append("\n〔").append(++index).append("〕")
-                    .append(sourceNames.optString(evidence.optInt("source")-1)).append(" · ").append(str(evidence,"quote"));
+    private void previewOrganizedNote(JSONObject draft,JSONArray files,Runnable apply,boolean replacesText) {
+        Panel p=panel(str(draft,"title"));
+        List<String> parts=strings(array(draft,"parts"));
+        if(!parts.isEmpty())text(p.root,"标准部位 · "+String.join("、",parts),12,teal,false);
+        for(String warning:strings(array(draft,"warnings")))text(p.root,warning,12,muted,false);
+        List<String> missing=strings(array(draft,"missing"));
+        if(!missing.isEmpty())text(p.root,"缺少资料 · "+String.join("、",missing),12,muted,false);
+        drawOrganizedBody(p.root,draft,files);
+        addButton(p.root,replacesText?"替换当前正文":"应用到编辑器",true,()->{p.dialog.dismiss();apply.run();});
+    }
+
+    private java.util.Set<String> drawOrganizedBody(LinearLayout root,JSONObject note,JSONArray attachments) {
+        java.util.Set<String> inline=new java.util.HashSet<>();
+        java.util.Map<String,JSONObject> files=new java.util.HashMap<>();
+        for(JSONObject file:objects(attachments))files.put(id(file),file);
+        List<JSONObject> blocks=objects(array(note,"body_blocks"));
+        if(blocks.isEmpty()){
+            String content=str(note,"content");
+            text(root,content.isEmpty()?"尚未填写正文":content,15,ink,false).setTextIsSelectable(true);
+            return inline;
         }
-        new AlertDialog.Builder(this).setTitle(str(draft,"title")).setMessage(preview)
-                .setNegativeButton("返回",null)
-                .setPositiveButton(replacesText?"替换当前正文":"应用到编辑器",(dialog,which)->apply.run()).show();
+        String currentVisit="";
+        for(JSONObject block:blocks){
+            String heading=str(block,"heading");
+            if(!heading.isEmpty()){
+                String[] labels=heading.split(" \\| |｜",2);
+                if(labels.length==1||!labels[0].equals(currentVisit)){
+                    divider(root,12,7);
+                    text(root,labels[0],18,ink,true);
+                }
+                currentVisit=labels.length==1?"":labels[0];
+                if(labels.length==2)text(root,labels[1],14,teal,true);
+                continue;
+            }
+            text(root,str(block,"text"),15,ink,false).setTextIsSelectable(true);
+            for(String id:strings(array(block,"media"))){
+                JSONObject file=files.get(id);
+                if(file==null)continue;
+                inline.add(id);
+                if(str(file,"mime").startsWith("image/")){
+                    android.widget.ImageView image=new android.widget.ImageView(this);
+                    image.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
+                    image.setContentDescription("查看图片："+str(file,"filename"));
+                    image.setOnClickListener(v->openFile(file));
+                    root.addView(image,new LinearLayout.LayoutParams(-1,dp(185)));
+                    loadResultThumbnail(image,file);
+                    text(root,str(file,"filename"),12,muted,false);
+                }else{
+                    text(root,str(file,"filename"),12,muted,false);
+                    Button play=addButton(root,"播放录音",()->{});
+                    play.setOnClickListener(v->playNoteAudio(play,file));
+                    play.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener(){
+                        public void onViewAttachedToWindow(View view){}
+                        public void onViewDetachedFromWindow(View view){if(noteAudioButton==play)stopNoteAudio();}
+                    });
+                }
+            }
+            List<JSONObject> citations=objects(array(block,"citations"));
+            if(citations.isEmpty())continue;
+            LinearLayout originals=column();
+            Button toggle=addButton(root,"查看本段原文",()->{});
+            originals.setVisibility(View.GONE);
+            toggle.setOnClickListener(v->{
+                boolean open=originals.getVisibility()!=View.VISIBLE;
+                originals.setVisibility(open?View.VISIBLE:View.GONE);
+                toggle.setText(open?"收起本段原文":"查看本段原文");
+            });
+            for(JSONObject source:citations){
+                String attachmentId=str(source,"attachment_id");
+                JSONObject file=files.get(attachmentId);
+                if(file==null)text(originals,str(source,"name"),12,teal,true);
+                else{
+                    inline.add(attachmentId);
+                    addButton(originals,str(source,"name"),()->openFile(file));
+                }
+                text(originals,str(source,"quote"),13,muted,false).setTextIsSelectable(true);
+            }
+            root.addView(originals);
+        }
+        return inline;
+    }
+
+    private void stopNoteAudio(){
+        if(noteAudio!=null){noteAudio.release();noteAudio=null;}
+        if(noteAudioButton!=null){noteAudioButton.setText("播放录音");noteAudioButton=null;}
+    }
+
+    private void playNoteAudio(Button button,JSONObject file){
+        boolean same=noteAudioButton==button;
+        if(working&&!same){toast("正在处理，请稍候");return;}
+        stopNoteAudio();
+        if(same)return;
+        noteAudioButton=button;
+        button.setText("加载录音…");
+        work(()->saveExport(UUID.randomUUID()+".audio",api.download("/attachments/"+id(file)+"/file")),local->{
+            try(java.io.FileInputStream input=new java.io.FileInputStream(local)){
+                if(noteAudioButton!=button||!button.isAttachedToWindow())return;
+                noteAudio=new MediaPlayer();
+                noteAudio.setDataSource(input.getFD());
+                noteAudio.setOnPreparedListener(player->{player.start();button.setText("停止播放");});
+                noteAudio.setOnCompletionListener(player->stopNoteAudio());
+                noteAudio.setOnErrorListener((player,what,extra)->{stopNoteAudio();toast("无法播放录音，可打开原件");return true;});
+                noteAudio.prepareAsync();
+            }catch(Exception error){stopNoteAudio();toast("无法播放录音，可打开原件");}
+            finally{local.delete();}
+        },error->{if(noteAudioButton==button)stopNoteAudio();});
     }
 
     private void drawDetailGroup(LinearLayout parent,List<String> fields,java.util.Map<String,String> values,java.util.Map<String,EditText> inputs){
@@ -845,7 +952,7 @@ public final class MainActivity extends Activity {
     private void pickEditorFiles(int capacity,java.util.function.BiConsumer<List<JSONObject>, Boolean> done,Runnable started) {
         if (working) return;
         if (capacity <= 0) {
-            toast("最多关联 20 份材料");
+            toast("最多关联 60 份材料");
             return;
         }
         batchCapacity = capacity;
@@ -933,7 +1040,7 @@ public final class MainActivity extends Activity {
     }
     private void cancelRecording(){handler.removeCallbacks(recordingTimeout);if(recorder!=null){try{recorder.stop();}catch(Exception ignored){}recorder.release();recorder=null;}if(recordingFile!=null)recordingFile.delete();if(recordingDialog!=null)recordingDialog.dismiss();recordingDialog=null;}
     private void clearExports(){File dir=new File(getCacheDir(),"exports");File[] files=dir.listFiles();if(files!=null)for(File f:files)f.delete();dir.delete();}
-    @Override protected void onStop(){handler.removeCallbacks(syncLoop);super.onStop();if(recorder!=null){cancelRecording();toast("录音已取消，可返回后重新录制");}}
+    @Override protected void onStop(){stopNoteAudio();handler.removeCallbacks(syncLoop);super.onStop();if(recorder!=null){cancelRecording();toast("录音已取消，可返回后重新录制");}}
     @Override public void onBackPressed(){
         android.webkit.WebView web=anatomyWeb;
         if(web==null){super.onBackPressed();return;}

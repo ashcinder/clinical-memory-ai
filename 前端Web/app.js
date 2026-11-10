@@ -1180,7 +1180,7 @@ async function uploadFiles(files, target, onComplete) {
   const available = hasBucket
     ? Math.max(0, 5 - state[target + "Files"].length)
     : target === "editor"
-      ? Math.max(0, 20 - $$("#editor-file-list .editor-file").length)
+      ? Math.max(0, 60 - $$("#editor-file-list .editor-file").length)
       : 10;
   if (files.length > available)
     toast("本次最多可再添加 " + available + " 份材料");
@@ -1255,7 +1255,7 @@ async function uploadFiles(files, target, onComplete) {
     if (busy?.isConnected) busy.hidden = true;
   }
   return { uploaded, complete: uploaded.length === files.length &&
-    uploaded.every((item) => item.status === "ready" && item.extracted_text?.trim()) };
+    uploaded.every((item) => item.extracted_text?.trim() || /^(image|audio)\//.test(item.mime)) };
 }
 
 async function toggleRecording(target) {
@@ -1331,14 +1331,56 @@ async function startNoteRecall(note) {
   await navigate("chat");
   $("#chat-input")?.focus();
 }
+function organizedBody(blocks, content, attachments) {
+  if (!blocks?.length) return `<div class="note-body">${esc(content) || '<span class="muted">尚未填写正文</span>'}</div>`;
+  const files = new Map((attachments || []).map((file) => [file.id, file]));
+  let currentVisit = "";
+  const fileURL = (id, part = "file") => siteURL("/api/attachments/" + encodeURIComponent(id) + "/" + part);
+  return `<div class="organized-body">${blocks.map((block) => {
+    if (block.heading) {
+      const [visit, subsection] = block.heading.split(/ \| |｜/);
+      if (!subsection) {
+        currentVisit = "";
+        return `<h3 class="organized-heading">${esc(block.heading)}</h3>`;
+      }
+      const heading = visit === currentVisit ? "" : `<h3 class="organized-heading">${esc(visit)}</h3>`;
+      currentVisit = visit;
+      return heading + `<h4>${esc(subsection)}</h4>`;
+    }
+    const media = (block.media || []).map((id) => files.get(id)).filter(Boolean).map((file) => {
+      const name = esc(file.filename);
+      const url = esc(fileURL(file.id));
+      if (file.mime.startsWith("image/")) {
+        return `<figure class="organized-media"><a href="${url}" target="_blank" rel="noopener"><img src="${esc(fileURL(file.id, "thumbnail"))}" alt="${name}" loading="lazy"></a><figcaption>${name}</figcaption></figure>`;
+      }
+      if (file.mime.startsWith("audio/")) {
+        return `<figure class="organized-media"><figcaption>${name}</figcaption><audio aria-label="${name}" controls preload="none" src="${url}"></audio></figure>`;
+      }
+      return "";
+    }).join("");
+    const sources = (block.citations || []).map((source) => {
+      const name = esc(source.name);
+      const file = files.get(source.attachment_id);
+      return `<div class="organized-source">${file ? `<a href="${esc(fileURL(file.id))}" target="_blank" rel="noopener">${name}</a>` : `<strong>${name}</strong>`}<blockquote>${esc(source.quote)}</blockquote></div>`;
+    }).join("");
+    return `<div class="organized-paragraph"><p>${esc(block.text)}</p>${media}${sources ? `<details class="organized-sources"><summary>查看本段原文</summary>${sources}</details>` : ""}</div>`;
+  }).join("")}</div>`;
+}
+function inlineMaterialIDs(blocks) {
+  return new Set((blocks || []).flatMap((block) => [
+    ...(block.media || []), ...(block.citations || []).map((source) => source.attachment_id),
+  ]));
+}
 async function showNote(id) {
   if (!allowDiscard()) return;
   try {
     const n = await api("/notes/" + id);
     const type = typeOf(n);
+    const placed = inlineMaterialIDs(n.body_blocks);
+    const files = (n.attachments || []).filter((file) => !placed.has(file.id));
     openDialog(
       "完整记录",
-      `<div class="reader-meta"><span class="note-type-badges">${typeBadges(n)}</span><time>${dateLabel(n.occurred_on)}</time></div><h1 class="note-detail-title">${esc(n.title)}</h1><div class="tags">${n.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>${Object.keys(n.details||{}).length?`<section class="reader-section"><h3>专属信息</h3><dl class="detail-values">${Object.entries(n.details).map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl></section>`:""}<section class="reader-section"><h3>${esc(type.content_label)}</h3><div class="note-body">${esc(n.content) || '<span class="muted">尚未填写正文</span>'}</div></section><section class="reader-section"><h3>${esc(type.steps_label)} <span>${n.steps.length} 项</span></h3>${n.steps.length ? `<ol class="step-list">${n.steps.map((step, i) => `<li><span class="step-number">${i + 1}</span><span class="step-text">${esc(step)}</span></li>`).join("")}</ol>` : '<p class="muted">尚未记录步骤，可编辑补充。</p>'}</section><section class="reader-section"><h3>原始材料 <span>${n.attachments.length} 份</span></h3><div class="reader-materials">${n.attachments.map((a) => `<button class="reader-file" data-material="${a.id}">${a.mime.startsWith("image/") ? `<img src="${APP_BASE}/api/attachments/${a.id}/thumbnail" alt="${esc(a.filename)}" loading="lazy">` : icon(a.mime.startsWith("audio/") ? "mic" : "file")}<span><b>${esc(a.filename)}</b><small>${extractionLabel(a)}</small></span>${icon("arrow")}</button>`).join("") || '<p class="muted">尚无关联材料</p>'}</div></section><div class="detail-meta">最后更新 ${dateLabel(n.updated_at)}</div><div class="form-actions reader-actions"><button class="text-button danger" id="delete-note">删除笔记</button><button class="secondary" id="recall-note">回顾这篇记录</button><button class="primary" id="edit-note">编辑笔记</button></div>`,
+      `<div class="reader-meta"><span class="note-type-badges">${typeBadges(n)}</span><time>${dateLabel(n.occurred_on)}</time></div><h1 class="note-detail-title">${esc(n.title)}</h1><div class="tags">${n.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>${Object.keys(n.details||{}).length?`<section class="reader-section"><h3>专属信息</h3><dl class="detail-values">${Object.entries(n.details).map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl></section>`:""}<section class="reader-section">${n.body_blocks?.length ? "" : `<h3>${esc(type.content_label)}</h3>`}${organizedBody(n.body_blocks, n.content, n.attachments)}</section>${!n.body_blocks?.length || n.steps.length ? `<section class="reader-section"><h3>${esc(type.steps_label)} <span>${n.steps.length} 项</span></h3>${n.steps.length ? `<ol class="step-list">${n.steps.map((step, i) => `<li><span class="step-number">${i + 1}</span><span class="step-text">${esc(step)}</span></li>`).join("")}</ol>` : '<p class="muted">尚未记录步骤，可编辑补充。</p>'}</section>` : ""}${!n.body_blocks?.length || files.length ? `<section class="reader-section"><h3>${n.body_blocks?.length ? "其他原件" : "原始材料"} <span>${files.length} 份</span></h3><div class="reader-materials">${files.map((a) => `<button class="reader-file" data-material="${a.id}">${a.mime.startsWith("image/") ? `<img src="${APP_BASE}/api/attachments/${a.id}/thumbnail" alt="${esc(a.filename)}" loading="lazy">` : icon(a.mime.startsWith("audio/") ? "mic" : "file")}<span><b>${esc(a.filename)}</b><small>${extractionLabel(a)}</small></span>${icon("arrow")}</button>`).join("") || '<p class="muted">尚无关联材料</p>'}</div></section>` : ""}<div class="detail-meta">最后更新 ${dateLabel(n.updated_at)}</div><div class="form-actions reader-actions"><button class="text-button danger" id="delete-note">删除笔记</button><button class="secondary" id="recall-note">回顾这篇记录</button><button class="primary" id="edit-note">编辑笔记</button></div>`,
     );
     $("#edit-note").onclick = () => editNote(n);
     $("#recall-note").onclick = () => startNoteRecall(n);
@@ -1512,7 +1554,7 @@ function editNote(note, entry) {
       files.push(...uploaded);
       drawFiles();
     },
-    () => Math.max(0, 20 - files.length),
+    () => Math.max(0, 60 - files.length),
   );
   const appendFiles = (uploaded) => {
     files.push(...uploaded);
@@ -1522,8 +1564,8 @@ function editNote(note, entry) {
   const uploadButton = $("#editor-upload");
   const afterImport = (result) => {
     if (!organizerRun?.isConnected || !result) return;
-    if (result.complete) organizerRun.click();
-    else $("#organizer-status").textContent = "有材料上传或提取未完成。请核对材料，再点击「生成草稿」。";
+    if (result.complete && (files.some((file) => file.extracted_text?.trim()) || $("#organizer-text").value.trim())) organizerRun.click();
+    else $("#organizer-status").textContent = "请核对上传与识别结果，确认有可用文字后再生成草稿。";
   };
   uploadButton.onclick = () => {
     if (!organizerRun?.disabled) chooseFiles("editor", appendFiles, entry ? afterImport : undefined);
@@ -1551,12 +1593,9 @@ function editNote(note, entry) {
       if (draft.missing?.length) issues.push("缺少资料：" + draft.missing.join("、"));
       preview.innerHTML = `
         <h4>${esc(draft.title)}</h4>
-        <p class="reading-text">${esc(draft.content)}</p>
+        ${organizedBody(draft.body_blocks, draft.content, files)}
         ${draft.parts?.length ? `<p>标准部位 · ${esc(draft.parts.join("、"))}</p>` : ""}
         ${issues.map((issue) => `<p class="muted">${esc(issue)}</p>`).join("")}
-        <details><summary>核对原文</summary><ol>${draft.evidence.map((entry) =>
-          `<li><strong>${esc(draft.source_names[entry.source - 1])}</strong> · ${esc(entry.quote)}</li>`
-        ).join("")}</ol></details>
         <button class="primary" id="organizer-apply" type="button">应用到编辑器</button>`;
       $("#organizer-apply").onclick = () => {
         if (editorType().id !== request.note_type ||
@@ -1579,7 +1618,7 @@ function editNote(note, entry) {
           drawDetails();
         }
         appliedDraft = { id: draft.id, request };
-        status.textContent = "草稿已填入正文，请核对后保存。";
+        status.textContent = "草稿已填入正文。改写的段落需重新核对，其原件会保留。";
         $("#organizer-apply").disabled = true;
         content.focus();
       };
