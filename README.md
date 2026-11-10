@@ -81,7 +81,7 @@ DB_NAME=linji
 DB_USER=你的MySQL应用用户名
 DB_PASSWORD='你的MySQL应用密码'
 HOST=127.0.0.1
-PORT=8000
+PORT=8001
 ```
 
 建库 SQL 在 `数据库数据/初始化.sql`，建表 SQL 在 `数据库数据/schema.sql`。后端首次启动会自动建表，应用账户需拥有该库的 SELECT、INSERT、UPDATE、DELETE、CREATE、INDEX、ALTER、REFERENCES 权限。密码包含 `#`、空格或 `$` 等符号时建议使用单引号包裹，避免变量展开；`!` 是英文和中文时属于不同字符。
@@ -97,9 +97,9 @@ bash run.sh
 
 等价命令为 `go run ./cmd/server`，首次会下载 go.mod / go.sum 固定的依赖。无需 Python、虚拟环境或 uvicorn。
 
-- API：**http://127.0.0.1:8000/api/health**
-- API 说明：**http://127.0.0.1:8000/docs**
-- 后端自带 Web 页面：**http://127.0.0.1:8000**
+- API：**http://127.0.0.1:8001/api/health**
+- API 说明：**http://127.0.0.1:8001/docs**
+- 后端自带 Web 页面：**http://127.0.0.1:8001**
 
 默认监听本机。真机通过局域网访问时：
 
@@ -120,9 +120,9 @@ go build -o bin/linji-server ./cmd/server
 
 ### 3. Web 前端
 
-方式 A：后端已自带静态页面，直接访问 **http://127.0.0.1:8000**，不需要再启动前端进程。
+本机常驻服务同时提供 Web 与 API，直接访问 **http://127.0.0.1:8001**。
 
-方式 B：需要分别启动时，保留终端一，另开终端二：
+需要单独调试 Web 时，可临时启动开发代理：
 
 ```bash
 cd 前端Web
@@ -142,8 +142,8 @@ bash run.sh
 
 地址：
 
-- Android Studio 模拟器：`http://10.0.2.2:8000`
-- 真机：`http://电脑的局域网IP:8000`；电脑、手机同一 Wi-Fi，后端用 `HOST=0.0.0.0 bash run.sh`，并允许防火墙 8000 端口。
+- Android Studio 模拟器：`http://10.0.2.2:8001`
+- 真机：`http://电脑的局域网IP:8001`；电脑、手机同一 Wi-Fi，后端用 `HOST=0.0.0.0 bash run.sh`，并允许防火墙 8001 端口。
 - 正式部署：使用 HTTPS 域名。Debug 允许本地 HTTP，Release 禁用明文 HTTP。
 
 命令行构建：
@@ -281,6 +281,6 @@ MYSQL_TEST_DSN='root@tcp(127.0.0.1:3307)/?charset=utf8mb4&parseTime=true' go tes
 
 `GET /api/taxonomy` 返回统一目录、数量和学习标签提示；笔记响应的 `note_type` 是派生类型。列表和检索可传 `note_type` 与 `tag`，在数据库 LIMIT 前过滤。检索 `search_match.passages` 返回实际命中的正文、材料或步骤；短原文尽量完整显示，长原文定位命中段落，并可在结果页展开全文。它们是历史来源文本，不是 AI 自动生成的操作指令。
 
-## 三处同步更新
+## 分支与发布
 
-按用户要求，后续功能修改同时更新腾讯云、公网源码、内网/局域网源码和本机 localhost:8000，并覆盖 Web 与 APP。共享代码核对和构建差异见 [多版本同步](多版本同步.md)。
+本机与内网使用 `codex/intranet-deployment`，腾讯云使用 `codex/public-multiselect`。共享代码按功能的发布范围同步，具体流程见 [多版本同步](多版本同步.md)。
